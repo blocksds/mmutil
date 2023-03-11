@@ -269,8 +269,10 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 	for( x = 0; x < 28; x++ )
 		mod->title[x] = read8();	// read song name
 
-	if( read8() != 0x1A );
+    read8(); // No need to check this value
+//	if( read8() != 0x1A )
 //		return ERR_INVALID_MODULE;
+
 	if( read8() != 16 )
 		return ERR_INVALID_MODULE;
 	if( verbose )

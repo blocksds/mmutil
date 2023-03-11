@@ -52,8 +52,8 @@ SOURCES_CPP	:= $(shell find -L $(SOURCEDIRS) -name "*.cpp")
 # Compiler and linker flags
 # -------------------------
 
-WARNFLAGS_C	:= -Wall -Wno-multichar -Wno-unused-but-set-variable \
-		   -Wno-unused-variable -Wno-unused-result
+WARNFLAGS_C	:= -Wall -Wextra -Wno-multichar -Wno-unused-but-set-variable \
+		   -Wno-unused-result -Wno-sign-compare -Wno-type-limits
 
 WARNFLAGS_CXX	:= -Wall
 
