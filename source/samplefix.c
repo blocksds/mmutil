@@ -333,7 +333,14 @@ void FixSample_GBA( Sample* samp )
 
 	if( samp->loop_type )
 	{
-		if( samp->loop_end-samp->loop_start < GBA_MIN_LOOP_SIZE )
+		int loop_length = samp->loop_end-samp->loop_start;
+
+		// if loop exists and is empty, there is no actual loop
+		if( loop_length <= 0 )
+		{
+			samp->loop_type = 0;
+		}
+		else if( loop_length < GBA_MIN_LOOP_SIZE )
 		{
 			Unroll_Sample_Loop( samp, (GBA_MIN_LOOP_SIZE / (samp->loop_end-samp->loop_start))+1 );
 		}
