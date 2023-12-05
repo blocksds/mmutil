@@ -132,6 +132,7 @@ int main(int argc, char* argv[])
 	char* str_header=NULL;
 	
 	MAS_Module mod = { 0 };
+	Sample samp = { 0 };
 
 	int strl;
 
@@ -362,8 +363,26 @@ int main(int argc, char* argv[])
 				return -1;
 			}
 			break;
+		//------------------------------------------------------
+		case INPUT_TYPE_WAV:
+		//------------------------------------------------------
+			if( Load_WAV( &samp, v_flag, false ) )
+			{
+				print_error( ERR_INVALID_MODULE );
+				file_close_read();
+				return -1;
+			}
+
+			// Force saving the sample even if it isn't referenced anywhere
+			samp.msl_index = 0xFFFF;
+
+			mod.samp_count = 1;
+			mod.samples = malloc(sizeof(Sample));
+			memcpy(mod.samples, &samp, sizeof(Sample));
+
+			break;
 		}
-		
+
 		file_close_read();
 
 		if( file_exists( str_output ) )
