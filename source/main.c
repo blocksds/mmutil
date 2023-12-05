@@ -204,7 +204,7 @@ int main(int argc, char* argv[])
 		file_open_read( str_input );
 		Sample s;
 		
-		Load_WAV( &s, false,false );
+		Load_WAV( &s, v_flag, false );
 		
 		s.name[0] = '%';
 		s.name[1] = 'c';
