@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	char* str_output=NULL;
 	char* str_header=NULL;
 	
-	MAS_Module mod;
+	MAS_Module mod = { 0 };
 
 	int strl;
 
