@@ -13,28 +13,15 @@
 #ifndef DEFTYPES_H
 #define DEFTYPES_H
 
-#ifdef HOST_16_BITS
+#include <stdint.h>
+#include <stdbool.h>
 
+typedef uint32_t u32;
+typedef uint16_t u16;
+typedef uint8_t u8;
 
-typedef unsigned int u16;
-typedef unsigned long u32;
-typedef signed int s16;
-typedef signed long s32;
-
-#else
-
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef signed short s16;
-typedef signed long s32;
-
-#endif
-
-typedef unsigned char u8;
-typedef signed char s8;
-
-typedef unsigned char bool;
-#define true (!0)
-#define false (0)
+typedef int32_t s32;
+typedef int16_t s16;
+typedef int8_t s8;
 
 #endif
