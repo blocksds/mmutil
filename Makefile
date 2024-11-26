@@ -32,8 +32,8 @@ ELF		:= $(NAME)
 STRIP		:= -s
 BINMODE		:= 755
 
-CC		:= gcc
-CXX		:= g++
+HOSTCC		?= gcc
+HOSTCXX		?= g++
 CP		:= cp
 MKDIR		:= mkdir
 RM		:= rm -rf
@@ -64,9 +64,9 @@ WARNFLAGS_C	:= -Wall -Wextra -Wno-multichar -Wno-unused-but-set-variable \
 WARNFLAGS_CXX	:= -Wall
 
 ifeq ($(SOURCES_CPP),)
-    LD	:= $(CC)
+    HOSTLD	:= $(HOSTCC)
 else
-    LD	:= $(CXX)
+    HOSTLD	:= $(HOSTCXX)
 endif
 
 INCLUDEFLAGS	:= $(foreach path,$(INCLUDEDIRS),-I$(path)) \
@@ -96,8 +96,8 @@ DEPS		:= $(OBJS:.o=.d)
 all: $(ELF)
 
 $(ELF): $(OBJS)
-	@echo "  LD      $@"
-	$(V)$(LD) -o $@ $(OBJS) $(LDFLAGS)
+	@echo "  HOSTLD  $@"
+	$(V)$(HOSTLD) -o $@ $(OBJS) $(LDFLAGS)
 
 clean:
 	@echo "  CLEAN  "
@@ -118,14 +118,14 @@ install: all
 # -----
 
 $(BUILDDIR)/%.c.o : %.c
-	@echo "  CC      $<"
+	@echo "  HOSTCC  $<"
 	@$(MKDIR) -p $(@D)
-	$(V)$(CC) $(CFLAGS) -MMD -MP -c -o $@ $<
+	$(V)$(HOSTCC) $(CFLAGS) -MMD -MP -c -o $@ $<
 
 $(BUILDDIR)/%.cpp.o : %.cpp
-	@echo "  CXX     $<"
+	@echo "  HOSTCXX $<"
 	@$(MKDIR) -p $(@D)
-	$(V)$(CXX) $(CXXFLAGS) -MMD -MP -c -o $@ $<
+	$(V)$(HOSTCXX) $(CXXFLAGS) -MMD -MP -c -o $@ $<
 
 # Include dependency files if they exist
 # --------------------------------------
