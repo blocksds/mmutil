@@ -256,6 +256,15 @@ void Write_Sample( Sample* samp )
 		Write_SampleData(samp);
 }
 
+#define MF_START        1
+#define MF_DVOL         2
+#define MF_HASVCMD      4
+#define MF_HASFX        8
+#define MF_NEWINSTR     16  // New instrument
+
+#define MF_NOTEOFF      64  // LOCKED
+#define MF_NOTECUT      128 // LOCKED
+
 void Write_Pattern( Pattern* patt, bool xm_vol )
 {
 	int row;
@@ -305,25 +314,25 @@ void Write_Pattern( Pattern* patt, bool xm_vol )
 				maskvar = 0;
 				chanvar = col+1;
 				if( pe->note != 250 )
-					maskvar |= 1|16;
-				
+					maskvar |= MF_START | MF_NEWINSTR;
+
 				if( pe->inst != 0 )
-					maskvar |= 2|32;
+					maskvar |= MF_DVOL | 32;
 
 				if( pe->note > 250 )	// noteoff/cut disabled start+reset
-					maskvar &= ~(16|32);
-				
+					maskvar &= ~(MF_NEWINSTR | 32);
+
 				if( pe->vol != emptyvol )
-					maskvar |= 4|64;
-				
+					maskvar |= MF_HASFX | MF_NOTEOFF;
+
 				if( pe->fx != 0 || pe->param != 0 )
-					maskvar |= 8|128;
-				
-				if( maskvar & 1 )
+					maskvar |= MF_HASFX | MF_NOTECUT;
+
+				if( maskvar & MF_START )
 				{
 					if( pe->note == last_note[col] )
 					{
-						maskvar &= ~1;
+						maskvar &= ~MF_START;
 					}
 					else
 					{
@@ -332,36 +341,36 @@ void Write_Pattern( Pattern* patt, bool xm_vol )
 							last_note[col] = 256;
 					}
 				}
-				
-				if( maskvar & 2 )
+
+				if( maskvar & MF_DVOL )
 				{
 					if( pe->inst == last_inst[col] )
 					{
-						maskvar &= ~2;
+						maskvar &= ~MF_DVOL;
 					}
 					else
 					{
 						last_inst[col] = pe->inst;
 					}
 				}
-				
-				if( maskvar & 4 )
+
+				if( maskvar & MF_HASVCMD )
 				{
 					if( pe->vol == last_vol[col] )
 					{
-						maskvar &= ~4;
+						maskvar &= ~MF_HASVCMD;
 					}
 					else
 					{
 						last_vol[col] = pe->vol;
 					}
 				}
-				
-				if( maskvar & 8 )
+
+				if( maskvar & MF_HASFX )
 				{
 					if( (pe->fx == last_fx[col]) && (pe->param == last_param[col]) )
 					{
-						maskvar &= ~8;
+						maskvar &= ~MF_HASFX;
 					}
 					else
 					{
@@ -369,23 +378,23 @@ void Write_Pattern( Pattern* patt, bool xm_vol )
 						last_param[col] = pe->param;
 					}
 				}
-				
+
 				if( maskvar != last_mask[col] )
 				{
-					chanvar |= 128;
+					chanvar |= MF_NOTECUT;
 					last_mask[col] = maskvar;
 				}
 
 				write8( chanvar );
-				if( chanvar & 128 )
+				if( chanvar & MF_NOTECUT )
 					write8( maskvar );
-				if( maskvar & 1 )
+				if( maskvar & MF_START )
 					write8( pe->note );
-				if( maskvar & 2 )
+				if( maskvar & MF_DVOL )
 					write8( pe->inst );
-				if( maskvar & 4 )
+				if( maskvar & MF_HASVCMD )
 					write8( pe->vol );
-				if( maskvar & 8 )
+				if( maskvar & MF_HASFX )
 				{
 					write8( pe->fx );
 					write8( pe->param );
