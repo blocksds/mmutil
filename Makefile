@@ -59,7 +59,7 @@ SOURCES_CPP	:= $(shell find -L $(SOURCEDIRS) -name "*.cpp")
 # -------------------------
 
 WARNFLAGS_C	:= -Wall -Wextra -Wno-multichar -Wno-unused-but-set-variable \
-		   -Wno-unused-result -Wno-sign-compare -Wno-type-limits
+		   -Wno-unused-result -Wno-sign-compare
 
 WARNFLAGS_CXX	:= -Wall
 

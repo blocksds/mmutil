@@ -21,6 +21,4 @@ extern int PANNING_SEP;
 
 //#define SUPER_ASCII
 
-#define CLAMP(x, a, b) ((x) < (a) ? (a) : ((x) > (b) ? (b) : (x)))
-
 #endif // _defs_h_
