@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef IT_H
-#define IT_H
+#ifndef IT_H__
+#define IT_H__
 
-int Load_IT( MAS_Module* itm, bool verbose );
+int Load_IT(MAS_Module *itm, bool verbose);
 
-#endif
+#endif // IT_H__

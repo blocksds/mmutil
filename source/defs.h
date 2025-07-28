@@ -10,15 +10,17 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef _defs_h_
-#define _defs_h_
+#ifndef DEFS_H__
+#define DEFS_H__
 
 #include "deftypes.h"
 
-#define BYTESMASHER		0xBA
-#define MAX_CHANNELS		32
+#define BYTESMASHER     0xBA
+#define MAX_CHANNELS    32
 extern int PANNING_SEP;
 
+// Define this to use less common characters when printing information on the
+// terminal.
 //#define SUPER_ASCII
 
-#endif // _defs_h_
+#endif // DEFS_H__

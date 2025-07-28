@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef adpcm_h
-#define adpcm_h
+#ifndef ADPCM_H__
+#define ADPCM_H__
 
-void adpcm_compress_sample( Sample* sample );
+void adpcm_compress_sample(Sample *sample);
 
-#endif // adpcm_h
+#endif // ADPCM_H__

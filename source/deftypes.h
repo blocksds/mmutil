@@ -10,8 +10,8 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef DEFTYPES_H
-#define DEFTYPES_H
+#ifndef DEFTYPES_H__
+#define DEFTYPES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -24,4 +24,4 @@ typedef int32_t s32;
 typedef int16_t s16;
 typedef int8_t s8;
 
-#endif
+#endif // DEFTYPES_H__

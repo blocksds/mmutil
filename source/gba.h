@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef GBA_H
-#define GBA_H
+#ifndef GBA_H__
+#define GBA_H__
 
-void Write_GBA( void );
+void Write_GBA(void);
 
-#endif
+#endif // GBA_H__
