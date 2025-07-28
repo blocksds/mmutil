@@ -136,7 +136,7 @@ void Unroll_BIDI_Sample( Sample* samp )
 
 	looplen = samp->loop_end-samp->loop_start;
 	newlen = (samp->sample_length + looplen);
-	
+
 	if( samp->format & SAMPF_16BIT )
 	{
 		newdata16 = malloc( newlen *2 );
@@ -173,14 +173,14 @@ void Resample( Sample* samp, u32 newsize )
 	u16	*dst16=0;
 	u8	*src8 = (u8*)samp->data;
 	u16	*src16 = (u16*)samp->data;
-	
+
 	int oldlength = samp->sample_length;
 	int lpoint = samp->loop_start;
 	int i;
-	
+
 	bool bit16 = samp->format & SAMPF_16BIT;
 	double sign_diff;
-	
+
 	// allocate memory
 	if( bit16 )
 	{
@@ -192,62 +192,62 @@ void Resample( Sample* samp, u32 newsize )
 		dst8 = (u8*)malloc(newsize);
 		sign_diff = 128.0;
 	}
-		
+
 	double tscale = (double)oldlength / (double)newsize;
 	double posf;
-	
+
 	for( i = 0; i < newsize; i++ )
 	{
 		posf = (double)i * tscale;
 		int posi = (int)floor(posf);
-		
+
 		double mu = posf - (double)posi;
 		double s0, s1, s2, s3;
 		double mu2, a0, a1, a2, a3, res;
-		
+
 		// get previous, current, next, and after next samples
 		if( bit16 )
 		{
 			s0 = (posi-1) < 0 ? 0 :		((double)(src16[posi-1]));
 			s1 =							((double)(src16[posi  ]));
-			s2 = (posi+1) >= oldlength ? 
-									(samp->loop_type ? 
-										((double)(src16[lpoint + (posi + 1 - oldlength)])) : 0) : 
+			s2 = (posi+1) >= oldlength ?
+									(samp->loop_type ?
+										((double)(src16[lpoint + (posi + 1 - oldlength)])) : 0) :
 										((double)(src16[posi+1]));
-			s3 = (posi+1) >= oldlength ? 
-									(samp->loop_type ? 
-										((double)(src16[lpoint + (posi + 2 - oldlength)])) : 0) : 
+			s3 = (posi+1) >= oldlength ?
+									(samp->loop_type ?
+										((double)(src16[lpoint + (posi + 2 - oldlength)])) : 0) :
 										((double)(src16[posi+2]));
 		}
 		else
 		{
 			s0 = (posi-1) < 0 ? 0 :		((double)(src8[posi-1]));
 			s1 =							((double)(src8[posi  ]));
-			s2 = (posi+1) >= oldlength ? 
-									(samp->loop_type ? 
-										((double)(src8[lpoint + (posi + 1 - oldlength)])) : 0) : 
+			s2 = (posi+1) >= oldlength ?
+									(samp->loop_type ?
+										((double)(src8[lpoint + (posi + 1 - oldlength)])) : 0) :
 										((double)(src8[posi+1]));
-			s3 = (posi+1) >= oldlength ? 
-									(samp->loop_type ? 
-										((double)(src8[lpoint + (posi + 2 - oldlength)])) : 0) : 
+			s3 = (posi+1) >= oldlength ?
+									(samp->loop_type ?
+										((double)(src8[lpoint + (posi + 2 - oldlength)])) : 0) :
 										((double)(src8[posi+2]));
 		}
-		
+
 		// sign data
 		s0 -= sign_diff;
 		s1 -= sign_diff;
 		s2 -= sign_diff;
 		s3 -= sign_diff;
-		
+
 		mu2 = mu * mu;
 		a0 = s3 - s2 - s0 + s1;
 		a1 = s0 - s1 - a0;
 		a2 = s2 - s0;
 		a3 = s1;
-		
+
 		res = a0*mu*mu2 + a1*mu2 + a2*mu + a3;
 		int resi = ((int)floor(res+0.5));
-		
+
 		if( bit16 )
 		{
 			if( resi < -32768 ) resi = -32768;
@@ -260,15 +260,15 @@ void Resample( Sample* samp, u32 newsize )
 			if( resi > 127 ) resi = 127;
 			dst8[i] = resi + 128;
 		}
-		
+
 	}
-	
+
 	free( samp->data );
 	if( bit16 )
 		samp->data = (void*)dst16;
 	else
 		samp->data = (void*)dst8;
-	
+
 	samp->sample_length = newsize;
 	samp->loop_end = newsize;
 	samp->loop_start = (int)(((double)samp->loop_start * (double)newsize+((double)oldlength/2))/(double)oldlength);
@@ -322,11 +322,11 @@ void FixSample_GBA( Sample* samp )
 {
 	// convert to 8-bit if neccesary
 	Sample_8bit( samp );
-	
+
 	// delete data after loop_end if loop exists
 	if( samp->loop_type != 0 )
 		samp->sample_length = samp->loop_end;
-	
+
 	// unroll BIDI loop
 	if( samp->loop_type == 2 )
 		Unroll_BIDI_Sample( samp );
@@ -372,7 +372,7 @@ void FixSample_NDS( Sample* samp )
 	// delete data after loop_end if loop exists
 	if( samp->loop_type != 0 )
 		samp->sample_length = samp->loop_end;
-	
+
 	// unroll BIDI loop
 	if( samp->loop_type == 2 )
 		Unroll_BIDI_Sample( samp );
@@ -397,7 +397,7 @@ void FixSample_NDS( Sample* samp )
 			samp->format |= SAMPF_COMP;
 		}
 	}
-	
+
 	// Resize loop
 	if( samp->loop_type )
 	{
@@ -456,7 +456,7 @@ void FixSample_NDS( Sample* samp )
 				Unroll_Sample_Loop( samp, count );
 		}
 	}
-	
+
 	// Align loop_start
 	if( samp->loop_type )
 	{
@@ -475,7 +475,7 @@ void FixSample_NDS( Sample* samp )
 		}
 		Sample_PadStart( samp, padsize );
 	}
-	
+
 	// Pad end, only happens when loop is disabled
 	if( !(samp->format & SAMPF_COMP) )
 	{
@@ -501,7 +501,7 @@ void FixSample_NDS( Sample* samp )
 			Sample_PadEnd( samp, 8-(samp->sample_length&7) );
 		}
 	}
-	
+
 	Sample_Sign( samp );	// DS hardware takes signed samples
 
 	if( samp->format & SAMPF_COMP )
@@ -511,7 +511,7 @@ void FixSample_NDS( Sample* samp )
 	}
 	else
 	{
-		
+
 	}
 }
 

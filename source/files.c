@@ -228,12 +228,12 @@ void skip8f( u32 count, FILE* p_file )
 	fseek( p_file, count, SEEK_CUR );
 //	while( count )		// this was a major slowdown!
 //	{
-//		//read8f( p_file );	
-//		
+//		//read8f( p_file );
+//
 //		count--;
 //	}
 }
- 
+
 void file_delete( char* filename )
 {
 	if( file_exists( filename ) )

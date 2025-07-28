@@ -25,7 +25,7 @@ void kiwi_start( void )
 	r=0;
 
 	rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();
-	
+
 	switch( r )
 	{
 	case 0:

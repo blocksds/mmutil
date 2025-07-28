@@ -88,7 +88,7 @@ u16 MSL_AddSampleC( Sample* samp )
 	u32 h_filesize;
 	int samp_id;
 	bool samp_match;
-		
+
 	int fsize=file_size( TMP_SAMP );
 	if( fsize == 0 )
 	{
@@ -173,7 +173,7 @@ u16 MSL_AddModule( MAS_Module* mod )
 			MSL_PrintDefinition( mod->samples[x].filename+1, (u16)samp_id, "SFX_" );
 		mod->samples[x].msl_index = samp_id;
 	}
-	
+
 	file_open_write_end( TMP_SONG );
 	Write_MAS( mod, false, true );
 	file_close_write();
@@ -201,10 +201,10 @@ void MSL_Export( char* filename )
 	write8( 'o' );
 	write8( 'd' );
 	write8( '*' );
-	
+
 	parap_samp = (u32*)malloc( MSL_NSAMPS * sizeof( u32 ) );
 	parap_song = (u32*)malloc( MSL_NSONGS * sizeof( u32 ) );
-	
+
 	// reserve space for parapointers
 	for( x = 0; x < MSL_NSAMPS; x++ )
 		write32( 0xAAAAAAAA );
@@ -222,7 +222,7 @@ void MSL_Export( char* filename )
 			write8( read8() );
 	}
 	file_close_read();
-	
+
 	file_open_read( TMP_SONG );
 	for( x = 0; x < MSL_NSONGS; x++ )
 	{
@@ -234,7 +234,7 @@ void MSL_Export( char* filename )
 			write8( read8() );
 	}
 	file_close_read();
-	
+
 	file_seek_write( 0x0C, SEEK_SET );
 	for( x = 0; x < MSL_NSAMPS; x++ )
 		write32( parap_samp[x] );
@@ -257,7 +257,7 @@ void MSL_PrintDefinition( char* filename, u16 id, char* prefix )
 		return;
 	for( x = 0; x < (int)strlen( filename ); x++ )
 	{
-		if( filename[x] == '\\' || filename[x] == '/' ) s = x+1; 
+		if( filename[x] == '\\' || filename[x] == '/' ) s = x+1;
 	}
 	for( x = s; x < (int)strlen( filename ); x++ )
 	{
@@ -329,7 +329,7 @@ void MSL_LoadFile( char* filename, bool verbose )
 		printf( "Unknown file %s...\n", filename );
 	}
 	file_close_read();
-	
+
 }
 
 int MSL_Create( char* argv[], int argc, char* output, char* header, bool verbose )
@@ -350,17 +350,17 @@ int MSL_Create( char* argv[], int argc, char* output, char* header, bool verbose
 
 //	if( !F_HEADER )
 //		return -1;	// needs header file!
-	
+
 	file_open_write( TMP_SAMP );
 	file_close_write();
 	file_open_write( TMP_SONG );
 	file_close_write();
-	
+
 	for( x = 1; x < argc; x++ )
 	{
 		if( argv[x][0] == '-' )
 		{
-			
+
 		}
 		else
 		{

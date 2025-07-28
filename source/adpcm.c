@@ -60,7 +60,7 @@ static int minmax( int value, int low, int high )
 static int calc_delta( int diff, int step )
 {
 	int delta = (step >> 3);	// t/8
-	
+
 	if( diff >= step ) {		// t/1
 		diff -= step;
 		delta += step;
@@ -88,17 +88,17 @@ void adpcm_compress_sample( Sample* sample )
 
 	int prev_value;
 	int curr_value;
-	
+
 	int diff;
 	int data;
 	int delta;
-	
+
 	int index;
 	int step;
-	
+
 	// allocate space for sample (compressed size)
 	output = (u8*)malloc( sample->sample_length/2+4 );
-	
+
 	prev_value = read_sample( sample, 0 );
 	index = 0;
 
@@ -111,7 +111,7 @@ void adpcm_compress_sample( Sample* sample )
 
 
 		diff = read_sample( sample, 1 ) - read_sample( sample, 0 );
-		
+
 		for( i = 0; i < 88; i++ )
 		{
 			tmp_error = calc_delta( diff, i ) - diff;
@@ -122,17 +122,17 @@ void adpcm_compress_sample( Sample* sample )
 			}
 		}
 	}
-		
+
 	// set data header
 	(*((u32*)output)) =		prev_value			// initial PCM16 value
 							| (index << 16);	// initial table index value
-	
+
 	step = AdpcmTable[index];
-	
+
 	for( x = 0; x < sample->sample_length; x++ )
 	{
 		curr_value = read_sample( sample, x );
-		
+
 		diff = curr_value - prev_value;
 		if( diff < 0 )
 		{
@@ -145,17 +145,17 @@ void adpcm_compress_sample( Sample* sample )
 			// clear negative flag
 			data = 0;
 		}
-		
+
 		/*
 		  difference calculation:
 		  Diff = AdpcmTable[Index]/8
 		  IF (data4bit AND 1) THEN Diff = Diff + AdpcmTable[Index]/4
 		  IF (data4bit AND 2) THEN Diff = Diff + AdpcmTable[Index]/2
 		  IF (data4bit AND 4) THEN Diff = Diff + AdpcmTable[Index]/1
-		*/	
-		
+		*/
+
 		delta = (step >> 3);		// t/8 (always)
-		
+
 		if( diff >= step ) {		// t/1
 			data |= 4;
 			diff -= step;
@@ -171,19 +171,19 @@ void adpcm_compress_sample( Sample* sample )
 			diff -= step>>2;
 			delta += step>>2;
 		}
-		
+
 		// add/subtract delta
 		prev_value += (data&8) ? -delta : delta;
-		
+
 		// claamp output
 		prev_value = minmax( prev_value, -0x7FFF, 0x7FFF );
-				
+
 		// add index table value (and clamp)
 		index = minmax( index + IndexTable[data & 7], 0, 88 );
-		
+
 		// read new step value
 		step = AdpcmTable[index];
-		
+
 		// write output
 		if( (x & 1) )
 			output[(x>>1)+4] |= (data) << 4;
@@ -204,7 +204,7 @@ void adpcm_compress_sample( Sample* sample )
 	sample->sample_length = (sample->sample_length/2) +4;
 	sample->loop_start /= 2;
 	sample->loop_end /= 2;
-	
+
 	// step loop past adpcm header
 	sample->loop_start += 4;
 	sample->loop_end += 4;

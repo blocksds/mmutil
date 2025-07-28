@@ -60,10 +60,10 @@ int Get_XM_Frequency( s8 relnote, s8 finetune )
 
 int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, bool verbose )
 {
-	
+
 	int inst_size;
 	int nsamples;
-	
+
 	int ns;
 
 	int samp_headstart;
@@ -90,12 +90,12 @@ int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, boo
 	Sample* samp;
 
 	ns = *p_nextsample;
-	
+
 	memset( inst, 0, sizeof( Instrument ) );
 
 	inst_headstart = file_tell_read();
 	inst_size = read32();
-	
+
 	for( x = 0; x < 22; x++ )
 		inst->name[x] = read8(); // instrument name
 //	if( verbose )
@@ -142,24 +142,24 @@ int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, boo
 			inst->env_flags |= 1|8;
 		if( panbits & 1 )
 			inst->env_flags |= 2;
-		
+
 		if( !(volbits & 2) )
 			inst->envelope_volume.sus_start=inst->envelope_volume.sus_end=255;
 		if( !(panbits & 2) )
 			inst->envelope_pan.sus_start=inst->envelope_pan.sus_end=255;
-		
+
 		if( !(volbits & 4) )
 			inst->envelope_volume.loop_start=inst->envelope_volume.loop_end=255;
 		if( !(panbits & 4) )
 			inst->envelope_pan.loop_start=inst->envelope_pan.loop_end=255;
-		
+
 		vibtype=read8();
 		vibsweep=32768/(read8()+1);
 		vibdepth=read8();
 		vibrate=read8();
 		inst->fadeout = read16()/32;			// apply scalar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		file_seek_read( inst_headstart+inst_size, SEEK_SET );
-			
+
 /*		if( verbose )
 		{
 			if( volbits & 1 )
@@ -171,7 +171,7 @@ int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, boo
 			else
 				printf( "  Loading sample\n" );
 		}
-*/		
+*/
 		// read sample headers
 		for( x = 0; x < nsamples; x++ )
 		{
@@ -206,9 +206,9 @@ int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, boo
 				if( y < 12 )
 					samp->filename[y] = samp->name[y];
 			}
-			
+
 			samp->frequency = Get_XM_Frequency( relnote, finetune );
-			
+
 //			samp->bit16 = loopbits & 16 ? true : false;
 			samp->format = loopbits & 16 ? SAMP_FORMAT_U16 : SAMP_FORMAT_U8;
 			if( samp->format & SAMPF_16BIT )
@@ -235,14 +235,14 @@ int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, boo
 				printf( "    16 bit........%s\n", (samp->format & SAMPF_16BIT) ? "yes (will be converted)" : "no" );
 			}*/
 		}
-		
+
 		// read sample
 		for( x = 0; x < nsamples; x++ )
 		{
 			samp = &mas->samples[ns+x];
 			if( samp->sample_length == 0 )
 				continue;
-			
+
 			sample_old = 0;
 			if( samp->format & SAMPF_16BIT )
 			{
@@ -278,7 +278,7 @@ int Load_XM_Instrument( Instrument* inst, MAS_Module* mas, u8* p_nextsample, boo
 		if( verbose )
 			printf( vstr_xm_nosamp, inst->name );
 	}
-	
+
 	return ERR_NONE;
 }
 
@@ -296,59 +296,59 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 		else
 			wfx=wpm=0;
 		break;
-	
+
 	case 1: //   1xx porta up
 		wfx = 'F'-cho;
 		if( wpm >= 0xE0 )
 			wpm = 0xDF;
 		break;
-	
+
 	case 2: //   2xx porta down
 		wfx = 'E'-cho;
 		if( wpm >= 0xE0 )
 			wpm = 0xDF;
 		break;
-	
+
 	case 3: //   3xx porta to note
 		wfx = 'G'-cho;
 		break;
-	
+
 	case 4: //   4xy vibrato
 		wfx = 'H'-cho;
 		break;
-	
+
 	case 5: //   5xy volslide+glissando
 		wfx = 'L'-cho;
 		break;
-	
+
 	case 6: //   6xy volslide+vibrato
 		wfx = 'K'-cho;
 		break;
-	
+
 	case 7: //   7xy tremolo
 		wfx = 'R'-cho;
 		break;
-	
+
 	case 8: //   8xx set panning
 		wfx = 'X'-cho;
 		break;
-	
+
 	case 9: //   9xx set offset
 		wfx = 'O'-cho;
 		break;
-	
+
 	case 0xA: // Axy volume slide
 		wfx = 'D'-cho;
 		break;
-	
+
 	case 0xB: // Bxx position jump
 		wfx = 'B'-cho;
 		break;
-	
+
 	case 0xC: // Cxx set volume
 		wfx = 27;	// compatibility effect
 		break;
-	
+
 	case 0xD: // Dxx pattern break
 		wfx = 'C'-cho;
 		wpm = (wpm&0xF) + (wpm>>4) * 10;
@@ -361,7 +361,7 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 			wpm = 0x0F | (wpm&0xF0);
 		}*/
 		break;
-	
+
 	case 0xE: // Exy extended
 //		if( (wpm & 0xF0) != 0xC0 )
 //		{int foo = 1;}
@@ -383,7 +383,7 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 			wfx=0;
 			wpm=0;
 			break;
-			
+
 		case 4:						// vibrato control
 			wfx = 'S'-cho;
 			wpm = 0x30 | (wpm&0xF);
@@ -393,7 +393,7 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 			wfx = 'S'-cho;
 			wpm = 0xB0 | (wpm&0xF);
 			break;
-		
+
 		case 7:						// tremolo control
 			wfx = 'S'-cho;
 			wpm = 0x40 | (wpm&0xF);
@@ -403,7 +403,7 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 			wfx = 'X'-cho;
 			wpm = (wpm&0xF) * 16;
 			break;
-			
+
 		case 9:						// old retrig
 			wfx = 'S'-cho;
 			wpm = 0x20 | (wpm&0xF);
@@ -423,7 +423,7 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 			wfx = 'S'-cho;
 			wpm = 0xC0 | (wpm&0xF);
 			break;
-			
+
 		case 13:					// note delay
 			wfx = 'S'-cho;
 			wpm = 0xD0 | (wpm&0xF);
@@ -443,19 +443,19 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 
 		}
 		break;
-	
+
 	case 0xF: // Fxx set speed
 		if( wpm >= 32 )
 			wfx = 'T'-cho;
 		else
 			wfx = 'A'-cho;
 		break;
-	
+
 	case 16: // Gxx set global volume
 		wfx = 'V'-cho;
 		wpm=wpm;
 		break;
-	
+
 	case 17: // Hxx global volume slide
 		wfx = 'W'-cho;
 		break;
@@ -475,29 +475,29 @@ void CONV_XM_EFFECT( u8* fx, u8* param )
 		wfx = 0;
 		wpm = 0;
 		break;
-		
+
 	case 20: // Kxx key off
 		wfx = 28;
 		break;
-	
+
 	case 21: // Lxx set envelope position
 		wfx = 29;
 		break;
-	
+
 	case 25: // Pxx panning slide
 		wfx = 'P'-cho;
 		break;
 
-	
-	
+
+
 	case 27: // Rxx retrigger note
 		wfx = 'Q'-cho;
 		break;
-		
+
 	case 29: // Txx tremor
 		wfx = 30;
 		break;
-		
+
 	case 33: // Xxx extra fine slide
 		if( (wpm>>4) == 1 )
 		{
@@ -532,15 +532,15 @@ int Load_XM_Pattern( Pattern* patt, u32 nchannels, bool verbose )
 
 	headstart = file_tell_read();
 	headsize = read32();
-	
+
 	if( read8() != 0 )
 		return ERR_UNKNOWNPATTERN;
 
 	memset( patt, 0, sizeof( Pattern ) );
-	
+
 	patt->nrows = read16();
 	clength = read16();
-	
+
 	if( verbose )
 		printf( "- %i rows, %.2f KB\n", patt->nrows, (float)(clength)/1000 );
 
@@ -552,13 +552,13 @@ int Load_XM_Pattern( Pattern* patt, u32 nchannels, bool verbose )
 	}
 
 	file_seek_read( headstart+headsize, SEEK_SET );
-	
+
 	if( clength == 0 )
 	{
 		// pattern is empty
 		return ERR_NONE;
 	}
-	
+
 	// read pattern data
 	for( row = 0; row < patt->nrows; row++ )
 	{
@@ -627,9 +627,9 @@ int Load_XM( MAS_Module* mod, bool verbose )
 	u32 xm_headsize;
 	u16 xm_nchannels;
 	u8 next_sample;
-	
+
 	memset( mod, 0, sizeof( MAS_Module ) );
-	
+
 	mod->old_effects=true;
 	mod->xm_mode=true;
 	mod->global_volume=64;
@@ -670,7 +670,7 @@ int Load_XM( MAS_Module* mod, bool verbose )
 		printf( "Speed......%i\n", mod->initial_speed );
 		printf( "Tempo......%i\n", mod->initial_tempo );
 	}
-	
+
 	for( x = 0; x < 32; x++ )
 	{
 		mod->channel_volume[x] = 64;
@@ -691,7 +691,7 @@ int Load_XM( MAS_Module* mod, bool verbose )
 			mod->orders[x] = 255;
 		}
 	}
-	
+
 	for( ; x < 256; x++ )			// skip 200->255
 		read8();
 	file_seek_read( 60+xm_headsize, SEEK_SET );	// or maybe 60..
@@ -702,7 +702,7 @@ int Load_XM( MAS_Module* mod, bool verbose )
 		printf( "Loading patterns...\n" );
 		printf( vstr_xm_div );
 	}
-	
+
 	mod->patterns = (Pattern*)malloc( mod->patt_count * sizeof( Pattern ) );
 	for( x = 0; x < mod->patt_count; x++ )
 	{
@@ -710,12 +710,12 @@ int Load_XM( MAS_Module* mod, bool verbose )
 			printf( vstr_xm_patt, x+1 );
 		Load_XM_Pattern( &mod->patterns[x], xm_nchannels, verbose );
 	}
-	
+
 	mod->instruments = (Instrument*)malloc( mod->inst_count * sizeof( Instrument ) );
 	mod->samples = (Sample*)malloc( 256 * sizeof( Sample ) );
 	next_sample=0;
 
-	
+
 	if( verbose )
 	{
 		printf( vstr_xm_div );
@@ -724,7 +724,7 @@ int Load_XM( MAS_Module* mod, bool verbose )
 		printf( vstr_xm_samp_header );
 		printf( vstr_xm_samp_slice );
 	}
-	
+
 	for( x = 0; x < mod->inst_count; x++ )
 	{
 	//	if( verbose )
@@ -733,12 +733,12 @@ int Load_XM( MAS_Module* mod, bool verbose )
 			printf( vstr_xm_samp_prefix, x+1 );
 		Load_XM_Instrument( &mod->instruments[x], mod, &next_sample, verbose );
 	}
-	
+
 	if( verbose )
 	{
 		printf( vstr_xm_samp_bottom );
 	}
-	
+
 	mod->samp_count = next_sample;
 	return ERR_NONE;
 }

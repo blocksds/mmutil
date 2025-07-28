@@ -40,7 +40,7 @@
 #define vstr_s3m_div "--------------------------------------------\n"
 #define vstr_s3m_sampt_top  vstr_s3m_div
 #define vstr_s3m_sampt_mid   " INDEX LENGTH  LOOP  VOLUME  MID-C   NAME\n"
-//#define vstr_s3m_sampt_slice "" 
+//#define vstr_s3m_sampt_slice ""
 #define vstr_s3m_sampt_index " %-2i    "
 #define vstr_s3m_sampt_bottom vstr_s3m_div
 #define vstr_s3m_pattern " * %2i%s"
@@ -169,21 +169,21 @@ int Load_S3M_Pattern( Pattern* patt  )
 	int row, col;
 	u8 what;
 	int z;
-	
+
 	clength = read16();
 	// unpack s3m data
-	
+
 	memset( patt, 0, sizeof( Pattern ) );
-	
+
 	patt->clength = clength;
 	patt->nrows = 64;
-	
+
 	for( row = 0; row < 64*MAX_CHANNELS; row++ )
 	{
 		patt->data[row].note = 250;
 		patt->data[row].vol = 255;
 	}
-	
+
 	for( row = 0; row < 64; row++ )
 	{
 		while( (what = read8()) != 0 )	// BYTE:what / 0=end of row
@@ -242,7 +242,7 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 	u16 cwt;
 	u16 ffi;
 	u8 dp;
-	
+
 	bool stereo;
 
 	u8 a;
@@ -253,7 +253,7 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 	u16* parap_inst;
 	u16* parap_patt;
 
-	
+
 
 	memset( mod, 0, sizeof( MAS_Module ) );
 	for( x = 0; x < 28; x++ )
@@ -286,7 +286,7 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 	mod->link_gxx=false;	// dont link gxx memory
 	mod->restart_pos = 0;	// restart from beginning
 	mod->old_mode=true;
-	
+
 	s3m_flags = read16();
 	cwt = read16();
 	ffi = read16();
@@ -321,12 +321,12 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 	}
 	parap_inst = (u16*)malloc( mod->inst_count * sizeof( u16 ) );
 	parap_patt = (u16*)malloc( mod->patt_count * sizeof( u16 ) );
-	
+
 	for( x = 0; x < mod->inst_count; x++ )
 		parap_inst[x] = read16();
 	for( x = 0; x < mod->patt_count; x++ )
 		parap_patt[x] = read16();
-	
+
 	if( dp == 252 )
 	{
 		for( x = 0; x < 32; x++ )
@@ -367,11 +367,11 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 				mod->channel_panning[x] = 128;
 		}
 	}
-	
+
 	mod->instruments = (Instrument*)malloc( mod->inst_count * sizeof( Instrument ) );
 	mod->samples = (Sample*)malloc( mod->samp_count * sizeof( Sample ) );
 	mod->patterns = (Pattern*)malloc( mod->patt_count * sizeof( Pattern ) );
-	
+
 	if( verbose )
 	{
 		printf( vstr_s3m_div );
@@ -396,7 +396,7 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 		// make notemap
 		for( y = 0; y < 120; y++ )
 			mod->instruments[x].notemap[y] = y | ((x+1) << 8);
-		
+
 		// load sample
 		file_seek_read( parap_inst[x]*16, SEEK_SET );
 		if( Load_S3M_Sample( &mod->samples[x], verbose ) )
@@ -405,7 +405,7 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 			return ERR_UNKNOWNSAMPLE;
 		}
 	}
-	
+
 	// load patterns
 	if( verbose )
 	{
@@ -423,7 +423,7 @@ int Load_S3M( MAS_Module* mod, bool verbose )
 		file_seek_read( parap_patt[x]*16, SEEK_SET );
 		Load_S3M_Pattern( &mod->patterns[x] );
 	}
-	
+
 	if( verbose )
 	{
 		printf( "\n" );

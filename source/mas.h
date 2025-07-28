@@ -70,7 +70,7 @@ typedef struct tInstrument
 typedef struct tSample
 {
 	u32		parapointer;
-	
+
 	u8		global_volume;
 	u8		default_volume;
 	u8		default_panning;
@@ -80,17 +80,17 @@ typedef struct tSample
 	u8		loop_type;
 	u32		frequency;
 	void*	data;
-	
+
 	u8		vibtype;
 	u8		vibdepth;
 	u8		vibspeed;
 	u8		vibrate;
 	u16		msl_index;
 	u8		rsamp_index;
-	
+
 	u8		format;
 //	bool	samp_signed;
-	
+
 	// file info
 	u32		datapointer;
 //	bool	bit16;

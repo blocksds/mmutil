@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 	char* str_input=NULL;
 	char* str_output=NULL;
 	char* str_header=NULL;
-	
+
 	MAS_Module mod = { 0 };
 	Sample samp = { 0 };
 
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 	//------------------------------------------------------------------------
 	// parse arguments
 	//------------------------------------------------------------------------
-	
+
 	for( a = 1; a < argc; a++ )
 	{
 		if( argv[a][0] == '-' )
@@ -192,34 +192,34 @@ int main(int argc, char* argv[])
 			number_of_inputs++;
 		}
 	}
-	
+
 	if( number_of_inputs==0 )
 	{
 		print_usage();
 		return 0;
 	}
-	
+
 	if( z_flag )
 	{
 		kiwi_start();
 		file_open_read( str_input );
 		Sample s;
-		
+
 		Load_WAV( &s, v_flag, false );
-		
+
 		s.name[0] = '%';
 		s.name[1] = 'c';
 		s.name[2] = 0;
-		
+
 		FixSample( &s );
-		
+
 		file_close_read();
 		file_open_write( str_output );
-		
+
 		int i;
 		for( i = 0; i < s.sample_length; i++ )
 			write8( ((u8*)s.data)[i] );
-		
+
 		file_close_write();
 		printf("okay\n");
 		return 0;
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
 		printf("-m and -g cannot be combined.\n");
 		return -1;
 	}
-	
+
 	if( m_flag && number_of_inputs != 1 )
 	{
 		printf( "-m only supports one input.\n" );
@@ -256,14 +256,14 @@ int main(int argc, char* argv[])
 				str_output = (char*)malloc( strp+2 );
 				strcpy(str_output, str_input);
 				strp=strlen(str_output)-1;
-				
+
 				for( strpi=strp; str_output[strpi] != '.' && strpi != 0; strpi-- );
 				if( strpi == 0 )
 				{
 					print_error( ERR_BADINPUT );
 					return -1;
 				}
-				
+
 				str_output[strpi++] = '.';
 				if( !g_flag )
 				{
@@ -302,7 +302,7 @@ int main(int argc, char* argv[])
 			}
 		}
 	}
-	
+
 	// catch filename too small
 	strl=strlen(str_input);
 	if( strl < 4 )
@@ -393,7 +393,7 @@ int main(int argc, char* argv[])
 				printf( "Operation Canceled!\n" );
 				return -1;
 			}
-			
+
 		}
 
 		if( file_open_write( str_output ) )
@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
 		// output MAS
 		output_size = Write_MAS( &mod, v_flag, false );
 
-		
+
 		file_close_write();
 
 		Delete_Module( &mod );
@@ -435,7 +435,7 @@ int main(int argc, char* argv[])
 				printf( "Operation Canceled!\n" );
 				return -1;
 			}
-			
+
 		}
 
 		if( file_open_write( str_output ) )
@@ -472,12 +472,12 @@ int main(int argc, char* argv[])
 
 		file_close_read();
 		file_close_write();
-		
+
 		file_delete( "tempSH308GK.bin" );
 
 		if( g_flag && target_system == SYSTEM_NDS )
 			Validate_NDS( str_output, output_size );
-		
+
 		if( v_flag )
 		{
 			printf( "Success! :D\n" );
@@ -489,7 +489,7 @@ int main(int argc, char* argv[])
 					printf("ROM can be multibooted!!\n" );
 				}
 			}
-		}	
+		}
 	}
 	else
 	{

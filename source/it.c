@@ -60,7 +60,7 @@ bool Load_IT_Envelope( Instrument_Envelope* env, bool unsign )
 	u8 a;
 	u8 node_count;
 	int x;
-	
+
 	bool env_loop=false;
 	bool env_sus=false;
 	bool env_enabled=false;
@@ -69,7 +69,7 @@ bool Load_IT_Envelope( Instrument_Envelope* env, bool unsign )
 	memset( env, 0, sizeof( Instrument_Envelope ) );
 
 	a=read8();
-	
+
 	if( a & 1 )
 		env_enabled = true;
 	if( !(a & 2) )
@@ -93,11 +93,11 @@ bool Load_IT_Envelope( Instrument_Envelope* env, bool unsign )
 		env_filter=true;
 		env->env_filter=env_filter;
 	}
-	
+
 	node_count=read8();
 	if( node_count != 0 )
 		env->env_valid=true;
-	
+
 	env->node_count = node_count;
 	if( env_loop )
 	{
@@ -123,7 +123,7 @@ bool Load_IT_Envelope( Instrument_Envelope* env, bool unsign )
 		if( unsign )
 			env->node_y[x] += 32;
 		env->node_x[x] = read16();
-		
+
 	}
 	read8(); // unused byte
 	env->env_enabled = env_enabled;
@@ -153,12 +153,12 @@ int Load_IT_Instrument( Instrument* inst, bool verbose, int index )
 	for( x = 0; x < 26; x++ )
 		inst->name[x] = read8();
 	skip8( 6 );
-	
+
 	for( x = 0; x < 120; x++ )
 		inst->notemap[x] = read16();
-	
+
 	inst->env_flags=0;
-	
+
 	Load_IT_Envelope( &inst->envelope_volume, false );
 	inst->env_flags |= inst->envelope_volume.env_valid ? 1 : 0;
 	inst->env_flags |= inst->envelope_volume.env_enabled ? 8 : 0;
@@ -220,7 +220,7 @@ void Create_IT_Instrument( Instrument* inst, int sample )
 	memset( inst, 0, sizeof( Instrument ) );
 
 	inst->global_volume		=128;
-	
+
 	for( x = 0; x < 120; x++ )
 		inst->notemap[x] = x+sample*256;
 }
@@ -238,7 +238,7 @@ int Load_IT_Sample( Sample* samp )
 	u32 c5spd;
 	u32 data_address;
 	int x;
-	
+
 	memset( samp, 0, sizeof( Sample ) );
 	samp->msl_index = 0xFFFF;
 
@@ -266,12 +266,12 @@ int Load_IT_Sample( Sample* samp )
 	loop_start=read32();
 	loop_end=read32();
 	c5spd=read32();
-	
+
 	samp->frequency			= c5spd;
 	samp->sample_length		= samp_length;
 	samp->loop_start		= loop_start;
 	samp->loop_end			= loop_end;
-	
+
 	skip8( 8 ); // susloop start/end
 	data_address = read32();
 	samp->vibspeed = read8();
@@ -310,7 +310,7 @@ int Load_IT_SampleData( Sample* samp, u16 cwmt )
 
 	if( !samp->it_compression )
 	{
-	
+
 		for( x = 0; x < samp->sample_length; x++ )
 		{
 			if( samp->format & SAMPF_16BIT )
@@ -339,7 +339,7 @@ int Load_IT_SampleData( Sample* samp, u16 cwmt )
 				}
 				((u8*)samp->data)[x] = (u8)a;
 			}
-			
+
 		}
 	}
 	else
@@ -376,9 +376,9 @@ int Load_IT_Pattern( Pattern* patt )
 	u8 old_vol[MAX_CHANNELS];
 	u8 old_fx[MAX_CHANNELS];
 	u8 old_param[MAX_CHANNELS];
-	
+
 	memset( patt, 0, sizeof( Pattern ) );
-	
+
 	clength = read16();
 	patt->nrows = read16();
 	skip8(4);
@@ -390,38 +390,38 @@ int Load_IT_Pattern( Pattern* patt )
 		patt->data[x].note = 250; // special clears for vol&note
 		patt->data[x].vol = 255;
 	}
-	
-	
+
+
 	// DECOMPRESS IT PATTERN
-	
+
 	for( x = 0; x < patt->nrows; x++ )
 	{
 GetNextChannelMarker:
 		chanvar = read8();					// Read byte into channelvariable.
 		if( chanvar == 0 )					// if(channelvariable = 0) then end of row
-			continue;					
-		
+			continue;
+
 		chan = (chanvar-1) & 63;			// Channel = (channelvariable-1) & 63
 		if( chan >= MAX_CHANNELS )
 			return ERR_MANYCHANNELS;
-		
+
 		if( chanvar & 128 )					// if(channelvariable & 128) then read byte into maskvariable
 			old_maskvar[chan] = read8();
-		
+
 		maskvar = old_maskvar[chan];
-		
+
 		if( maskvar & 1 )					// if(maskvariable & 1), then read note. (byte value)
 		{
 			old_note[chan] = read8();
 			patt->data[x*MAX_CHANNELS+chan].note = old_note[chan];
 		}
-		
+
 		if( maskvar & 2 )					// if(maskvariable & 2), then read instrument (byte value)
 		{
 			old_inst[chan] = read8();
 			patt->data[x*MAX_CHANNELS+chan].inst = old_inst[chan];
 		}
-		
+
 		if( maskvar & 4 )					// if(maskvariable & 4), then read volume/panning (byte value)
 		{
 			old_vol[chan] = read8();
@@ -449,7 +449,7 @@ GetNextChannelMarker:
 		}
 		goto GetNextChannelMarker;
 	}
-	
+
 	return ERR_NONE;
 }
 
@@ -462,13 +462,13 @@ int Load_IT( MAS_Module* itm, bool verbose )
 
 	u16 cwt;
 	u16 cmwt;
-	
+
 	u32* parap_inst;
 	u32* parap_samp;
 	u32* parap_patt;
 
 	bool instr_mode;
-	
+
 	memset( itm, 0, sizeof( MAS_Module ) );
 
 	if( read32() != 'MPMI' )
@@ -527,18 +527,18 @@ int Load_IT( MAS_Module* itm, bool verbose )
 	}
 	for( x = 0; x < itm->order_count; x++ )
 		itm->orders[x] = read8();
-	
+
 	parap_inst = (u32*)malloc( itm->inst_count * sizeof( u32 ) );
 	parap_samp = (u32*)malloc( itm->samp_count * sizeof( u32 ) );
 	parap_patt = (u32*)malloc( itm->patt_count * sizeof( u32 ) );
-	
+
 	for( x = 0; x < itm->inst_count; x++ )
 		parap_inst[x] = read32();
 	for( x = 0; x < itm->samp_count; x++ )
 		parap_samp[x] = read32();
 	for( x = 0; x < itm->patt_count; x++ )
 		parap_patt[x] = read32();
-	
+
 	itm->samples = (Sample*)malloc( itm->samp_count * sizeof( Sample ) );
 	itm->patterns = (Pattern*)malloc( itm->patt_count * sizeof( Pattern ) );
 
@@ -555,7 +555,7 @@ int Load_IT( MAS_Module* itm, bool verbose )
 #endif
 			//printf( "INDEX	VOLUME	NNA	ENV	NAME\n" );
 		}
-		
+
 		// read instruments
 		for( x = 0; x < itm->inst_count; x++ )
 		{
@@ -581,7 +581,7 @@ int Load_IT( MAS_Module* itm, bool verbose )
 #endif
 		//printf( "INDEX	VOLUME	DVOLUME	LOOP	MID-C	NAME\n" );
 	}
-	
+
 	// read samples
 	for( x = 0; x < itm->samp_count; x++ )
 	{
@@ -655,7 +655,7 @@ int Load_IT( MAS_Module* itm, bool verbose )
 				}
 			}
 			Load_IT_Pattern( &itm->patterns[x] );
-			
+
 		}
 		else
 		{
@@ -663,8 +663,8 @@ int Load_IT( MAS_Module* itm, bool verbose )
 			//memset( &itm->patterns[x], 0, sizeof( Pattern ) );
 		}
 	}
-	
-	
+
+
 	if( verbose )
 	{
 		if( cc != 0 )
@@ -687,7 +687,7 @@ int Load_IT( MAS_Module* itm, bool verbose )
 	free( parap_inst );
 	free( parap_samp );
 	free( parap_patt );
-	
+
 	return ERR_NONE;
 }
 
@@ -716,19 +716,19 @@ int Load_IT_Sample_CMP( u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16 )
 {
 	u8*	c_buffer=NULL;
    	u16 block_length;		// length of compressed data block in samples
-	u16 block_position;		// position in block 
-	u8 bit_width;			// actual "bit width" 
-	u32 aux_value;			// value read from file to be processed 
-	s16 d1, d2;		// integrator buffers (d2 for it2.15) 
+	u16 block_position;		// position in block
+	u8 bit_width;			// actual "bit width"
+	u32 aux_value;			// value read from file to be processed
+	s16 d1, d2;		// integrator buffers (d2 for it2.15)
 	s8 d18, d28;
-	s8 v8;			// sample value 
+	s8 v8;			// sample value
 	s16 v16;		// sample value 16 bit
 	bool it215; // is this an it215 module?
 	u16 border;
 	u8 tmp_shift;
 	u32 bit_readpos=0;
 	int i;
-	
+
 	u32 nbits, dsize;
 
 	u8 *dest8_write = (u8 *)p_dest_buffer;
@@ -738,16 +738,16 @@ int Load_IT_Sample_CMP( u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16 )
 	dsize = bit16 ? 4 : 3;
 	for (i=0;i<samp_len;i++)
 		p_dest_buffer[i]=128;
-	
+
 
 
 	it215=(cmwt==0x215);
 
-	// now unpack data till the dest buffer is full 
+	// now unpack data till the dest buffer is full
 
 	while( samp_len )
 	{
-	// read a new block of compressed data and reset variables 
+	// read a new block of compressed data and reset variables
 		Load_IT_CompressedSampleBlock( &c_buffer );
 		bit_readpos=0;
 		if( bit16 )
@@ -755,86 +755,86 @@ int Load_IT_Sample_CMP( u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16 )
 		else
 			block_length = (samp_len < 0x8000) ? samp_len : 0x8000;
 		block_position = 0;
-		bit_width = nbits+1;		// start with width of 9 bits 
-		d1 = d2 = d18=d28=0;		// reset integrator buffers 
-		
+		bit_width = nbits+1;		// start with width of 9 bits
+		d1 = d2 = d18=d28=0;		// reset integrator buffers
 
-		// now uncompress the data block 
+
+		// now uncompress the data block
 		while ( block_position < block_length ) {
 
-			aux_value = readbits( c_buffer, bit_readpos, bit_width );			// read bits 
+			aux_value = readbits( c_buffer, bit_readpos, bit_width );			// read bits
 			bit_readpos+=bit_width;
-			
-			if ( bit_width < 7 ) { // method 1 (1-6 bits) 
+
+			if ( bit_width < 7 ) { // method 1 (1-6 bits)
 
 				if( bit16 )
 				{
-					if ( (signed)aux_value == (1 << (bit_width - 1)) ) { // check for "100..." 
+					if ( (signed)aux_value == (1 << (bit_width - 1)) ) { // check for "100..."
 
-						aux_value = readbits( c_buffer, bit_readpos, dsize )+1; //read_n_bits_from_IT_compressed_block(3) + 1; // yes -> read new width; 
+						aux_value = readbits( c_buffer, bit_readpos, dsize )+1; //read_n_bits_from_IT_compressed_block(3) + 1; // yes -> read new width;
 						bit_readpos += dsize;
 		    			bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-								// and expand it 
-		    				continue; // ... next value 
+								// and expand it
+		    				continue; // ... next value
 					}
 				}
 				else
 				{
-					if ( aux_value == ((u32)1 << ((u32)bit_width - 1)) ) { // check for "100..." 
+					if ( aux_value == ((u32)1 << ((u32)bit_width - 1)) ) { // check for "100..."
 
-						aux_value = readbits( c_buffer, bit_readpos, dsize )+1; //read_n_bits_from_IT_compressed_block(3) + 1; // yes -> read new width; 
+						aux_value = readbits( c_buffer, bit_readpos, dsize )+1; //read_n_bits_from_IT_compressed_block(3) + 1; // yes -> read new width;
 						bit_readpos += dsize;
 		    			bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-								// and expand it 
-		    				continue; // ... next value 
+								// and expand it
+		    				continue; // ... next value
 					}
 				}
 
-			} else if ( bit_width < nbits + 1 ) { // method 2 (7-8 bits) 
+			} else if ( bit_width < nbits + 1 ) { // method 2 (7-8 bits)
 
 				if( bit16 )
 				{
 					border = (0xFFFF >> ((nbits+1) - bit_width)) - (nbits/2);
-								// lower border for width chg 
+								// lower border for width chg
 
 					if ( (int)aux_value > (int)border && (int)aux_value <= ((int)border + nbits) ) {
 
-						aux_value -= border; // convert width to 1-8 
+						aux_value -= border; // convert width to 1-8
 						bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-								// and expand it 
-		    				continue; // ... next value 
-					}	
+								// and expand it
+		    				continue; // ... next value
+					}
 				}
 				else
 				{
 					border = (0xFF >> ((nbits+1) - bit_width)) - (nbits/2);
-								// lower border for width chg 
+								// lower border for width chg
 
 					if ( aux_value > border && aux_value <= (border + nbits) ) {
 
-						aux_value -= border; // convert width to 1-8 
+						aux_value -= border; // convert width to 1-8
 						bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-								// and expand it 
-		    				continue; // ... next value 
-					}	
+								// and expand it
+		    				continue; // ... next value
+					}
 				}
 
-			} else if ( bit_width == nbits+1 ) { // method 3 (9 bits) 
+			} else if ( bit_width == nbits+1 ) { // method 3 (9 bits)
 
-				if ( aux_value & (1<<nbits) ) {			// bit 8 set? 
+				if ( aux_value & (1<<nbits) ) {			// bit 8 set?
 
-					bit_width = (aux_value + 1) & 0xff;		// new width... 
-		    			continue;				// ... and next value 
+					bit_width = (aux_value + 1) & 0xff;		// new width...
+		    			continue;				// ... and next value
 				}
 
-			} else { // illegal width, abort 
+			} else { // illegal width, abort
 
 				if( c_buffer ) {
 					free( c_buffer ); c_buffer=NULL; }
 				return ERR_UNKNOWNSAMPLE;
 			}
 
-			// now expand value to signed byte 
+			// now expand value to signed byte
 			if ( bit_width < nbits ) {
 
 				tmp_shift = nbits - bit_width;
@@ -857,10 +857,10 @@ int Load_IT_Sample_CMP( u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16 )
 				else
 					v8 = (s8) aux_value;
 			}
-			
+
 			if( bit16 )
 			{
-				// integrate upon the sample values 
+				// integrate upon the sample values
 				d1 += v16;
 	    		d2 += d1;
 
@@ -869,10 +869,10 @@ int Load_IT_Sample_CMP( u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16 )
 			}
 			else
 			{
-				// integrate upon the sample values 
+				// integrate upon the sample values
 				d18 += v8;
 	    		d28 += d18;
-				
+
 				// ... and store it into the buffer
 				*(dest8_write)++ = (it215 ? (int)d28+128 : (int)d18+128);
 			}
@@ -880,11 +880,11 @@ int Load_IT_Sample_CMP( u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16 )
 
 		}
 
-		// now subtract block lenght from total length and go on 
+		// now subtract block lenght from total length and go on
 		if( c_buffer ) {
 			free( c_buffer ); c_buffer=NULL; }
 		samp_len -= block_length;
 	}
-	
+
 	return ERR_NONE;
 }

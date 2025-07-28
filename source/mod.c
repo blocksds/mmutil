@@ -101,7 +101,7 @@ int Load_MOD_Pattern( Pattern* patt, u8 nchannels, u8* inst_count )
 	{
 		patt->data[row].note = 250;
 	}
-	
+
 	for( row = 0; row < 64; row++ )
 	{
 		for( col = 0; col < nchannels; col++ )
@@ -116,7 +116,7 @@ int Load_MOD_Pattern( Pattern* patt, u8 nchannels, u8* inst_count )
 			inst = (data1&0xF0)+(data3>>4);		// aaaaDDDD     = sample number
 			effect = data3&0xF;					// eeee         = effect number
 			param = data4;						// FFFFFFFF     = effect parameters
-			
+
 			// fix parameter for certain MOD effects
 			switch( effect )
 			{
@@ -125,13 +125,13 @@ int Load_MOD_Pattern( Pattern* patt, u8 nchannels, u8* inst_count )
 				if( param & 0xF0 )	// clear Y if X
 					param &= 0xF0;
 			}
-			
+
 			p = &patt->data[row*MAX_CHANNELS+col];	// copy data to pattern entry
 			p->inst = inst;							// ...
 			CONV_XM_EFFECT( &effect, &param );		//  ...
 			p->fx = effect;							//   ...
 			p->param = param;						//    ...
-			
+
 			if( period != 0 )						// 0 = no note, otherwise calculate note value from the amiga period
 				p->note = (int)round(12.0*log( (856.0)/(double)period )/log(2)) + 37 + 11;
 			if( *inst_count < (inst + 1) )
@@ -159,7 +159,7 @@ int Load_MOD_Sample( Sample* samp, bool verbose, int index )
 	samp->sample_length = (read8()*256 + read8()) * 2;				// read in 2 bytes (word), store as SAMPLE_LENGTH
 	finetune = read8();												// read in 1 byte,         store as FINE_TUNE
 	if( finetune >= 8 ) finetune -= 16;
-	
+
 	samp->default_volume = read8();									// read in 1 byte,         store as VOLUME
 	samp->loop_start = (read8()*256 + read8()) * 2;					// read in 2 bytes (word), store as LOOP_START
 	samp->loop_end = samp->loop_start + (read8()*256+read8())*2;	// read in 2 bytes (word), store as LOOP_LENGTH
@@ -282,7 +282,7 @@ int Load_MOD( MAS_Module* mod, bool verbose )
 		printf( "\"%s\"\n", mod->title );
 		printf( "%i channels (%s)\n", mod_channels, sigs );
 	}
-	
+
 	for( x = 0; x < MAX_CHANNELS; x++ )
 	{
 		if( (x&3)!=1 && (x&3) != 2 )
@@ -291,7 +291,7 @@ int Load_MOD( MAS_Module* mod, bool verbose )
 			mod->channel_panning[x] = clamp_u8( 128 + (PANNING_SEP/2) );
 		mod->channel_volume[x] = 64;
 	}
-	
+
 	// set MOD settings
 	mod->freq_mode = 0;
 	mod->global_volume = 64;
@@ -308,7 +308,7 @@ int Load_MOD( MAS_Module* mod, bool verbose )
 	mod->stereo = true;
 	mod->xm_mode = true;
 	mod->old_mode=true;
-	
+
 	if( verbose )
 	{
 		printf( vstr_mod_div );
@@ -327,7 +327,7 @@ int Load_MOD( MAS_Module* mod, bool verbose )
 		Create_MOD_Instrument( &mod->instruments[x], (u8)x );
 		Load_MOD_Sample( &mod->samples[x], verbose, x );
 	}
-	
+
 	// read sequence
 	mod->order_count = read8();	// read a byte, store as SONG_LENGTH (this is the number of orders in a song)
 	mod->restart_pos = read8();	// read a byte, discard it (this is the UNUSED byte - used to be used in PT as the restart position, but not now since jump to pattern was introduced)
@@ -340,7 +340,7 @@ int Load_MOD( MAS_Module* mod, bool verbose )
 		if( mod->orders[x] >= npatterns )	// if this value was bigger than NUMBER_OF_PATTERNS then set it to that value.
 			npatterns=mod->orders[x]+1;
 	}
-	
+
 	read32();								// read 4 bytes, discard them (we are at position 1080 again, this is M.K. etc!)
 	mod->patt_count = npatterns;
 	mod->patterns = (Pattern*)malloc( mod->patt_count * sizeof( Pattern ) );	// allocate patterns
@@ -354,7 +354,7 @@ int Load_MOD( MAS_Module* mod, bool verbose )
 		printf( "Loading Patterns...\n" );
 		printf( vstr_mod_div );
 	}
-	
+
 	// Load Patterns
 	for( x = 0; x < mod->patt_count; x++ )
 	{

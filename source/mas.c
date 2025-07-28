@@ -62,7 +62,7 @@ void Write_Instrument_Envelope( Instrument_Envelope* env )
 			base = env->node_y[x];
 			if( x != env->node_count-1 )
 			{
-				
+
 				range = env->node_x[x+1] - env->node_x[x];
 				if( range > 511 ) range = 511;
 				if( range < 1 ) range = 1;
@@ -119,7 +119,7 @@ void Write_Instrument( Instrument* inst )
 			break;
 		}
 	}
-	
+
 	if( full_notemap )
 	{
 		// full notemap
@@ -133,7 +133,7 @@ void Write_Instrument( Instrument* inst )
 	}
 
 	write16( 0 );	// reserved space
-	
+
 	if( inst->env_flags & 1 )	// write volume envelope
 		Write_Instrument_Envelope( &inst->envelope_volume );
 	if( inst->env_flags & 2 )	// write panning envelope
@@ -144,7 +144,7 @@ void Write_Instrument( Instrument* inst )
 	if( full_notemap )
 	{
 		for( y = 0; y < 120; y++ )
-			write16( inst->notemap[y] );	
+			write16( inst->notemap[y] );
 	}
 }
 
@@ -196,7 +196,7 @@ void Write_SampleData( Sample* samp )
 		write16( (u16) ((samp->frequency * 1024 + (32768/2)) / 32768) );
 		write32( 0);
 	}
-	
+
 	// write sample data
 	if( samp->format & SAMPF_16BIT )
 	{
@@ -249,9 +249,9 @@ void Write_Sample( Sample* samp )
 	write8( samp->vibspeed );
 	write8( samp->global_volume );
 	write16( samp->vibrate );
-	
+
 	write16( samp->msl_index );
-	
+
 	if( samp->msl_index == 0xFFFF )
 		Write_SampleData(samp);
 }
@@ -269,29 +269,29 @@ void Write_Pattern( Pattern* patt, bool xm_vol )
 {
 	int row;
 	int col;
-	
+
 	u16 last_mask[MAX_CHANNELS];
 	u16 last_note[MAX_CHANNELS];
 	u16 last_inst[MAX_CHANNELS];
 	u16 last_vol[MAX_CHANNELS];
 	u16 last_fx[MAX_CHANNELS];
 	u16 last_param[MAX_CHANNELS];
-	
+
 	u8 chanvar;
 	u8 maskvar;
 
 	u8 emptyvol;
-	
+
 	PatternEntry* pe;
-	
+
 	patt->parapointer = file_tell_write()-MAS_OFFSET;
 	write8( (u8)(patt->nrows-1) );
-	
+
 	patt->cmarks[0] = true;
 	emptyvol = xm_vol ? 0 : 255;
-	
+
 	// using IT pattern compression
-	
+
 	for( row = 0; row < patt->nrows; row++ )
 	{
 		if( patt->cmarks[row] )
@@ -407,13 +407,13 @@ void Write_Pattern( Pattern* patt, bool xm_vol )
 		}
 		write8( 0 );
 	}
-	
+
 }
 
 void Mark_Pattern_Row( MAS_Module* mod, int order, int row )
 {
 	Pattern* p;
-	
+
 	if( row >= 256 )
 		return;
 	if( mod->orders[order] == 255 )
@@ -431,14 +431,14 @@ void Mark_Pattern_Row( MAS_Module* mod, int order, int row )
 
 void Mark_Patterns( MAS_Module* mod )
 {
-	
+
 	int o;
 	int p;
 	int row;
 	int col;
-	
+
 	PatternEntry* pe;
-	
+
 	for( o = 0; o < mod->order_count; o++ )
 	{
 		p = mod->orders[o];
@@ -488,7 +488,7 @@ int Write_MAS( MAS_Module* mod, bool verbose, bool msl_dep )
 	write8(	MAS_VERSION );
 	write8( BYTESMASHER );
 	write8( BYTESMASHER );
-	
+
 	MAS_OFFSET = file_tell_write();
 
 	write8( (u8)mod->order_count );
@@ -500,7 +500,7 @@ int Write_MAS( MAS_Module* mod, bool verbose, bool msl_dep )
 	write8( mod->initial_speed );
 	write8( mod->initial_tempo );
 	write8( mod->restart_pos );
-	
+
 /*	for( x = 0; x < mod->samp_count; x++ )
 	{
 		unique=true;
@@ -560,14 +560,14 @@ int Write_MAS( MAS_Module* mod, bool verbose, bool msl_dep )
 	for( x = 0; x < mod->inst_count; x++ )
 		Write_Instrument( &mod->instruments[x] );
 
-	
+
 
 	for( x = 0; x < mod->samp_count; x++ )
 		Write_Sample( &mod->samples[x] );
 
 	if( verbose )
 		printf("Instruments: %i bytes\n", file_get_byte_count() );
-	
+
 	Mark_Patterns( mod );
 	for( x = 0; x < mod->patt_count; x++ )
 	{
@@ -595,7 +595,7 @@ int Write_MAS( MAS_Module* mod, bool verbose, bool msl_dep )
 	}
 	for( x = 0; x < mod->patt_count; x++ )
 		write32( mod->patterns[x].parapointer );
-	return MAS_FILESIZE;	
+	return MAS_FILESIZE;
 }
 
 void Delete_Module( MAS_Module* mod )

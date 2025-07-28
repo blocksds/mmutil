@@ -25,7 +25,7 @@
 u32 readbits(u8* buffer, unsigned int pos, unsigned int size) {
 	u32 result=0;
 	u32 i;
-	
+
 	for(i=0;i<size;i++) {
 		u32 byte_pos;
 		u32 bit_pos;
@@ -53,7 +53,7 @@ int get_ext( char* filename )
 			break;
 	}
 	//a = tolower( filename[strl-1] ) | (tolower( filename[strl-1] )<<8) | tolower( filename[strl-2]<<16 ) | tolower( filename[strl-3]<<24 );
-	
+
 	switch( a )
 	{
 	case 'mod':
