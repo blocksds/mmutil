@@ -38,8 +38,6 @@ int target_system;
 bool ignore_sflags;
 int PANNING_SEP;
 
-int number_of_inputs;
-
 #define USAGE "\n\
 ************************\n\
 * Maxmod Utility "PACKAGE_VERSION" *\n\
@@ -82,418 +80,414 @@ Usage:\n\
  www.maxmod.org\n\
 "
 
-void print_usage( void )
+void print_usage(void)
 {
-	printf( USAGE );
+    printf(USAGE);
 }
 
-void print_error( int err )
+void print_error(int err)
 {
-	switch( err )
-	{
-	case ERR_INVALID_MODULE:
-		printf( "Invalid module!\n" );
-		break;
-	case ERR_MANYARGS:
-		printf( "Too many arguments!\n" );
-		break;
-	case ERR_NOINPUT:
-		printf( "No input file!\n" );
-		break;
-	case ERR_NOWRITE:
-		printf( "Unable to write file!\n" );
-		break;
-	case ERR_BADINPUT:
-		printf( "Cannot parse input filename!\n" );
-		break;
-	}
+    switch (err)
+    {
+        case ERR_INVALID_MODULE:
+            printf("Invalid module!\n");
+            break;
+        case ERR_MANYARGS:
+            printf("Too many arguments!\n");
+            break;
+        case ERR_NOINPUT:
+            printf("No input file!\n");
+            break;
+        case ERR_NOWRITE:
+            printf("Unable to write file!\n");
+            break;
+        case ERR_BADINPUT:
+            printf("Cannot parse input filename!\n");
+            break;
+    }
 }
 
-int GetYesNo( void )
+int GetYesNo(void)
 {
-	char c = 0;
-	c = tolower(getchar());
-	while( getchar() != '\n' );
-	while( c != 'y' && c != 'n' )
-	{
-		printf( "Was that a yes? " );
-		c = tolower(getchar());
-		while( getchar() != '\n' );
-	}
-	return c == 'y' ? 1 : 0;
+    char c = tolower(getchar());
+
+    while (getchar() != '\n');
+
+    while (c != 'y' && c != 'n')
+    {
+        printf("Was that a yes? ");
+        c = tolower(getchar());
+        while (getchar() != '\n');
+    }
+    return c == 'y' ? 1 : 0;
 }
 
-//------------------------------------------------------------------------------------------------
 int main(int argc, char* argv[])
-//------------------------------------------------------------------------------------------------
 {
-	char* str_input=NULL;
-	char* str_output=NULL;
-	char* str_header=NULL;
+    char *str_input = NULL;
+    char *str_output = NULL;
+    char *str_header = NULL;
 
-	MAS_Module mod = { 0 };
-	Sample samp = { 0 };
+    MAS_Module mod = { 0 };
+    Sample samp = { 0 };
 
-	int strl;
+    bool g_flag = false;
+    bool v_flag = false;
+    bool m_flag = false;
+    bool z_flag = false;
 
-	int input_type=0;
+    int output_size;
 
-	int strp;
-	int strpi;
+    ignore_sflags = false;
 
-	bool g_flag=false;
-	bool v_flag=false;
-	bool m_flag=false;
-	bool z_flag=false;
-	int a;
+    PANNING_SEP = 128;
 
-	int output_size;
+    //------------------------------------------------------------------------
+    // parse arguments
+    //------------------------------------------------------------------------
 
-	ignore_sflags=false;
+    int number_of_inputs = 0;
 
-	number_of_inputs=0;
+    for (int a = 1; a < argc; a++)
+    {
+        if (argv[a][0] == '-')
+        {
+            if (argv[a][1] == 'b')
+                g_flag = true;
+            else if (argv[a][1] == 'v')
+                v_flag = true;
+            else if (argv[a][1] == 'd')
+                target_system = SYSTEM_NDS;
+            else if (argv[a][1] == 'i')
+                ignore_sflags = true;
+            else if (argv[a][1] == 'p')
+                PANNING_SEP = ((argv[a][2] - '0') * 256) / 9;
+            else if (argv[a][1] == 'o')
+                str_output = argv[a]+2;
+            else if (argv[a][1] == 'h')
+                str_header = argv[a]+2;
+            else if (argv[a][1] == 'm')
+                m_flag = true;
+            else if (argv[a][1] == 'z')
+                z_flag = true;
+        }
+        else if (!str_input)
+        {
+            str_input = argv[a];
+            number_of_inputs = 1;
+        }
+        else
+        {
+            number_of_inputs++;
+        }
+    }
 
-	PANNING_SEP = 128;
+    if (number_of_inputs == 0)
+    {
+        print_usage();
+        return 0;
+    }
 
-	//------------------------------------------------------------------------
-	// parse arguments
-	//------------------------------------------------------------------------
+    if (z_flag)
+    {
+        kiwi_start();
+        file_open_read(str_input);
+        Sample s;
 
-	for( a = 1; a < argc; a++ )
-	{
-		if( argv[a][0] == '-' )
-		{
-			if( argv[a][1] == 'b' )
-				g_flag = true;
-			else if( argv[a][1] == 'v' )
-				v_flag = true;
-			else if( argv[a][1] == 'd' )
-				target_system = SYSTEM_NDS;
-			else if( argv[a][1] == 'i' )
-				ignore_sflags = true;
-			else if( argv[a][1] == 'p' )
-				PANNING_SEP = ((argv[a][2] - '0') * 256)/9;
-			else if( argv[a][1] == 'o' )
-				str_output = argv[a]+2;
-			else if( argv[a][1] == 'h' )
-				str_header = argv[a]+2;
-			else if( argv[a][1] == 'm' )
-				m_flag = true;
-			else if( argv[a][1] == 'z' )
-				z_flag = true;
-		}
-		else if( !str_input )
-		{
-			str_input = argv[a];
-			number_of_inputs=1;
-		}
-		else
-		{
-			number_of_inputs++;
-		}
-	}
+        Load_WAV(&s, v_flag, false);
 
-	if( number_of_inputs==0 )
-	{
-		print_usage();
-		return 0;
-	}
+        s.name[0] = '%';
+        s.name[1] = 'c';
+        s.name[2] = 0;
 
-	if( z_flag )
-	{
-		kiwi_start();
-		file_open_read( str_input );
-		Sample s;
+        FixSample(&s);
 
-		Load_WAV( &s, v_flag, false );
+        file_close_read();
+        file_open_write(str_output);
 
-		s.name[0] = '%';
-		s.name[1] = 'c';
-		s.name[2] = 0;
+        for (int i = 0; i < s.sample_length; i++)
+            write8(((u8 *)s.data)[i]);
 
-		FixSample( &s );
+        file_close_write();
+        printf("okay\n");
+        return 0;
+    }
 
-		file_close_read();
-		file_open_write( str_output );
+    if (m_flag & g_flag)
+    {
+        printf("-m and -g cannot be combined.\n");
+        return -1;
+    }
 
-		int i;
-		for( i = 0; i < s.sample_length; i++ )
-			write8( ((u8*)s.data)[i] );
+    if (m_flag && number_of_inputs != 1)
+    {
+        printf("-m only supports one input.\n");
+        return -1;
+    }
 
-		file_close_write();
-		printf("okay\n");
-		return 0;
-	}
+    //---------------------------------------------------------------------------
+    // m/g generate output target if not given
+    //---------------------------------------------------------------------------
 
-	if( m_flag & g_flag )
-	{
-		printf("-m and -g cannot be combined.\n");
-		return -1;
-	}
+    if (m_flag || g_flag)
+    {
+        if (!str_output)
+        {
+            if (number_of_inputs == 1)
+            {
+                if (strlen(str_input) < 4)
+                {
+                    print_error(ERR_BADINPUT);
+                    return -1;
+                }
 
-	if( m_flag && number_of_inputs != 1 )
-	{
-		printf( "-m only supports one input.\n" );
-		return -1;
-	}
+                int strp = strlen(str_input);
+                str_output = malloc(strp + 2);
+                strcpy(str_output, str_input);
+                strp=strlen(str_output)-1;
 
-	//---------------------------------------------------------------------------
-	// m/g generate output target if not given
-	//---------------------------------------------------------------------------
+                int strpi;
+                for (strpi = strp; str_output[strpi] != '.' && strpi != 0; strpi--)
+                    ;
 
-	if( m_flag || g_flag)
-	{
-		if( !str_output )
-		{
-			if( number_of_inputs == 1 )
-			{
-				if( strlen(str_input) < 4 )
-				{
-					print_error( ERR_BADINPUT );
-					return -1;
-				}
-				strp = strlen(str_input);
-				str_output = (char*)malloc( strp+2 );
-				strcpy(str_output, str_input);
-				strp=strlen(str_output)-1;
+                if (strpi == 0)
+                {
+                    print_error(ERR_BADINPUT);
+                    return -1;
+                }
 
-				for( strpi=strp; str_output[strpi] != '.' && strpi != 0; strpi-- );
-				if( strpi == 0 )
-				{
-					print_error( ERR_BADINPUT );
-					return -1;
-				}
+                str_output[strpi++] = '.';
+                if (!g_flag)
+                {
+                    str_output[strpi++] = 'm';
+                    str_output[strpi++] = 'a';
+                    str_output[strpi++] = 's';
+                    str_output[strpi++] = 0;
+                }
+                else
+                {
+                    if (target_system == SYSTEM_GBA)
+                    {
+                        str_output[strpi++] = 'g';
+                        str_output[strpi++] = 'b';
+                        str_output[strpi++] = 'a';
+                        str_output[strpi++] = 0;
+                    }
+                    else if (target_system == SYSTEM_NDS)
+                    {
+                        str_output[strpi++] = 'n';
+                        str_output[strpi++] = 'd';
+                        str_output[strpi++] = 's';
+                        str_output[strpi++] = 0;
+                    }
+                    else
+                    {
+                        // error!
+                    }
+                }
+                str_output[strpi++] = 0;
+            }
+            else
+            {
+                printf("No output file! (-o option)\n");
+                return -1;
+            }
+        }
+    }
 
-				str_output[strpi++] = '.';
-				if( !g_flag )
-				{
-					str_output[strpi++] = 'm';
-					str_output[strpi++] = 'a';
-					str_output[strpi++] = 's';
-					str_output[strpi++] = 0;
-				}
-				else
-				{
-					if( target_system == SYSTEM_GBA )
-					{
-						str_output[strpi++] = 'g';
-						str_output[strpi++] = 'b';
-						str_output[strpi++] = 'a';
-						str_output[strpi++] = 0;
-					}
-					else if( target_system == SYSTEM_NDS )
-					{
-						str_output[strpi++] = 'n';
-						str_output[strpi++] = 'd';
-						str_output[strpi++] = 's';
-						str_output[strpi++] = 0;
-					}
-					else
-					{
-						// error!
-					}
-				}
-				str_output[strpi++] = 0;
-			}
-			else
-			{
-				printf( "No output file! (-o option)\n" );
-				return -1;
-			}
-		}
-	}
+    // catch filename too small
+    int strl = strlen(str_input);
+    if (strl < 4)
+    {
+        print_error(ERR_BADINPUT);
+        return -1;
+    }
 
-	// catch filename too small
-	strl=strlen(str_input);
-	if( strl < 4 )
-	{
-		print_error( ERR_BADINPUT );
-		return -1;
-	}
+    if (m_flag)
+    {
+        if (file_open_read(str_input))
+        {
+            printf("Cannot open %s for reading!\n", str_input);
+            return -1;
+        }
 
-	if( m_flag )
-	{
-		if( file_open_read( str_input ) )
-		{
-			printf( "Cannot open %s for reading!\n", str_input );
-			return -1;
-		}
-		input_type = get_ext( str_input );
+        int input_type = get_ext(str_input);
 
-		switch( input_type )
-		{
-		//------------------------------------------------------
-		case INPUT_TYPE_MOD:
-		//------------------------------------------------------
-			if( Load_MOD( &mod, v_flag ) )
-			{
-				print_error( ERR_INVALID_MODULE );
-				file_close_read();
-				return -1;
-			}
-			break;
-		//------------------------------------------------------
-		case INPUT_TYPE_S3M:
-		//------------------------------------------------------
-			if( Load_S3M( &mod, v_flag ) )
-			{
-				print_error( ERR_INVALID_MODULE );
-				file_close_read();
-				return -1;
-			}
-			break;
-		//------------------------------------------------------
-		case INPUT_TYPE_XM:
-		//------------------------------------------------------
-			if( Load_XM( &mod, v_flag ) )
-			{
-				print_error( ERR_INVALID_MODULE );
-				file_close_read();
-				return -1;
-			}
-			break;
-		//------------------------------------------------------
-		case INPUT_TYPE_IT:
-		//------------------------------------------------------
-			if( Load_IT( &mod, v_flag ) )
-			{
-				// ERROR!
-				print_error( ERR_INVALID_MODULE );
-				file_close_read();
-				return -1;
-			}
-			break;
-		//------------------------------------------------------
-		case INPUT_TYPE_WAV:
-		//------------------------------------------------------
-			if( Load_WAV( &samp, v_flag, false ) )
-			{
-				print_error( ERR_INVALID_MODULE );
-				file_close_read();
-				return -1;
-			}
+        switch (input_type)
+        {
+            case INPUT_TYPE_MOD:
+            {
+                if (Load_MOD(&mod, v_flag))
+                {
+                    print_error(ERR_INVALID_MODULE);
+                    file_close_read();
+                    return -1;
+                }
+                break;
+            }
 
-			// Force saving the sample even if it isn't referenced anywhere
-			samp.msl_index = 0xFFFF;
+            case INPUT_TYPE_S3M:
+            {
+                if (Load_S3M(&mod, v_flag))
+                {
+                    print_error(ERR_INVALID_MODULE);
+                    file_close_read();
+                    return -1;
+                }
+                break;
+            }
 
-			mod.samp_count = 1;
-			mod.samples = malloc(sizeof(Sample));
-			memcpy(mod.samples, &samp, sizeof(Sample));
+            case INPUT_TYPE_XM:
+            {
+                if (Load_XM(&mod, v_flag))
+                {
+                    print_error(ERR_INVALID_MODULE);
+                    file_close_read();
+                    return -1;
+                }
+                break;
+            }
 
-			break;
-		}
+            case INPUT_TYPE_IT:
+            {
+                if (Load_IT(&mod, v_flag))
+                {
+                    // ERROR!
+                    print_error(ERR_INVALID_MODULE);
+                    file_close_read();
+                    return -1;
+                }
+                break;
+            }
 
-		file_close_read();
+            case INPUT_TYPE_WAV:
+            {
+                if (Load_WAV(&samp, v_flag, false))
+                {
+                    print_error(ERR_INVALID_MODULE);
+                    file_close_read();
+                    return -1;
+                }
 
-		if( file_exists( str_output ) )
-		{
-			printf( "Output file exists! Overwrite? (y/n) " );
-			if( !GetYesNo() )
-			{
-				printf( "Operation Canceled!\n" );
-				return -1;
-			}
+                // Force saving the sample even if it isn't referenced anywhere
+                samp.msl_index = 0xFFFF;
 
-		}
+                mod.samp_count = 1;
+                mod.samples = malloc(sizeof(Sample));
+                memcpy(mod.samples, &samp, sizeof(Sample));
 
-		if( file_open_write( str_output ) )
-		{
-			print_error( ERR_NOWRITE );
-			return -1;
-		}
+                break;
+            }
+        }
 
-		printf( "Writing .mas............\n" );
+        file_close_read();
 
-		// output MAS
-		output_size = Write_MAS( &mod, v_flag, false );
+        if (file_exists(str_output))
+        {
+            printf("Output file exists! Overwrite? (y/n) ");
+            if (!GetYesNo())
+            {
+                printf("Operation Canceled!\n");
+                return -1;
+            }
+        }
 
+        if (file_open_write(str_output))
+        {
+            print_error(ERR_NOWRITE);
+            return -1;
+        }
 
-		file_close_write();
+        printf("Writing .mas............\n");
 
-		Delete_Module( &mod );
+        // output MAS
+        output_size = Write_MAS(&mod, v_flag, false);
 
-		if( v_flag )
-		{
+        file_close_write();
+
+        Delete_Module(&mod);
+
+        if (v_flag)
+        {
 #ifdef SUPER_ASCII
-			printf( "Success! \x02 \n" );
+            printf("Success! \x02\n");
 #else
-			printf( "Success! :) \n" );
+            printf("Success! :)\n");
 #endif
-		}
-	}
-	else if( g_flag )
-	{
-		int i;
+        }
+    }
+    else if (g_flag)
+    {
+        MSL_Create(argv, argc, "tempSH308GK.bin", 0, v_flag);
 
-		MSL_Create( argv, argc, "tempSH308GK.bin", 0, v_flag );
+        if (file_exists(str_output))
+        {
+            printf("Output file exists! Overwrite? (y/n) ");
+            if (!GetYesNo())
+            {
+                printf("Operation Canceled!\n");
+                return -1;
+            }
 
-		if( file_exists( str_output ) )
-		{
-			printf( "Output file exists! Overwrite? (y/n) " );
-			if( !GetYesNo() )
-			{
-				printf( "Operation Canceled!\n" );
-				return -1;
-			}
+        }
 
-		}
+        if (file_open_write(str_output))
+        {
+            print_error(ERR_NOWRITE);
+            return -1;
+        }
 
-		if( file_open_write( str_output ) )
-		{
-			print_error( ERR_NOWRITE );
-			return -1;
-		}
+        if (target_system == SYSTEM_GBA)
+        {
+            if (v_flag)
+                printf("Making GBA ROM.......\n");
+            Write_GBA();
+        }
+        else if (target_system == SYSTEM_NDS)
+        {
+            if (v_flag)
+                printf("Making NDS ROM.......\n");
+            Write_NDS();
+        }
 
-		if( target_system == SYSTEM_GBA )
-		{
-			if( v_flag )
-				printf( "Making GBA ROM.......\n" );
-			Write_GBA();
-		}
-		else if( target_system == SYSTEM_NDS )
-		{
-			if( v_flag )
-				printf( "Making NDS ROM.......\n" );
-			Write_NDS();
-		}
+        output_size = file_size("tempSH308GK.bin");
+        file_open_read("tempSH308GK.bin");
 
-		output_size = file_size( "tempSH308GK.bin" );
-		file_open_read( "tempSH308GK.bin" );
+        if (target_system == SYSTEM_GBA)
+        {
+            write32((output_size < 248832) ? 1 : 0);
+        }
 
-		if( target_system == SYSTEM_GBA )
-		{
-			write32( (output_size < 248832) ? 1 : 0 );
-		}
+        for (int i = 0; i < output_size; i++)
+        {
+            write8(read8());
+        }
 
-		for( i = 0; i < output_size; i++ )
-		{
-			write8( read8() );
-		}
+        file_close_read();
+        file_close_write();
 
-		file_close_read();
-		file_close_write();
+        file_delete("tempSH308GK.bin");
 
-		file_delete( "tempSH308GK.bin" );
+        if (g_flag && target_system == SYSTEM_NDS)
+            Validate_NDS(str_output, output_size);
 
-		if( g_flag && target_system == SYSTEM_NDS )
-			Validate_NDS( str_output, output_size );
+        if (v_flag)
+        {
+            printf("Success! :D\n");
 
-		if( v_flag )
-		{
-			printf( "Success! :D\n" );
+            if (g_flag && target_system == SYSTEM_GBA)
+            {
+                if (output_size < 262144)
+                {
+                    printf("ROM can be multibooted!!\n");
+                }
+            }
+        }
+    }
+    else
+    {
+        MSL_Create(argv, argc, str_output, str_header, v_flag);
+    }
 
-			if( g_flag && target_system == SYSTEM_GBA )
-			{
-				if( output_size < 262144 )
-				{
-					printf("ROM can be multibooted!!\n" );
-				}
-			}
-		}
-	}
-	else
-	{
-		MSL_Create( argv, argc, str_output, str_header, v_flag );
-	}
-	return 0;
+    return 0;
 }
