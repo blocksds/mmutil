@@ -10,6 +10,8 @@
  *                                                                          *
  ****************************************************************************/
 
+#include <stdlib.h>
+
 #include "defs.h"
 #include "files.h"
 
@@ -107,7 +109,11 @@ int file_tell_size( void )
 u8 read8( void )
 {
 	u8 a;
-	fread( &a, 1, 1, fin );
+	if (fread( &a, 1, 1, fin ) != 1)
+	{
+		printf("Unable to read input file\n");
+		exit(EXIT_FAILURE);
+	}
 	return a;
 }
 
@@ -139,7 +145,11 @@ u32 read32( void )
 u8 read8f( FILE* p_fin )
 {
 	u8 a;
-	fread( &a, 1, 1, p_fin );
+	if (fread( &a, 1, 1, p_fin ) != 1)
+	{
+		printf("Unable to read file\n");
+		exit(EXIT_FAILURE);
+	}
 	return a;
 }
 
