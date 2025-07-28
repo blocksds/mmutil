@@ -15,22 +15,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-u32 time_start;
-
-void kiwi_start( void )
+void kiwi_start(void)
 {
-	int r;
-	time_start = time(NULL);
-	srand( time_start );
-	r=0;
+    srand(time(NULL));
 
-	rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();rand();
-
-	switch( r )
-	{
-	case 0:
-		printf( "Your lucky number today is %i!\n", rand() );
-		break;
-	}
-
+    printf("Your lucky number today is %i!\n", rand());
 }
