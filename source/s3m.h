@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef S3M_H
-#define S3M_H
+#ifndef S3M_H__
+#define S3M_H__
 
-int Load_S3M( MAS_Module* mod, bool verbose );
+int Load_S3M(MAS_Module *mod, bool verbose);
 
-#endif
+#endif // S3M_H__

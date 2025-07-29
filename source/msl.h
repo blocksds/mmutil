@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef MSL_H
-#define MSL_H
+#ifndef MSL_H__
+#define MSL_H__
 
-int MSL_Create( char* argv[], int argc, char* output, char* header, bool verbose );
+int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose);
 
-#endif
+#endif // MSL_H__

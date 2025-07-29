@@ -10,10 +10,10 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef NDS_H
-#define NDS_H
+#ifndef NDS_H__
+#define NDS_H__
 
-void Write_NDS( void );
-void Validate_NDS( char* filename, int output_size );
+void Write_NDS(void);
+void Validate_NDS(char *filename, int output_size);
 
-#endif
+#endif // NDS_H__
