@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef MOD_H
-#define MOD_H
+#ifndef MOD_H__
+#define MOD_H__
 
-int Load_MOD( MAS_Module* mod, bool verbose );
+int Load_MOD(MAS_Module *mod, bool verbose);
 
-#endif
+#endif // MOD_H__
