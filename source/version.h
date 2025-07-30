@@ -10,4 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
+#ifndef VERSION_H__
+#define VERSION_H__
+
 #define MAS_VERSION 0x18
+
+#endif // VERSION_H__

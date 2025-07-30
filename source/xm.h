@@ -10,10 +10,10 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef XM_H
-#define XM_H
+#ifndef XM_H__
+#define XM_H__
 
-int Load_XM( MAS_Module* mod, bool verbose );
-void CONV_XM_EFFECT( u8* fx, u8* param );
+int Load_XM(MAS_Module *mod, bool verbose);
+void CONV_XM_EFFECT(u8 *fx, u8 *param);
 
-#endif
+#endif // XM_H__

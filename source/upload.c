@@ -12,8 +12,8 @@
 
 // xboo uploader...................
 
-void Upload_GBA( char* filename )
+void Upload_GBA(char *filename)
 {
-	(void)filename;
-	// todo.........
+    (void)filename;
+    // todo.........
 }

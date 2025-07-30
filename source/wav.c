@@ -14,6 +14,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 #include "defs.h"
 #include "files.h"
 #include "mas.h"
@@ -21,211 +22,212 @@
 #include "simple.h"
 #include "samplefix.h"
 
-int Load_WAV( Sample* samp, bool verbose, bool fix )
+int Load_WAV(Sample *samp, bool verbose, bool fix)
 {
-	unsigned int file_size;
-	unsigned int bit_depth = 8;
-	unsigned int hasformat = 0;
-	unsigned int hasdata = 0;
-	unsigned int chunk_code;
-	unsigned int chunk_size;
-	unsigned int num_channels = 0;
-	unsigned int smpl_chunk_pos = 0;
+    if (verbose)
+        printf("Loading WAV file...\n");
 
-	if( verbose )
-		printf( "Loading WAV file...\n" );
+    // initialize data
+    memset(samp, 0, sizeof(Sample));
 
-	// initialize data
-	memset( samp, 0, sizeof( Sample ) );
+    unsigned int file_size = file_tell_size();
 
-	file_size = file_tell_size();
+    read32(); // "RIFF"
+    read32(); // filesize-8
+    read32(); // "WAVE"
 
-	read32();						// "RIFF"
-	read32();						// filesize-8
-	read32();						// "WAVE"
+    unsigned int bit_depth = 8;
+    unsigned int hasformat = 0;
+    unsigned int hasdata = 0;
+    unsigned int num_channels = 0;
+    unsigned int smpl_chunk_pos = 0;
 
-	while( 1 )
-	{
-		// break on end of file
-		if( file_tell_read() >= file_size ) break;
+    while (1)
+    {
+        // break on end of file
+        if (file_tell_read() >= file_size)
+            break;
 
-		// read chunk code and length
-		chunk_code = read32();
-		chunk_size = read32();
+        // read chunk code and length
+        unsigned int chunk_code = read32();
+        unsigned int chunk_size = read32();
 
-		// parse chunk code
-		switch( chunk_code )
-		{
-		//---------------------------------------------------------------------
-		case ' tmf':	// format chunk
-		//---------------------------------------------------------------------
+        // parse chunk code
+        switch (chunk_code)
+        {
+            case ' tmf': // format chunk
+            {
+                // check compression code (1 = PCM)
+                if (read16() != 1)
+                {
+                    if (verbose)
+                        printf("Unsupported WAV format.\n");
 
-			// check compression code (1 = PCM)
-			if( read16() != 1 )
-			{
-				if( verbose )
-					printf( "Unsupported WAV format.\n" );
-				return LOADWAV_UNKNOWN_COMP;
-			}
+                    return LOADWAV_UNKNOWN_COMP;
+                }
 
-			// read # of channels
-			num_channels = read16();
+                // read # of channels
+                num_channels = read16();
 
-			// read sampling frequency
-			samp->frequency = read32();
+                // read sampling frequency
+                samp->frequency = read32();
 
-			// skip average something, wBlockAlign
-			read32();
-			read16();
+                // skip average something, wBlockAlign
+                read32();
+                read16();
 
-			// get bit depth, catch unsupported values
-			bit_depth = read16();
-			if( bit_depth != 8 && bit_depth != 16 )
-			{
-				if( verbose )
-					printf( "Unsupported bit-depth.\n" );
-				return LOADWAV_UNSUPPORTED_BD;
-			}
+                // get bit depth, catch unsupported values
+                bit_depth = read16();
+                if (bit_depth != 8 && bit_depth != 16)
+                {
+                    if (verbose)
+                        printf("Unsupported bit-depth.\n");
+                    return LOADWAV_UNSUPPORTED_BD;
+                }
 
-			if( bit_depth == 16 )
-				samp->format |= SAMPF_16BIT;
+                if (bit_depth == 16)
+                    samp->format |= SAMPF_16BIT;
 
-			// print verbose data
-			if( verbose )
-			{
-				printf( "Sample Rate...%i\n", samp->frequency );
-				printf( "Bit Depth.....%i-bit\n", bit_depth );
-			}
+                // print verbose data
+                if (verbose)
+                {
+                    printf("Sample Rate...%i\n", samp->frequency);
+                    printf("Bit Depth.....%i-bit\n", bit_depth);
+                }
 
-			// skip the rest of the chunk (if any)
-			if( (chunk_size - 0x10) > 0 )
-				skip8( (chunk_size - 0x10) );
+                // skip the rest of the chunk (if any)
+                if ((chunk_size - 0x10) > 0)
+                    skip8((chunk_size - 0x10));
 
-			hasformat = 1;
-			break;
+                hasformat = 1;
+                break;
+            }
 
-		//---------------------------------------------------------------------
-		case 'atad':	// data chunk
-		//---------------------------------------------------------------------
-		{
-			int t, c, dat;
+            case 'atad': // data chunk
+            {
+                int t, c, dat;
 
-			if( !hasformat )
-			{
-				return LOADWAV_CORRUPT;
-			}
+                if (!hasformat)
+                {
+                    return LOADWAV_CORRUPT;
+                }
 
-			if( verbose )
-				printf( "Loading Sample Data...\n" );
+                if (verbose)
+                    printf("Loading Sample Data...\n");
 
-			// clip chunk size against end of file (for some borked wavs...)
-			{
-				int br = file_size - file_tell_read();
-				chunk_size = chunk_size > br ? br : chunk_size;
-			}
+                // clip chunk size against end of file (for some borked wavs...)
+                {
+                    int br = file_size - file_tell_read();
+                    chunk_size = chunk_size > br ? br : chunk_size;
+                }
 
-			samp->sample_length = chunk_size / (bit_depth/8) / num_channels;
-			samp->data = malloc( chunk_size );
+                samp->sample_length = chunk_size / (bit_depth / 8) / num_channels;
+                samp->data = malloc(chunk_size);
 
-			// read sample data
-			for( t = 0; t < samp->sample_length; t++ )
-			{
-				dat = 0;
+                // read sample data
+                for (t = 0; t < samp->sample_length; t++)
+                {
+                    dat = 0;
 
-				// for multi-channel samples, get average value
-				for( c = 0; c < num_channels; c++ )
-				{
-					dat += bit_depth == 8 ? ((int)read8()) - 128 : ((short)read16());
-				}
-				dat /= num_channels;
+                    // for multi-channel samples, get average value
+                    for (c = 0; c < num_channels; c++)
+                    {
+                        dat += bit_depth == 8 ? ((int)read8()) - 128 : ((short)read16());
+                    }
+                    dat /= num_channels;
 
-				if( bit_depth == 8 )
-				{
-					((u8*)samp->data)[t] = dat + 128;
-				}
-				else
-				{
-					((u16*)samp->data)[t] = dat + 32768;
-				}
-			}
+                    if (bit_depth == 8)
+                    {
+                        ((u8*)samp->data)[t] = dat + 128;
+                    }
+                    else
+                    {
+                        ((u16*)samp->data)[t] = dat + 32768;
+                    }
+                }
 
-			hasdata = 1;
+                hasdata = 1;
 
-			break;
-		}
-		//------------------------------------------------------------------------------
-		case 'lpms':	// sampler chunk
-		//------------------------------------------------------------------------------
-		{
-			smpl_chunk_pos = file_tell_read();
-			skip8( chunk_size );
-			break;
-		}
-		default:
-			skip8( chunk_size );
-		}
-	}
+                break;
+            }
 
-	// sampler chunk is processed last because it depends on the sample length being known.
-	if ( smpl_chunk_pos )
-	{
-		file_seek_read( smpl_chunk_pos, SEEK_SET );
+            case 'lpms': // sampler chunk
+            {
+                smpl_chunk_pos = file_tell_read();
+                skip8(chunk_size);
+                break;
+            }
 
-		skip8( 	4		// manufacturer
-				+4		// product
-				+4		// sample period
-				+4		// midi unity note
-				+4		// midi pitch fraction
-				+4		// smpte format
-				+4		// smpte offset
-				);
+            default:
+            {
+                skip8(chunk_size);
+            }
+        }
+    }
 
-		int num_sample_loops = read32();
+    // sampler chunk is processed last because it depends on the sample length being known.
+    if (smpl_chunk_pos)
+    {
+        file_seek_read(smpl_chunk_pos, SEEK_SET);
 
-		read32();		// sample data
+        skip8(4   // manufacturer
+              + 4 // product
+              + 4 // sample period
+              + 4 // midi unity note
+              + 4 // midi pitch fraction
+              + 4 // smpte format
+              + 4 // smpte offset
+        );
 
-		// check for sample looping data
-		if( num_sample_loops )
-		{
-			read32();	// cue point ID
-			int loop_type = read32();
+        int num_sample_loops = read32();
 
-			if( loop_type < 2 )
-			{
-				// sample    | internal
-				// 0=forward | 1
-				// 1=bidi    | 2
-				samp->loop_type = loop_type + 1;
-				samp->loop_start = read32();
-				samp->loop_end = read32();
+        read32(); // sample data
 
-				// clip loop start against sample length
-				if( samp->loop_end > samp->sample_length ) {
-					samp->loop_end = samp->sample_length;
-				}
+        // check for sample looping data
+        if (num_sample_loops)
+        {
+            read32(); // cue point ID
+            int loop_type = read32();
 
-				// disable tiny loop
-				// catch invalid loop
-				if( (samp->loop_start > samp->sample_length) ||
-					(samp->loop_end - samp->loop_start < 16) ) {
-					samp->loop_type = 0;
-					samp->loop_start = 0;
-					samp->loop_end = 0;
-				}
+            if (loop_type < 2)
+            {
+                // sample    | internal
+                // 0=forward | 1
+                // 1=bidi    | 2
+                samp->loop_type = loop_type + 1;
+                samp->loop_start = read32();
+                samp->loop_end = read32();
 
-				// ignore fractional
-				// ignore play count
-			}
-		}
-	}
+                // clip loop start against sample length
+                if (samp->loop_end > samp->sample_length)
+                {
+                    samp->loop_end = samp->sample_length;
+                }
 
-	if( hasformat && hasdata )
-	{
-		if( fix ) FixSample( samp );
-		return LOADWAV_OK;
-	}
-	else
-	{
-		return LOADWAV_CORRUPT;
-	}
+                // disable tiny loop
+                // catch invalid loop
+                if ((samp->loop_start > samp->sample_length) ||
+                    (samp->loop_end - samp->loop_start < 16))
+                {
+                    samp->loop_type = 0;
+                    samp->loop_start = 0;
+                    samp->loop_end = 0;
+                }
+
+                // ignore fractional
+                // ignore play count
+            }
+        }
+    }
+
+    if (hasformat && hasdata)
+    {
+        if (fix)
+            FixSample(samp);
+        return LOADWAV_OK;
+    }
+    else
+    {
+        return LOADWAV_CORRUPT;
+    }
 }

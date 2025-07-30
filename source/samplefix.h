@@ -10,9 +10,9 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef SAMPLEFIX_H
-#define SAMPLEFIX_H
+#ifndef SAMPLEFIX_H__
+#define SAMPLEFIX_H__
 
-void FixSample( Sample* samp );
+void FixSample(Sample *samp);
 
-#endif
+#endif // SAMPLEFIX_H__

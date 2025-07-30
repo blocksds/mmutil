@@ -10,7 +10,12 @@
  *                                                                          *
  ****************************************************************************/
 
-#define SYSTEM_GBA	0
-#define SYSTEM_NDS	1
+#ifndef SYSTEMS_H__
+#define SYSTEMS_H__
+
+#define SYSTEM_GBA  0
+#define SYSTEM_NDS  1
 
 extern int target_system;
+
+#endif // SYSTEMS_H__
