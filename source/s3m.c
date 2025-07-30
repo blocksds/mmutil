@@ -288,7 +288,9 @@ int Load_S3M(MAS_Module* mod, bool verbose)
     mod->old_mode = true;
 
     u16 s3m_flags = read16();
+    (void)s3m_flags;
     u16 cwt = read16();
+    (void)cwt;
     u16 ffi = read16();
     if (read32() != 'MRCS') // "SCRM" mark
         return ERR_INVALID_MODULE;
