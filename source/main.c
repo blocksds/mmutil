@@ -75,7 +75,7 @@ Usage:\n\
 |-----------------------------------------------------------------|\n\
 | Create test NDS ROM from three inputs                           |\n\
 |                                                                 |\n\
-| mmutil -d -b input1.xm input2.s3m testsound.wav                 |\n\
+| mmutil -d -b input1.xm input2.s3m testsound.wav -oTEST.nds      |\n\
 `-----------------------------------------------------------------'\n\
  www.maxmod.org\n\
 "

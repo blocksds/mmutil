@@ -37,5 +37,5 @@ Option       | Description
 - Create test NDS ROM from three inputs.
 
   ```
-  mmutil -d -b input1.xm input2.s3m testsound.wav
+  mmutil -d -b input1.xm input2.s3m testsound.wav -oTEST.nds
   ```
