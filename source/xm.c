@@ -124,9 +124,9 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
         u8 panbits = read8();
         inst->env_flags = 0;
         if (volbits & 1)
-            inst->env_flags |= 1|8;
+            inst->env_flags |= MAS_INSTR_FLAG_VOL_ENV_EXISTS | MAS_INSTR_FLAG_VOL_ENV_ENABLED;
         if (panbits & 1)
-            inst->env_flags |= 2;
+            inst->env_flags |= MAS_INSTR_FLAG_PAN_ENV_EXISTS;
 
         if (!(volbits & 2))
             inst->envelope_volume.sus_start=inst->envelope_volume.sus_end = 255;

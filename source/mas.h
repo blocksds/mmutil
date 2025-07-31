@@ -69,6 +69,13 @@ typedef struct tInstrument
 }
 Instrument;
 
+#define MAS_INSTR_FLAG_VOL_ENV_EXISTS   (1 << 0) // Volume envelope exists
+#define MAS_INSTR_FLAG_PAN_ENV_EXISTS   (1 << 1) // Panning envelope exists
+#define MAS_INSTR_FLAG_PITCH_ENV_EXISTS (1 << 2) // Pitch envelope exists
+#define MAS_INSTR_FLAG_VOL_ENV_ENABLED  (1 << 3) // Volume envelope enabled
+// In XM, bits 0 and 3 are always set together. In IT, they can be set
+// independently. Other formats don't use them.
+
 typedef struct tSample
 {
     u32     parapointer;

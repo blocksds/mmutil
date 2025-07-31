@@ -30,11 +30,11 @@ static int CalcInstrumentSize(Instrument *instr)
 {
     int size = 12;
 
-    if (instr->env_flags & 1) // volume envelope exists
+    if (instr->env_flags & MAS_INSTR_FLAG_VOL_ENV_EXISTS) // Volume envelope exists
         size += CalcEnvelopeSize(&instr->envelope_volume);
-    if (instr->env_flags & 2) // panning envelope exists
+    if (instr->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS) // Panning envelope exists
         size += CalcEnvelopeSize(&instr->envelope_pan);
-    if (instr->env_flags & 4) // pitch envelope exists
+    if (instr->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) // Pitch envelope exists
         size += CalcEnvelopeSize(&instr->envelope_pitch);
 
     return size;
@@ -129,11 +129,11 @@ void Write_Instrument(Instrument *inst)
 
     write16(0); // reserved space
 
-    if (inst->env_flags & 1) // write volume envelope
+    if (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_EXISTS) // Write volume envelope
         Write_Instrument_Envelope(&inst->envelope_volume);
-    if (inst->env_flags & 2) // write panning envelope
+    if (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS) // Write panning envelope
         Write_Instrument_Envelope(&inst->envelope_pan);
-    if (inst->env_flags & 4) // write pitch envelope
+    if (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) // Write pitch envelope
         Write_Instrument_Envelope(&inst->envelope_pitch);
 
     if (full_notemap)

@@ -181,14 +181,18 @@ int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
     inst->env_flags = 0;
 
     Load_IT_Envelope(&inst->envelope_volume, false);
-    inst->env_flags |= inst->envelope_volume.env_valid ? 1 : 0;
-    inst->env_flags |= inst->envelope_volume.env_enabled ? 8 : 0;
+    if (inst->envelope_volume.env_valid)
+        inst->env_flags |= MAS_INSTR_FLAG_VOL_ENV_EXISTS;
+    if (inst->envelope_volume.env_enabled)
+        inst->env_flags |= MAS_INSTR_FLAG_VOL_ENV_ENABLED;
 
     Load_IT_Envelope(&inst->envelope_pan, true);
-    inst->env_flags |= inst->envelope_pan.env_enabled ? 2 : 0;
+    if (inst->envelope_pan.env_enabled)
+        inst->env_flags |= MAS_INSTR_FLAG_PAN_ENV_EXISTS;
 
     Load_IT_Envelope(&inst->envelope_pitch, true);
-    inst->env_flags |= inst->envelope_pitch.env_enabled ? 4 : 0;
+    if (inst->envelope_pitch.env_enabled)
+        inst->env_flags |= MAS_INSTR_FLAG_PITCH_ENV_EXISTS;
 
     if (verbose)
     {
@@ -197,9 +201,9 @@ int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
                (inst->global_volume * 100) / 128,
                ((inst->nna == 0) ? "CUT" : ((inst->nna == 1) ? "CON" :
                    ((inst->nna == 2) ? "OFF" : ((inst->nna == 3) ? "FAD" : "???")))),
-               (inst->env_flags & 8) ? "V" : "-",
-               (inst->env_flags & 2) ? "P" : "-",
-               (inst->env_flags & 4) ? "T" : "-",
+               (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED) ? "V" : "-",
+               (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS) ? "P" : "-",
+               (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) ? "T" : "-",
                inst->name);
 
     /*
@@ -220,17 +224,19 @@ int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
                 break;
         }
 
-        if ((!(inst->env_flags & 2)) && (!(inst->env_flags & 4)) && (!(inst->env_flags & 8)))
+        if ((!(inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)) &&
+            (!(inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)) &&
+            (!(inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)))
         {
             printf("-    ");
         }
         else
         {
-            if (inst->env_flags & 8)
+            if (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)
                 printf("V");
-            if (inst->env_flags & 2)
+            if (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)
                 printf("P");
-            if (inst->env_flags & 4)
+            if (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)
                 printf("S");
             printf("    ");
         }
