@@ -31,8 +31,6 @@
 #include "wav.h"
 #include "samplefix.h"
 
-extern void kiwi_start(void);
-
 int target_system;
 
 bool ignore_sflags;
@@ -190,7 +188,6 @@ int main(int argc, char* argv[])
 
     if (z_flag)
     {
-        kiwi_start();
         file_open_read(str_input);
         Sample s;
 
