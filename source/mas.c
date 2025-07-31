@@ -94,17 +94,6 @@ void Write_Instrument(Instrument *inst)
     align32();
     inst->parapointer = file_tell_write() - MAS_OFFSET;
 
-    /*
-    write8(inst->global_volume);
-    write8((u8)inst->fadeout);
-    write8(inst->random_volume);
-    write8(inst->nna);
-    write8(inst->dct);
-    write8(inst->dca);
-    write8(inst->env_flags);
-    write8(inst->setpan);
-    */
-
     write8(inst->global_volume);
     write8((u8)inst->fadeout);
     write8(inst->random_volume);
