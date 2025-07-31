@@ -89,14 +89,17 @@ u32 calc_samplen_ex2(Sample *s)
         return s->loop_end;
 }
 
+#define MM_SREPEAT_FORWARD      1 // Forward loop
+#define MM_SREPEAT_OFF          2 // No loop
+
 u32 calc_samplooplen(Sample *s)
 {
-    if (s->loop_type == 1)
+    if (s->loop_type == MM_SREPEAT_FORWARD)
     {
         u32 a = s->loop_end - s->loop_start;
         return a;
     }
-    else if (s->loop_type == 2)
+    else if (s->loop_type == MM_SREPEAT_OFF)
     {
         u32 a = (s->loop_end - s->loop_start) * 2;
         return a;
@@ -109,11 +112,11 @@ u32 calc_samplooplen(Sample *s)
 
 u32 calc_samplen(Sample *s)
 {
-    if (s->loop_type == 1)
+    if (s->loop_type == MM_SREPEAT_FORWARD)
     {
         return s->loop_end;
     }
-    else if (s->loop_type == 2)
+    else if (s->loop_type == MM_SREPEAT_OFF)
     {
         return (s->loop_end - s->loop_start) + s->loop_end;
     }
@@ -123,27 +126,32 @@ u32 calc_samplen(Sample *s)
     }
 }
 
+#define MM_SFORMAT_8BIT         0 // 8 bit
+#define MM_SFORMAT_16BIT        1 // 16 bit
+#define MM_SFORMAT_ADPCM        2 // ADPCM (invalid)
+#define MM_SFORMAT_ERROR        3 // Invalid
+
 u8 sample_dsformat(Sample *samp)
 {
     if (samp->format & SAMPF_COMP)
     {
-        return 2;
+        return MM_SFORMAT_ADPCM;
     }
     else
     {
         if (samp->format & SAMPF_SIGNED)
         {
             if (samp->format & SAMPF_16BIT)
-                return 1;
+                return MM_SFORMAT_16BIT;
             else
-                return 0;
+                return MM_SFORMAT_8BIT;
         }
         else
         {
             if (!(samp->format & SAMPF_16BIT))
-                return 3;
+                return MM_SFORMAT_ERROR;
             else
-                return 3; // error
+                return MM_SFORMAT_ERROR; // error
         }
     }
 }
@@ -151,9 +159,9 @@ u8 sample_dsformat(Sample *samp)
 u8 sample_dsreptype(Sample *samp)
 {
     if (samp->loop_type)
-        return 1;
+        return MM_SREPEAT_FORWARD;
     else
-        return 2;
+        return MM_SREPEAT_OFF;
 }
 
 int clamp_s8(int value)
