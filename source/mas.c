@@ -92,7 +92,7 @@ void Write_Instrument_Envelope(Instrument_Envelope *env)
 void Write_Instrument(Instrument *inst)
 {
     align32();
-    inst->parapointer = file_tell_write()-MAS_OFFSET;
+    inst->parapointer = file_tell_write() - MAS_OFFSET;
 
     /*
     write8(inst->global_volume);

@@ -129,14 +129,14 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
             inst->env_flags |= 2;
 
         if (!(volbits & 2))
-            inst->envelope_volume.sus_start=inst->envelope_volume.sus_end=255;
+            inst->envelope_volume.sus_start=inst->envelope_volume.sus_end = 255;
         if (!(panbits & 2))
-            inst->envelope_pan.sus_start=inst->envelope_pan.sus_end=255;
+            inst->envelope_pan.sus_start=inst->envelope_pan.sus_end = 255;
 
         if (!(volbits & 4))
-            inst->envelope_volume.loop_start=inst->envelope_volume.loop_end=255;
+            inst->envelope_volume.loop_start=inst->envelope_volume.loop_end = 255;
         if (!(panbits & 4))
-            inst->envelope_pan.loop_start=inst->envelope_pan.loop_end=255;
+            inst->envelope_pan.loop_start=inst->envelope_pan.loop_end = 255;
 
         u8 vibtype = read8();
         u8 vibsweep = 32768 / (read8() + 1);
