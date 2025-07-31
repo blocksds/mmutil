@@ -18,6 +18,7 @@ Option       | Description
 `-i`         | Ignore sample flags.
 `-v`         | Enable verbose output.
 `-p`         | Set initial panning separation for MOD/S3M.
+`-z`         | Export raw WAV data (8-bit format).
 
 ## Examples
 

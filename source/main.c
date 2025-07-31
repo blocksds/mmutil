@@ -57,6 +57,7 @@ Usage:\n\
 | -i         | Ignore sample flags.                               |\n\
 | -v         | Enable verbose output.                             |\n\
 | -p         | Set initial panning separation for MOD/S3M.        |\n\
+| -z         | Export raw WAV data (8-bit format)                 |\n\
 `-----------------------------------------------------------------'\n\
 \n\
 .-----------------------------------------------------------------.\n\
