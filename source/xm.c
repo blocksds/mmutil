@@ -548,7 +548,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
     {
         for (u32 col = 0; col < nchannels; col++)
         {
-            u8 e = row * MAX_CHANNELS + col;
+            u32 e = row * MAX_CHANNELS + col;
             u8 b = read8();
 
             if (b & 128) // packed
