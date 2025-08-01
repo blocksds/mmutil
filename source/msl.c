@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include "errors.h"
 #include "defs.h"
@@ -42,8 +43,8 @@ u16 MSL_NSONGS;
 
 char str_msl[256];
 
-#define TMP_SAMP "sampJ328G54AU3.tmp"
-#define TMP_SONG "songDJ34957FAI.tmp"
+static char TMP_SAMP[] = "mm_samp_tmp.XXXXXXX";
+static char TMP_SONG[] = "mm_song_tmp.XXXXXXX";
 
 void MSL_PrintDefinition(char *filename, u16 id, char *prefix);
 
@@ -338,6 +339,38 @@ void MSL_LoadFile(char *filename, bool verbose)
     file_close_read();
 }
 
+int MSL_CreateTemporaryFiles(bool verbose)
+{
+    int fd_samp = mkstemp(TMP_SAMP);
+    if (fd_samp == -1)
+    {
+        printf("Can't generate temporary file for samples\n");
+        perror("mkstemp");
+        return ERR_NOWRITE;
+    }
+    close(fd_samp);
+
+    int fd_song = mkstemp(TMP_SONG);
+    if (fd_song == -1)
+    {
+        printf("Can't generate temporary file for songs\n");
+        perror("mkstemp");
+        return ERR_NOWRITE;
+    }
+    close(fd_song);
+
+    // Make sure that the files are deleted when the program ends even if it
+    // ends through a call to exit().
+    atexit(MSL_Erase);
+
+    if (verbose)
+    {
+        printf("Temporary files: %s and %s\n", TMP_SAMP, TMP_SONG);
+    }
+
+    return ERR_NONE;
+}
+
 int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose)
 {
     MSL_Erase();
@@ -355,10 +388,9 @@ int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose)
         }
     }
 
-    file_open_write(TMP_SAMP);
-    file_close_write();
-    file_open_write(TMP_SONG);
-    file_close_write();
+    int ret = MSL_CreateTemporaryFiles(verbose);
+    if (ret != ERR_NONE)
+        return ret;
 
     for (int x = 1; x < argc; x++)
     {
@@ -383,7 +415,5 @@ int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose)
         F_HEADER = NULL;
     }
 
-    file_delete(TMP_SAMP);
-    file_delete(TMP_SONG);
     return ERR_NONE;
 }
