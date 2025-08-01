@@ -89,9 +89,6 @@ u32 calc_samplen_ex2(Sample *s)
         return s->loop_end;
 }
 
-#define MM_SREPEAT_FORWARD      1 // Forward loop
-#define MM_SREPEAT_OFF          2 // No loop
-
 u32 calc_samplooplen(Sample *s)
 {
     if (s->loop_type == MM_SREPEAT_FORWARD)
@@ -125,11 +122,6 @@ u32 calc_samplen(Sample *s)
         return s->sample_length;
     }
 }
-
-#define MM_SFORMAT_8BIT         0 // 8 bit
-#define MM_SFORMAT_16BIT        1 // 16 bit
-#define MM_SFORMAT_ADPCM        2 // ADPCM (invalid)
-#define MM_SFORMAT_ERROR        3 // Invalid
 
 u8 sample_dsformat(Sample *samp)
 {

@@ -13,10 +13,8 @@
 #ifndef MAS_H__
 #define MAS_H__
 
-//#define SAMPLE_FORMAT_U8      3
-//#define SAMPLE_FORMAT_S8      0
-//#define SAMPLE_FORMAT_S16     1
-//#define SAMPLE_FORMAT_ADPCM   2
+// Flags used to determine the characteristics of samples in an input module
+// file. Not all combinations are supported in a MAS sample.
 
 #define SAMPF_16BIT         0x001
 #define SAMPF_SIGNED        0x002
@@ -27,6 +25,20 @@
 #define SAMP_FORMAT_S8      (SAMPF_SIGNED)
 #define SAMP_FORMAT_S16     (SAMPF_16BIT | SAMPF_SIGNED)
 #define SAMP_FORMAT_ADPCM   (SAMPF_COMP)
+
+// MAS sample loop types
+
+#define MM_SREPEAT_FORWARD      1 // Forward loop
+#define MM_SREPEAT_OFF          2 // No loop
+
+// MAS sample formats
+
+#define MM_SFORMAT_8BIT         0 // Signed 8 bit
+#define MM_SFORMAT_16BIT        1 // Signed 16 bit
+#define MM_SFORMAT_ADPCM        2 // ADPCM (Invalid)
+#define MM_SFORMAT_ERROR        3 // Invalid
+
+// Flags to specify the type of MAS file
 
 #define MAS_TYPE_SONG       0
 #define MAS_TYPE_SAMPLE_GBA 1
