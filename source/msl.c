@@ -348,6 +348,11 @@ int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose)
     if (header)
     {
         F_HEADER = fopen(header, "wb");
+        if (F_HEADER == NULL)
+        {
+            printf("Can't open output header file: %s\n", header);
+            return ERR_NOWRITE;
+        }
     }
 
     file_open_write(TMP_SAMP);

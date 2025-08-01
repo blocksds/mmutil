@@ -34,7 +34,10 @@ int file_size(char *filename)
 {
     FILE *f = fopen(filename, "rb");
     if (!f)
-        return 0;
+    {
+        printf("Can't check size of file: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
 
     fseek(f, 0, SEEK_END);
     int a = ftell(f);
@@ -46,7 +49,10 @@ int file_open_read(char *filename)
 {
     fin = fopen(filename, "rb");
     if (!fin)
-        return FILE_OPEN_ERROR;
+    {
+        printf("Can't open file for reading: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
 
     return FILE_OPEN_OKAY;
 }
@@ -55,7 +61,10 @@ int file_open_write(char *filename)
 {
     fout = fopen(filename, "wb");
     if (!fout)
-        return FILE_OPEN_ERROR;
+    {
+        printf("Can't open file for writing: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
 
     return FILE_OPEN_OKAY;
 }
@@ -64,7 +73,10 @@ int file_open_write_end(char *filename)
 {
     fout = fopen(filename, "r+b");
     if (!fout)
-        return FILE_OPEN_ERROR;
+    {
+        printf("Can't open file for appending: %s\n", filename);
+        exit(EXIT_FAILURE);
+    }
 
     fseek(fout, 0, SEEK_END);
     return FILE_OPEN_OKAY;

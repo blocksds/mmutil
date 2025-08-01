@@ -187,6 +187,12 @@ int main(int argc, char* argv[])
         return 0;
     }
 
+    if (str_output == NULL)
+    {
+        printf("No output file specified with -o\n");
+        return -1;
+    }
+
     if (z_flag)
     {
         file_open_read(str_input);
