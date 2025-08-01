@@ -527,7 +527,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
     u16 clength = read16();
 
     if (verbose)
-        printf("- %i rows, %.2f KB\n", patt->nrows, (float)(clength)/1000);
+        printf("- %i rows, %.2f KB\n", patt->nrows, (float)(clength) / 1000);
 
     for (u32 row = 0; row < patt->nrows * MAX_CHANNELS; row++)
     {
@@ -646,7 +646,7 @@ int Load_XM(MAS_Module *mod, bool verbose)
 
     if (verbose)
     {
-        printf( vstr_xm_div );
+        printf(vstr_xm_div);
         printf("Loading XM, \"%s\"\n", mod->title);
     }
 
