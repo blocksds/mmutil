@@ -162,9 +162,9 @@ int main(int argc, char* argv[])
             else if (argv[a][1] == 'p')
                 PANNING_SEP = ((argv[a][2] - '0') * 256) / 9;
             else if (argv[a][1] == 'o')
-                str_output = argv[a]+2;
+                str_output = argv[a] + 2;
             else if (argv[a][1] == 'h')
-                str_header = argv[a]+2;
+                str_header = argv[a] + 2;
             else if (argv[a][1] == 'm')
                 m_flag = true;
             else if (argv[a][1] == 'z')

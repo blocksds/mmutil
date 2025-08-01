@@ -290,7 +290,7 @@ void MSL_PrintDefinition(char* filename, u16 id, char* prefix)
     }
 }
 
-void MSL_LoadFile(char* filename, bool verbose)
+void MSL_LoadFile(char *filename, bool verbose)
 {
     Sample wav;
     MAS_Module mod;
@@ -302,7 +302,7 @@ void MSL_LoadFile(char* filename, bool verbose)
     }
 
     int f_ext = get_ext(filename);
-    switch(f_ext)
+    switch (f_ext)
     {
         case INPUT_TYPE_MOD:
             Load_MOD(&mod, verbose);
@@ -338,22 +338,17 @@ void MSL_LoadFile(char* filename, bool verbose)
     file_close_read();
 }
 
-int MSL_Create(char* argv[], int argc, char* output, char* header, bool verbose)
+int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose)
 {
-//    int str_w = 0;
-//    u8 pmode = 0;
-//    bool comment = false;
-
     MSL_Erase();
+
     str_msl[0] = 0;
+
     F_HEADER = NULL;
     if (header)
     {
         F_HEADER = fopen(header, "wb");
     }
-
-//    if (!F_HEADER)
-//        return -1;    // needs header file!
 
     file_open_write(TMP_SAMP);
     file_close_write();
@@ -364,7 +359,7 @@ int MSL_Create(char* argv[], int argc, char* output, char* header, bool verbose)
     {
         if (argv[x][0] == '-')
         {
-
+            // Skip anything that isn't an input file
         }
         else
         {
