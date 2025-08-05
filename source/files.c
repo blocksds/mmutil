@@ -10,6 +10,7 @@
  *                                                                          *
  ****************************************************************************/
 
+#include <stdbool.h>
 #include <stdlib.h>
 
 #include "defs.h"
@@ -19,6 +20,9 @@ static FILE *fin;
 static FILE *fout;
 
 static int file_byte_count;
+
+// Only report read errors once per file
+static bool read_error_reported = false;
 
 bool file_exists(char *filename)
 {
@@ -54,6 +58,9 @@ int file_open_read(char *filename)
         exit(EXIT_FAILURE);
     }
 
+    read_error_reported = false;
+    printf("File opened for reading: %s\n", filename);
+
     return FILE_OPEN_OKAY;
 }
 
@@ -65,6 +72,8 @@ int file_open_write(char *filename)
         printf("Can't open file for writing: %s\n", filename);
         exit(EXIT_FAILURE);
     }
+
+    printf("File opened for writing: %s\n", filename);
 
     return FILE_OPEN_OKAY;
 }
@@ -79,6 +88,11 @@ int file_open_write_end(char *filename)
     }
 
     fseek(fout, 0, SEEK_END);
+
+    // This is too verbose to be enabled. Temporary files are opened in append
+    // mode many times, so this ends up being printed on the terminal a lot.
+    //printf("File opened for appending: %s\n", filename);
+
     return FILE_OPEN_OKAY;
 }
 
@@ -121,13 +135,22 @@ int file_tell_size(void)
     return size;
 }
 
+// The following functions are used to read from music files that may have small
+// format issues. Some games depend on those broken files, so let's just print
+// an error message (and return 0 instead of an undefined value) to warn the
+// developers.
+
 u8 read8(void)
 {
     u8 a;
     if (fread(&a, 1, 1, fin) != 1)
     {
-        printf("Unable to read input file\n");
-        exit(EXIT_FAILURE);
+        if (!read_error_reported)
+        {
+            read_error_reported = true;
+            printf("ERROR: Can't read input file\n");
+        }
+        return 0;
     }
     return a;
 }
@@ -156,6 +179,10 @@ u32 read32(void)
     a |= ((u32)read16()) << 16;
     return a;
 }
+
+// The following functions are currently used to generate MSL files, so the
+// files are expected to be created properly, and we can crash on any error we
+// find.
 
 u8 read8f(FILE *p_fin)
 {
