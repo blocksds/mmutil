@@ -519,6 +519,9 @@ int Write_MAS(MAS_Module* mod, bool verbose, bool msl_dep)
     int z;
     for (z = 0; z < mod->order_count; z++)
     {
+        // Check that the pattern order isn't bigger than the number of patterns
+        // present in the module. Value 254 is considered invalid and Maxmod
+        // will skip that pattern order if found.
         if (mod->orders[z] < 254)
         {
             if (mod->orders[z] < mod->patt_count)
@@ -531,6 +534,7 @@ int Write_MAS(MAS_Module* mod, bool verbose, bool msl_dep)
             write8(mod->orders[z]);
         }
     }
+    // When Maxmod finds a 255 it considers it the end of the song.
     for ( ; z < 200; z++)
         write8(255);
 
