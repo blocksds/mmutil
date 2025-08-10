@@ -249,14 +249,17 @@ void Write_Sample(Sample *samp)
         Write_SampleData(samp);
 }
 
-#define MF_START        1
-#define MF_DVOL         2
-#define MF_HASVCMD      4
-#define MF_HASFX        8
-#define MF_NEWINSTR     16  // New instrument
+#define COMPR_FLAG_NOTE     (1 << 0)
+#define COMPR_FLAG_INSTR    (1 << 1)
+#define COMPR_FLAG_VOLC     (1 << 2)
+#define COMPR_FLAG_EFFC     (1 << 3)
 
-#define MF_NOTEOFF      64  // LOCKED
-#define MF_NOTECUT      128 // LOCKED
+// The following definitions are shifted by 4 bits with respect to Maxmod
+// because Maxmod shifts them right by 4 bits.
+#define MF_START            (1 << 4)
+#define MF_DVOL             (2 << 4)
+#define MF_HASVCMD          (4 << 4)
+#define MF_HASFX            (8 << 4)
 
 void Write_Pattern(Pattern* patt, bool xm_vol)
 {
@@ -267,7 +270,7 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
     u16 last_fx[MAX_CHANNELS];
     u16 last_param[MAX_CHANNELS];
 
-    patt->parapointer = file_tell_write()-MAS_OFFSET;
+    patt->parapointer = file_tell_write() - MAS_OFFSET;
     write8((u8)(patt->nrows - 1));
 
     patt->cmarks[0] = true;
@@ -301,25 +304,25 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
                 u8 chanvar = col + 1;
 
                 if (pe->note != 250)
-                    maskvar |= MF_START | MF_NEWINSTR;
+                    maskvar |= COMPR_FLAG_NOTE | MF_START;
 
                 if (pe->inst != 0)
-                    maskvar |= MF_DVOL | 32;
+                    maskvar |= COMPR_FLAG_INSTR | MF_DVOL;
 
                 if (pe->note > 250) // noteoff/cut disabled start+reset
-                    maskvar &= ~(MF_NEWINSTR | 32);
+                    maskvar &= ~(MF_START | MF_DVOL);
 
                 if (pe->vol != emptyvol)
-                    maskvar |= MF_HASFX | MF_NOTEOFF;
+                    maskvar |= COMPR_FLAG_EFFC | MF_HASVCMD;
 
                 if (pe->fx != 0 || pe->param != 0)
-                    maskvar |= MF_HASFX | MF_NOTECUT;
+                    maskvar |= COMPR_FLAG_EFFC | MF_HASFX;
 
-                if (maskvar & MF_START)
+                if (maskvar & COMPR_FLAG_NOTE)
                 {
                     if (pe->note == last_note[col])
                     {
-                        maskvar &= ~MF_START;
+                        maskvar &= ~COMPR_FLAG_NOTE;
                     }
                     else
                     {
@@ -331,11 +334,11 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
                     }
                 }
 
-                if (maskvar & MF_DVOL)
+                if (maskvar & COMPR_FLAG_INSTR)
                 {
                     if (pe->inst == last_inst[col])
                     {
-                        maskvar &= ~MF_DVOL;
+                        maskvar &= ~COMPR_FLAG_INSTR;
                     }
                     else
                     {
@@ -343,11 +346,11 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
                     }
                 }
 
-                if (maskvar & MF_HASVCMD)
+                if (maskvar & COMPR_FLAG_VOLC)
                 {
                     if (pe->vol == last_vol[col])
                     {
-                        maskvar &= ~MF_HASVCMD;
+                        maskvar &= ~COMPR_FLAG_VOLC;
                     }
                     else
                     {
@@ -355,11 +358,11 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
                     }
                 }
 
-                if (maskvar & MF_HASFX)
+                if (maskvar & COMPR_FLAG_EFFC)
                 {
                     if ((pe->fx == last_fx[col]) && (pe->param == last_param[col]))
                     {
-                        maskvar &= ~MF_HASFX;
+                        maskvar &= ~COMPR_FLAG_EFFC;
                     }
                     else
                     {
@@ -370,20 +373,22 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
 
                 if (maskvar != last_mask[col])
                 {
-                    chanvar |= MF_NOTECUT;
+                    // Bit 7 is set to specify that we're defining a new maskvar
+                    chanvar |= 1 << 7;
                     last_mask[col] = maskvar;
                 }
 
                 write8(chanvar);
-                if (chanvar & MF_NOTECUT)
+                if (chanvar & (1 << 7))
                     write8(maskvar);
-                if (maskvar & MF_START)
+
+                if (maskvar & COMPR_FLAG_NOTE)
                     write8(pe->note);
-                if (maskvar & MF_DVOL)
+                if (maskvar & COMPR_FLAG_INSTR)
                     write8(pe->inst);
-                if (maskvar & MF_HASVCMD)
+                if (maskvar & COMPR_FLAG_VOLC)
                     write8(pe->vol);
-                if (maskvar & MF_HASFX)
+                if (maskvar & COMPR_FLAG_EFFC)
                 {
                     write8(pe->fx);
                     write8(pe->param);
