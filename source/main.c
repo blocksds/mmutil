@@ -37,9 +37,9 @@ bool ignore_sflags;
 int PANNING_SEP;
 
 #define USAGE "\n\
-************************\n\
-* Maxmod Utility "PACKAGE_VERSION" *\n\
-************************\n\
+******************************************\n\
+* Maxmod Utility " VERSION_ID " *\n\
+******************************************\n\
 \n\
 Usage:\n\
   mmutil [options] input files ...\n\
