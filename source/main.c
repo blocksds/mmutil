@@ -36,52 +36,51 @@ int target_system;
 bool ignore_sflags;
 int PANNING_SEP;
 
-#define USAGE "\n\
-******************************************\n\
-* Maxmod Utility " VERSION_ID " *\n\
-******************************************\n\
-\n\
-Usage:\n\
-  mmutil [options] input files ...\n\
-\n\
- Input may be MOD, S3M, XM, IT, and/or WAV\n\
-\n\
-.------------.----------------------------------------------------.\n\
-| Option     | Description                                        |\n\
-|------------|----------------------------------------------------|\n\
-| -o<output> | Set output file.                                   |\n\
-| -h<header> | Set header output file.                            |\n\
-| -m         | Output MAS file rather than soundbank.             |\n\
-| -d         | Use for NDS projects.                              |\n\
-| -b         | Create test ROM. (use -d for .nds, otherwise .gba) |\n\
-| -i         | Ignore sample flags.                               |\n\
-| -v         | Enable verbose output.                             |\n\
-| -p         | Set initial panning separation for MOD/S3M.        |\n\
-| -z         | Export raw WAV data (8-bit format)                 |\n\
-`-----------------------------------------------------------------'\n\
-\n\
-.-----------------------------------------------------------------.\n\
-| Examples:                                                       |\n\
-|-----------------------------------------------------------------|\n\
-| Create DS soundbank file (soundbank.bin) from input1.xm         |\n\
-| and input2.it Also output header file (soundbank.h)             |\n\
-|                                                                 |\n\
-| mmutil -d input1.xm input2.it -osoundbank.bin -hsoundbank.h     |\n\
-|-----------------------------------------------------------------|\n\
-| Create test GBA ROM from two inputs                             |\n\
-|                                                                 |\n\
-| mmutil -b input1.mod input2.s3m -oTEST.gba                      |\n\
-|-----------------------------------------------------------------|\n\
-| Create test NDS ROM from three inputs                           |\n\
-|                                                                 |\n\
-| mmutil -d -b input1.xm input2.s3m testsound.wav -oTEST.nds      |\n\
-`-----------------------------------------------------------------'\n\
- www.maxmod.org\n\
-"
-
 void print_usage(void)
 {
-    printf(USAGE);
+    printf(
+        "\n"
+        "******************************************\n"
+        "* Maxmod Utility " VERSION_ID " *\n"
+        "******************************************\n"
+        "\n"
+        "Usage:\n"
+        "  mmutil [options] input files ...\n"
+        "\n"
+        " Input may be MOD, S3M, XM, IT, and/or WAV\n"
+        "\n"
+        ".------------.----------------------------------------------------.\n"
+        "| Option     | Description                                        |\n"
+        "|------------|----------------------------------------------------|\n"
+        "| -o<output> | Set output file.                                   |\n"
+        "| -h<header> | Set header output file.                            |\n"
+        "| -m         | Output MAS file rather than soundbank.             |\n"
+        "| -d         | Use for NDS projects.                              |\n"
+        "| -b         | Create test ROM. (use -d for .nds, otherwise .gba) |\n"
+        "| -i         | Ignore sample flags.                               |\n"
+        "| -v         | Enable verbose output.                             |\n"
+        "| -p         | Set initial panning separation for MOD/S3M.        |\n"
+        "| -z         | Export raw WAV data (8-bit format)                 |\n"
+        "`-----------------------------------------------------------------'\n"
+        "\n"
+        ".-----------------------------------------------------------------.\n"
+        "| Examples:                                                       |\n"
+        "|-----------------------------------------------------------------|\n"
+        "| Create DS soundbank file (soundbank.bin) from input1.xm         |\n"
+        "| and input2.it Also output header file (soundbank.h)             |\n"
+        "|                                                                 |\n"
+        "| mmutil -d input1.xm input2.it -osoundbank.bin -hsoundbank.h     |\n"
+        "|-----------------------------------------------------------------|\n"
+        "| Create test GBA ROM from two inputs                             |\n"
+        "|                                                                 |\n"
+        "| mmutil -b input1.mod input2.s3m -oTEST.gba                      |\n"
+        "|-----------------------------------------------------------------|\n"
+        "| Create test NDS ROM from three inputs                           |\n"
+        "|                                                                 |\n"
+        "| mmutil -d -b input1.xm input2.s3m testsound.wav -oTEST.nds      |\n"
+        "`-----------------------------------------------------------------'\n"
+        " www.maxmod.org\n"
+    );
 }
 
 void print_error(int err)
