@@ -313,7 +313,7 @@ void Write_Pattern(Pattern* patt, bool xm_vol)
                     maskvar &= ~(MF_START | MF_DVOL);
 
                 if (pe->vol != emptyvol)
-                    maskvar |= COMPR_FLAG_EFFC | MF_HASVCMD;
+                    maskvar |= COMPR_FLAG_VOLC | MF_HASVCMD;
 
                 if (pe->fx != 0 || pe->param != 0)
                     maskvar |= COMPR_FLAG_EFFC | MF_HASFX;
