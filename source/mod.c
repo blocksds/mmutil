@@ -150,7 +150,7 @@ int Load_MOD_Sample(Sample *samp, bool verbose, int index)
 
     // calculate frequency...
     // IS THIS WRONG?? :
-    samp->frequency = (int)(8363.0 * pow(2.0, ((double)finetune) * (1.0/192.0)));
+    samp->frequency = (int)(8363.0 * pow(2.0, ((double)finetune) * (1.0 / 192.0)));
 
     samp->global_volume = 64; // max global volume
     if ((samp->loop_end - samp->loop_start) <= 2) // if loop length <= 2 then disabled loop
@@ -169,7 +169,7 @@ int Load_MOD_Sample(Sample *samp, bool verbose, int index)
             //printf("%i    %s    %i%%    %ihz\n", samp->sample_length,
             //       samp->loop_type != 0 ? "Yes" : "No", (samp->default_volume * 100) / 64,
             //       samp->frequency);
-            printf(vstr_mod_samp, index, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
+            printf(vstr_mod_samp, index + 1, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
                    (samp->default_volume * 100) / 64, samp->frequency, samp->name);
             /*
             printf("  Length......%i\n", samp->sample_length);
@@ -296,7 +296,7 @@ int Load_MOD(MAS_Module* mod, bool verbose)
     mod->samples = (Sample *)malloc(31 * sizeof(Sample));
     mod->stereo = true;
     mod->xm_mode = true;
-    mod->old_mode=true;
+    mod->old_mode = true;
 
     if (verbose)
     {
