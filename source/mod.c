@@ -73,7 +73,7 @@ int Load_MOD_SampleData(Sample* samp)
     return ERR_NONE;
 }
 
-int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u8 *inst_count)
+int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u8 *inst_count, int pattern_num, Sample *samples)
 {
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64; // MODs have fixed 64 rows per pattern
@@ -97,6 +97,19 @@ int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u8 *inst_count)
             u8 inst = (data1 & 0xF0) + (data3 >> 4);  // aaaaDDDD     = sample number
             u8 effect = data3 & 0xF;                  // eeee         = effect number
             u8 param = data4;                         // FFFFFFFF     = effect parameters
+
+            // If the instrument entry isn't empty, make sure that the sample is
+            // valid. Maxmod will crash in some cases if it tries to play an
+            // empty sample.
+            if (inst > 0)
+            {
+                if (samples[inst - 1].sample_length == 0)
+                {
+                    printf("warning: Empty sample at pattern %d, row %u, column %u. Ignored.\n",
+                           pattern_num, row, col);
+                    continue;
+                }
+            }
 
             // fix parameter for certain MOD effects
             switch (effect)
@@ -361,7 +374,8 @@ int Load_MOD(MAS_Module* mod, bool verbose)
         {
             printf(vstr_mod_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
         }
-        Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count));
+        Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count),
+                         x, mod->samples);
     }
 
     if (verbose)
