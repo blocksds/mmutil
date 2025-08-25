@@ -594,9 +594,12 @@ int Write_MAS(MAS_Module* mod, bool verbose, bool msl_dep)
         write32(mod->instruments[x].parapointer);
     for (int x = 0; x < mod->samp_count; x++)
     {
-        printf("sample %s is at %d/%d of %d\n", mod->samples[x].name,
-               mod->samples[x].parapointer, file_tell_write(),
-               mod->samples[x].sample_length);
+        if (verbose)
+        {
+            printf("sample %s is at %d/%d of %d\n", mod->samples[x].name,
+                   mod->samples[x].parapointer, file_tell_write(),
+                   mod->samples[x].sample_length);
+        }
         write32(mod->samples[x].parapointer);
     }
     for (int x = 0; x < mod->patt_count; x++)
