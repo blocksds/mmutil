@@ -347,7 +347,7 @@ int Load_MOD(MAS_Module* mod, bool verbose)
     read32();
 
     mod->patt_count = npatterns;
-    mod->patterns = (Pattern *)malloc(mod->patt_count * sizeof(Pattern)); // allocate patterns
+    mod->patterns = (Pattern *)calloc(mod->patt_count, sizeof(Pattern));
 
     if (verbose)
     {

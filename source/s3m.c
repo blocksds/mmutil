@@ -384,9 +384,9 @@ int Load_S3M(MAS_Module* mod, bool verbose)
         }
     }
 
-    mod->instruments = (Instrument *)malloc(mod->inst_count * sizeof(Instrument));
-    mod->samples = (Sample *)malloc(mod->samp_count * sizeof(Sample));
-    mod->patterns = (Pattern *)malloc(mod->patt_count * sizeof(Pattern));
+    mod->instruments = (Instrument *)calloc(mod->inst_count, sizeof(Instrument));
+    mod->samples = (Sample *)calloc(mod->samp_count, sizeof(Sample));
+    mod->patterns = (Pattern *)calloc(mod->patt_count, sizeof(Pattern));
 
     if (verbose)
     {

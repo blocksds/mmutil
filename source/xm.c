@@ -718,7 +718,7 @@ int Load_XM(MAS_Module *mod, bool verbose)
         printf(vstr_xm_div);
     }
 
-    mod->patterns = (Pattern*)malloc(mod->patt_count * sizeof(Pattern));
+    mod->patterns = (Pattern*)calloc(mod->patt_count, sizeof(Pattern));
     for (int x = 0; x < mod->patt_count; x++)
     {
         if (verbose)
@@ -727,8 +727,8 @@ int Load_XM(MAS_Module *mod, bool verbose)
         Load_XM_Pattern(&mod->patterns[x], xm_nchannels, verbose);
     }
 
-    mod->instruments = (Instrument*)malloc(mod->inst_count * sizeof(Instrument));
-    mod->samples = (Sample *)malloc(256 * sizeof(Sample));
+    mod->instruments = (Instrument*)calloc(mod->inst_count, sizeof(Instrument));
+    mod->samples = (Sample *)calloc(256, sizeof(Sample));
 
     u8 next_sample = 0;
 
