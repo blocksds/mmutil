@@ -226,7 +226,7 @@ int Load_MOD(MAS_Module* mod, bool verbose)
 
     u32 mod_channels;
 
-    switch(sig)
+    switch (sig)
     {
         case 'NHC1':
             mod_channels = 1;
@@ -301,12 +301,12 @@ int Load_MOD(MAS_Module* mod, bool verbose)
     mod->initial_tempo = 125;
     mod->inst_count = 0; // filled in by Load_MOD_Pattern
     mod->inst_mode = false;
-    mod->instruments = (Instrument *)malloc(31 * sizeof(Instrument));
+    mod->instruments = (Instrument *)calloc(31, sizeof(Instrument));
     mod->link_gxx = false;
     mod->old_effects = true;
     mod->restart_pos = 0;
     mod->samp_count = 0; // filled in before Load_MOD_SampleData
-    mod->samples = (Sample *)malloc(31 * sizeof(Sample));
+    mod->samples = (Sample *)calloc(31, sizeof(Sample));
     mod->stereo = true;
     mod->xm_mode = true;
     mod->old_mode = true;

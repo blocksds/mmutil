@@ -596,12 +596,12 @@ int Load_IT(MAS_Module* itm, bool verbose)
     for (int x = 0; x < itm->patt_count; x++)
         parap_patt[x] = read32();
 
-    itm->samples = (Sample *)malloc(itm->samp_count * sizeof(Sample));
-    itm->patterns = (Pattern *)malloc(itm->patt_count * sizeof(Pattern));
+    itm->samples = (Sample *)calloc(itm->samp_count, sizeof(Sample));
+    itm->patterns = (Pattern *)calloc(itm->patt_count, sizeof(Pattern));
 
     if (instr_mode)
     {
-        itm->instruments = (Instrument *)malloc(itm->inst_count * sizeof(Instrument));
+        itm->instruments = (Instrument *)calloc(itm->inst_count, sizeof(Instrument));
         if (verbose)
         {
             printf("Loading Instruments...\n");
@@ -676,7 +676,7 @@ int Load_IT(MAS_Module* itm, bool verbose)
         }
 
         itm->inst_count = itm->samp_count;
-        itm->instruments = (Instrument*)malloc(itm->inst_count * sizeof(Instrument));
+        itm->instruments = (Instrument*)calloc(itm->inst_count, sizeof(Instrument));
         cc = 0;
 
         int x;
