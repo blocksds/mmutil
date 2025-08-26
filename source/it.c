@@ -147,6 +147,8 @@ int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
 
     memset(inst, 0, sizeof(Instrument));
 
+    inst->is_valid = true;
+
     skip8(17);
 
     inst->nna = read8();
@@ -251,6 +253,8 @@ int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
 void Create_IT_Instrument(Instrument *inst, int sample)
 {
     memset(inst, 0, sizeof(Instrument));
+
+    inst->is_valid = true;
 
     inst->global_volume = 128;
 
@@ -693,7 +697,9 @@ int Load_IT(MAS_Module* itm, bool verbose)
                     printf("\n");
                 }
             }
-            Create_IT_Instrument(&itm->instruments[x], x + 1);
+
+            if (itm->samples[x].sample_length > 0)
+                Create_IT_Instrument(&itm->instruments[x], x + 1);
         }
 
         if (verbose)
@@ -759,6 +765,8 @@ int Load_IT(MAS_Module* itm, bool verbose)
     free(parap_inst);
     free(parap_samp);
     free(parap_patt);
+
+    Sanitize_Module(itm);
 
     return ERR_NONE;
 }

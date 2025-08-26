@@ -408,14 +408,6 @@ int Load_S3M(MAS_Module* mod, bool verbose)
             //printf("Sample %i\n", x + 1);
         }
 
-        // create instrument for sample
-        memset(&mod->instruments[x], 0, sizeof(Instrument));
-        mod->instruments[x].global_volume = 128;
-
-        // make notemap
-        for (int y = 0; y < 120; y++)
-            mod->instruments[x].notemap[y] = y | ((x + 1) << 8);
-
         // load sample
         file_seek_read(parap_inst[x] * 16, SEEK_SET);
         if (Load_S3M_Sample(&mod->samples[x], verbose))
@@ -423,6 +415,20 @@ int Load_S3M(MAS_Module* mod, bool verbose)
             printf("Error loading sample!\n");
             return ERR_UNKNOWNSAMPLE;
         }
+
+        // Create instrument for sample only if the sample isn't empty
+        memset(&mod->instruments[x], 0, sizeof(Instrument));
+
+        if (mod->samples[x].sample_length > 0)
+        {
+            mod->instruments[x].global_volume = 128;
+            mod->instruments[x].is_valid = true;
+
+            // make notemap
+            for (int y = 0; y < 120; y++)
+                mod->instruments[x].notemap[y] = y | ((x + 1) << 8);
+        }
+
     }
 
     // load patterns
@@ -461,6 +467,8 @@ int Load_S3M(MAS_Module* mod, bool verbose)
     {
         printf(vstr_s3m_div);
     }
+
+    Sanitize_Module(mod);
 
     return ERR_NONE;
 }

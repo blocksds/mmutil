@@ -86,6 +86,8 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
 
     if (nsamples > 0)
     {
+        inst->is_valid = true;
+
         int samp_headsize = read32();
 
         // read sample map
@@ -265,6 +267,8 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
     }
     else
     {
+        inst->is_valid = false;
+
         file_seek_read(inst_headstart + inst_size, SEEK_SET);
         if (verbose)
             printf(vstr_xm_nosamp, inst->name);
@@ -753,5 +757,8 @@ int Load_XM(MAS_Module *mod, bool verbose)
     }
 
     mod->samp_count = next_sample;
+
+    Sanitize_Module(mod);
+
     return ERR_NONE;
 }

@@ -40,6 +40,38 @@ static int CalcInstrumentSize(Instrument *instr)
     return size;
 }
 
+void Sanitize_Module(MAS_Module *mod)
+{
+    // Sanitize patterns
+    for (int p = 0; p < mod->patt_count; p++)
+    {
+        Pattern *patt = &mod->patterns[p];
+
+        for (int r = 0; r < patt->nrows; r++)
+        {
+            for (int c = 0; c < MAX_CHANNELS; c++)
+            {
+                PatternEntry *pe = &(patt->data[r * MAX_CHANNELS + c]);
+
+                // If the instrument entry isn't empty, make sure that the
+                // sample is valid. Maxmod will crash in some cases if it tries
+                // to play an empty sample.
+                if (pe->inst > 0)
+                {
+                    Instrument *inst = &(mod->instruments[pe->inst - 1]);
+
+                    if (!inst->is_valid)
+                    {
+                        printf("warning: Invalid instrument %u at pattern %d row %u chan %u\n",
+                               pe->inst, p, r, c + 1);
+                        pe->inst = 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void Write_Instrument_Envelope(Instrument_Envelope *env)
 {
     write8((u8)(env->node_count * 4 + 8)); // maximum is 6+75

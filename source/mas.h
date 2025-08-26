@@ -63,6 +63,7 @@ typedef struct tInstrument
 {
     u32     parapointer;
 
+    bool    is_valid;
     u8      global_volume;
     u8      setpan;
     u16     fadeout;
@@ -176,6 +177,8 @@ void Write_Sample(Sample *samp);
 void Write_Pattern(Pattern *patt, bool xm_vol);
 int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep);
 void Delete_Module(MAS_Module *mod);
+
+void Sanitize_Module(MAS_Module *mod);
 
 extern u32 MAS_FILESIZE;
 
