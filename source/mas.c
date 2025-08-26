@@ -42,6 +42,40 @@ static int CalcInstrumentSize(Instrument *instr)
 
 void Sanitize_Module(MAS_Module *mod)
 {
+    // Sanitize instruments
+    for (int i = 0; i < mod->inst_count; i++)
+    {
+        Instrument *inst = &(mod->instruments[i]);
+
+        // Instruments tend to use the same sample in multiple entries. Warn
+        // once per sample only, and reset the notifications for the next
+        // instrument.
+        bool warned[256] = { 0 };
+
+        // Analyze notemap to see which samples are used
+        for (int x = 0; x < 120; x++)
+        {
+            int sample = (inst->notemap[x] >> 8) & 0xFF;
+
+            if (sample > 0)
+            {
+                if (mod->samples[sample - 1].sample_length == 0)
+                {
+                    if (!warned[sample - 1])
+                    {
+                        warned[sample - 1] = true;
+
+                        printf("warning: Empty sample %u for instrument %u at note map entry %u\n",
+                               sample, i + 1, x);
+                    }
+
+                    // Remove the sample from this note map entry
+                    inst->notemap[x] &= 0xFF;
+                }
+            }
+        }
+    }
+
     // Sanitize patterns
     for (int p = 0; p < mod->patt_count; p++)
     {
