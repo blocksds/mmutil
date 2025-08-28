@@ -388,7 +388,7 @@ int Load_MOD(MAS_Module *mod, bool verbose)
     if (verbose)
         printf(vstr_mod_div);
 
-    Sanitize_Module(mod);
+    Sanitize_Module(mod, verbose);
 
     return ERR_NONE;
 }

@@ -178,7 +178,7 @@ void Write_Pattern(Pattern *patt, bool xm_vol);
 int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep);
 void Delete_Module(MAS_Module *mod);
 
-void Sanitize_Module(MAS_Module *mod);
+void Sanitize_Module(MAS_Module *mod, bool verbose);
 
 extern u32 MAS_FILESIZE;
 

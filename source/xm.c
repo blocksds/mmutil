@@ -758,7 +758,7 @@ int Load_XM(MAS_Module *mod, bool verbose)
 
     mod->samp_count = next_sample;
 
-    Sanitize_Module(mod);
+    Sanitize_Module(mod, verbose);
 
     return ERR_NONE;
 }

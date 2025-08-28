@@ -40,7 +40,7 @@ static int CalcInstrumentSize(Instrument *instr)
     return size;
 }
 
-void Sanitize_Module(MAS_Module *mod)
+void Sanitize_Module(MAS_Module *mod, bool verbose)
 {
     // Sanitize instruments
     for (int i = 0; i < mod->inst_count; i++)
@@ -103,6 +103,47 @@ void Sanitize_Module(MAS_Module *mod)
                 }
             }
         }
+    }
+
+    // Sanitize pattern orders
+    if (mod->order_count > 200)
+    {
+        // The MAS format has a hardcoded limit of 200 pattern orders. Some
+        // songs go over this limit, but they only have "255" as pattern order,
+        // which isn't valid, and it means they don't actually use that pattern
+        // order entry.
+        //
+        // We need to check if all pattern orders over 200 are empty. If not,
+        // clamp the song to 200 pattern orders and print a warning.
+
+        bool clamped = false;
+
+        for (int i = 200; i < mod->order_count; i++)
+        {
+            // 254 means "invalid" and Maxmod will just skip it. 255 means
+            // "unused". Both of them are valid here. Any other value is
+            // invalid.
+            if (mod->orders[i] < 254)
+            {
+                clamped = true;
+                printf("warning: Too many pattern orders (%u > 200)\n",
+                       mod->order_count);
+                break;
+            }
+        }
+
+        if (!clamped)
+        {
+            // If all the extra pattern orders are empty we should only print
+            // some information in verbose mode.
+            if (verbose)
+            {
+                printf("verbose: Too many pattern orders (%u > 200), but they are empty\n",
+                       mod->order_count);
+            }
+        }
+
+        mod->order_count = 200;
     }
 }
 

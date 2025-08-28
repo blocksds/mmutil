@@ -766,7 +766,7 @@ int Load_IT(MAS_Module *itm, bool verbose)
     free(parap_samp);
     free(parap_patt);
 
-    Sanitize_Module(itm);
+    Sanitize_Module(itm, verbose);
 
     return ERR_NONE;
 }

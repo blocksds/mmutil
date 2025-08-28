@@ -468,7 +468,7 @@ int Load_S3M(MAS_Module *mod, bool verbose)
         printf(vstr_s3m_div);
     }
 
-    Sanitize_Module(mod);
+    Sanitize_Module(mod, verbose);
 
     return ERR_NONE;
 }
