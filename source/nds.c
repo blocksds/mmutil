@@ -182,7 +182,7 @@ unsigned short calculate_crc(void)
     return crc;
 }
 
-void Validate_NDS(char* filename, int output_size)
+void Validate_NDS(char *filename, int output_size)
 {
     int arm9_size = 65536 + output_size;
 

@@ -120,7 +120,7 @@ int GetYesNo(void)
     return c == 'y' ? 1 : 0;
 }
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
     char *str_input = NULL;
     char *str_output = NULL;

@@ -62,7 +62,7 @@ int Create_MOD_Instrument(Instrument *inst, u8 sample)
     return ERR_NONE;
 }
 
-int Load_MOD_SampleData(Sample* samp)
+int Load_MOD_SampleData(Sample *samp)
 {
     if (samp->sample_length > 0)
     {
@@ -194,7 +194,7 @@ int Load_MOD_Sample(Sample *samp, bool verbose, int index)
     return ERR_NONE;
 }
 
-int Load_MOD(MAS_Module* mod, bool verbose)
+int Load_MOD(MAS_Module *mod, bool verbose)
 {
     if (verbose)
         printf("Loading MOD, ");

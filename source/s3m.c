@@ -22,7 +22,7 @@
 #include "errors.h"
 #include "samplefix.h"
 
-#define S3M_NOTE(a) (((a&15)+(a>>4)*12)+12)
+#define S3M_NOTE(a) ((((a) & 15) + ((a) >> 4) * 12) + 12)
 
 #ifdef SUPER_ASCII
 #define vstr_s3m_samp  " %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n"
@@ -253,7 +253,7 @@ int Load_S3M_Pattern(Pattern *patt)
     return ERR_NONE;
 }
 
-int Load_S3M(MAS_Module* mod, bool verbose)
+int Load_S3M(MAS_Module *mod, bool verbose)
 {
     memset(mod, 0, sizeof(MAS_Module));
     for (int x = 0; x < 28; x++)

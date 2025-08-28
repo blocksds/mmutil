@@ -341,7 +341,7 @@ int Load_IT_Sample(Sample *samp)
 
 int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16);
 
-int Load_IT_SampleData(Sample* samp, u16 cwmt)
+int Load_IT_SampleData(Sample *samp, u16 cwmt)
 {
     if (samp->sample_length == 0)
         return 0;
@@ -409,7 +409,7 @@ int Empty_IT_Pattern(Pattern *patt)
     return ERR_NONE;
 }
 
-int Load_IT_Pattern(Pattern* patt)
+int Load_IT_Pattern(Pattern *patt)
 {
     u8 old_maskvar[MAX_CHANNELS];
     u8 old_note[MAX_CHANNELS];
@@ -515,7 +515,7 @@ GetNextChannelMarker:
     return ERR_NONE;
 }
 
-int Load_IT(MAS_Module* itm, bool verbose)
+int Load_IT(MAS_Module *itm, bool verbose)
 {
     int cc;
 

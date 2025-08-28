@@ -34,7 +34,7 @@ const u16 AdpcmTable[89] = {
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
 };
 
-static int read_sample( Sample* sample, int position )
+static int read_sample(Sample *sample, int position)
 {
     int s;
 
@@ -55,7 +55,7 @@ static int read_sample( Sample* sample, int position )
     return s;
 }
 
-static int minmax( int value, int low, int high )
+static int minmax(int value, int low, int high)
 {
     if (value < low)
         value = low;
@@ -64,7 +64,7 @@ static int minmax( int value, int low, int high )
     return value;
 }
 
-static int calc_delta( int diff, int step )
+static int calc_delta(int diff, int step)
 {
     int delta = step >> 3;      // t / 8
 

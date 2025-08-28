@@ -327,7 +327,7 @@ void Write_Sample(Sample *samp)
 #define MF_HASVCMD          (4 << 4)
 #define MF_HASFX            (8 << 4)
 
-void Write_Pattern(Pattern* patt, bool xm_vol)
+void Write_Pattern(Pattern *patt, bool xm_vol)
 {
     u16 last_mask[MAX_CHANNELS];
     u16 last_note[MAX_CHANNELS];
@@ -489,7 +489,7 @@ void Mark_Pattern_Row(MAS_Module *mod, int order, int row)
     p->cmarks[row] = true;
 }
 
-void Mark_Patterns(MAS_Module* mod)
+void Mark_Patterns(MAS_Module *mod)
 {
     for (int o = 0; o < mod->order_count; o++)
     {
@@ -529,7 +529,7 @@ void Mark_Patterns(MAS_Module* mod)
     }
 }
 
-int Write_MAS(MAS_Module* mod, bool verbose, bool msl_dep)
+int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
 {
     file_get_byte_count();
 

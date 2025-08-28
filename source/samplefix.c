@@ -183,7 +183,7 @@ thanks reduz!
 NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
 */
 
-void Resample(Sample* samp, u32 newsize)
+void Resample(Sample *samp, u32 newsize)
 {
     // output pointers
     u8 *dst8 = 0;

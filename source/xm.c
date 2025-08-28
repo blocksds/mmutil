@@ -277,7 +277,7 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
     return ERR_NONE;
 }
 
-void CONV_XM_EFFECT(u8* fx, u8* param)
+void CONV_XM_EFFECT(u8 *fx, u8 *param)
 {
     int wfx = *fx;
     int wpm = *param;
