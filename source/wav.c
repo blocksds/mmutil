@@ -30,7 +30,7 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
     // initialize data
     memset(samp, 0, sizeof(Sample));
 
-    unsigned int file_size = file_tell_size();
+    int file_size = file_tell_size();
 
     read32(); // "RIFF"
     read32(); // filesize-8
@@ -105,7 +105,8 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
 
             case 'atad': // data chunk
             {
-                int t, c, dat;
+                size_t t, c;
+                int dat;
 
                 if (!hasformat)
                 {
@@ -117,7 +118,7 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
 
                 // clip chunk size against end of file (for some borked wavs...)
                 {
-                    int br = file_size - file_tell_read();
+                    size_t br = file_size - file_tell_read();
                     chunk_size = chunk_size > br ? br : chunk_size;
                 }
 

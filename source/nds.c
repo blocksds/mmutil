@@ -161,13 +161,13 @@ void Write_NDS(void)
         write8(0);
 
     // write binaries
-    for (int x = 0; x < ARM7_SIZE; x++)
+    for (size_t x = 0; x < ARM7_SIZE; x++)
         write8(arm7_bin[x]);
-    for (int x = 0; x < 32768 - ARM7_SIZE; x++) // pad to 32k
+    for (size_t x = 0; x < 32768 - ARM7_SIZE; x++) // pad to 32k
         write8((u8)x);
-    for (int x = 0; x < ARM9_SIZE; x++)
+    for (size_t x = 0; x < ARM9_SIZE; x++)
         write8(arm9_bin[x]);
-    for (int x = 0; x < 65536 - ARM9_SIZE; x++) // pad to 64k
+    for (size_t x = 0; x < 65536 - ARM9_SIZE; x++) // pad to 64k
         write8((u8)x);
 }
 

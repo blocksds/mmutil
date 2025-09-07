@@ -208,7 +208,7 @@ int main(int argc, char *argv[])
         file_close_read();
         file_open_write(str_output);
 
-        for (int i = 0; i < s.sample_length; i++)
+        for (size_t i = 0; i < s.sample_length; i++)
             write8(((u8 *)s.data)[i]);
 
         file_close_write();

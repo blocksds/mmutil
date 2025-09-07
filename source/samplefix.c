@@ -212,7 +212,7 @@ void Resample(Sample *samp, u32 newsize)
     double tscale = (double)oldlength / (double)newsize;
     double posf;
 
-    for (int i = 0; i < newsize; i++)
+    for (size_t i = 0; i < newsize; i++)
     {
         posf = (double)i * tscale;
         int posi = (int)floor(posf);

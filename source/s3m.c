@@ -309,6 +309,7 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     {
         u8 chn = read8();
         chan_enabled[x] = chn >> 7;
+        (void)chan_enabled[0]; // TODO: This variable is unused, is that ok?
         if (stereo)
         {
             if ((chn & 127) < 8) // left channel

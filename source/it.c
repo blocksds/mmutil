@@ -881,7 +881,7 @@ int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16)
                     u16 border = (0xFFFF >> ((nbits + 1) - bit_width)) - (nbits / 2);
                     // lower border for width chg
 
-                    if ((int)aux_value > (int)border && (int)aux_value <= ((int)border + nbits))
+                    if ((aux_value > border) && (aux_value <= (border + nbits)))
                     {
                         aux_value -= border; // convert width to 1-8
                         bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
