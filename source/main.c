@@ -61,6 +61,7 @@ void print_usage(void)
         "| -v         | Enable verbose output.                             |\n"
         "| -p         | Set initial panning separation for MOD/S3M.        |\n"
         "| -z         | Export raw WAV data (8-bit format)                 |\n"
+        "| -V         | Print version string and exit.                     |\n"
         "`-----------------------------------------------------------------'\n"
         "\n"
         ".-----------------------------------------------------------------.\n"
@@ -81,6 +82,12 @@ void print_usage(void)
         "`-----------------------------------------------------------------'\n"
         " www.maxmod.org\n"
     );
+}
+
+void print_version_and_exit(void)
+{
+    printf("mmutil " VERSION_STRING "\n");
+    exit(EXIT_SUCCESS);
 }
 
 void print_error(int err)
@@ -150,7 +157,9 @@ int main(int argc, char *argv[])
     {
         if (argv[a][0] == '-')
         {
-            if (argv[a][1] == 'b')
+            if (argv[a][1] == 'V')
+                print_version_and_exit();
+            else if (argv[a][1] == 'b')
                 g_flag = true;
             else if (argv[a][1] == 'v')
                 v_flag = true;
