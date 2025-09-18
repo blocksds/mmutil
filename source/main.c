@@ -40,9 +40,9 @@ void print_usage(void)
 {
     printf(
         "\n"
-        "******************************************\n"
-        "* Maxmod Utility " VERSION_ID " *\n"
-        "******************************************\n"
+        "******************\n"
+        "* Maxmod Utility * " VERSION_STRING "\n"
+        "******************\n"
         "\n"
         "Usage:\n"
         "  mmutil [options] input files ...\n"
