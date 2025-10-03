@@ -1,5 +1,11 @@
 # Maxmod Utility
 
+## Introduction
+
+This is a packer of songs and audio effects to be used by Maxmod.
+
+Please, report issues [here](https://github.com/blocksds/sdk/issues).
+
 ## Usage
 
 ```
