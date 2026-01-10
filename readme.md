@@ -4,7 +4,7 @@
 
 This is a packer of songs and audio effects to be used by Maxmod.
 
-Please, report issues [here](https://github.com/blocksds/sdk/issues).
+Please, report issues [here](https://codeberg.org/blocksds/sdk/issues).
 
 ## Usage
 
