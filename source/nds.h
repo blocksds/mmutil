@@ -13,7 +13,8 @@
 #ifndef NDS_H__
 #define NDS_H__
 
-void Write_NDS(void);
-void Validate_NDS(char *filename, int output_size);
+#include <stdbool.h>
+
+void Write_NDS(int argc, char *argv[], const char *out_path, bool v_flag);
 
 #endif // NDS_H__

@@ -7,6 +7,7 @@
 
 SOURCEDIRS	:= source
 INCLUDEDIRS	:= source
+EMBEDDIRS	:= data
 
 # Version string handling
 # -----------------------
@@ -86,6 +87,7 @@ else
 endif
 
 INCLUDEFLAGS	:= $(foreach path,$(INCLUDEDIRS),-I$(path)) \
+		   $(foreach path,$(EMBEDDIRS),--embed-dir=$(path)) \
 		   $(foreach path,$(LIBDIRS),-I$(path)/include)
 
 LIBDIRSFLAGS	:= $(foreach path,$(LIBDIRS),-L$(path)/lib)

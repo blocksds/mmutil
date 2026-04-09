@@ -430,8 +430,6 @@ int main(int argc, char *argv[])
     }
     else if (g_flag)
     {
-        MSL_Create(argv, argc, "tempSH308GK.bin", 0, v_flag);
-
         if (file_exists(str_output))
         {
             printf("Output file exists! Overwrite? (y/n) ");
@@ -443,57 +441,49 @@ int main(int argc, char *argv[])
 
         }
 
-        if (file_open_write(str_output))
-        {
-            print_error(ERR_NOWRITE);
-            return -1;
-        }
-
         if (target_system == SYSTEM_GBA)
         {
+            MSL_Create(argv, argc, "tempSH308GK.bin", 0, v_flag);
+
+            if (file_open_write(str_output))
+            {
+                print_error(ERR_NOWRITE);
+                return -1;
+            }
+
             if (v_flag)
                 printf("Making GBA ROM.......\n");
+
             Write_GBA();
+
+            output_size = file_size("tempSH308GK.bin");
+            file_open_read("tempSH308GK.bin");
+
+            write32((output_size < 248832) ? 1 : 0);
+
+            for (int i = 0; i < output_size; i++)
+            {
+                write8(read8());
+            }
+
+            file_close_read();
+            file_close_write();
+
+            file_delete("tempSH308GK.bin");
+
+            printf("Success! :D\n");
+
+            if (output_size < 262144)
+                printf("ROM can be multibooted!!\n");
         }
         else if (target_system == SYSTEM_NDS)
         {
-            if (v_flag)
-                printf("Making NDS ROM.......\n");
-            Write_NDS();
+            Write_NDS(argc, argv, str_output, v_flag);
         }
-
-        output_size = file_size("tempSH308GK.bin");
-        file_open_read("tempSH308GK.bin");
-
-        if (target_system == SYSTEM_GBA)
+        else
         {
-            write32((output_size < 248832) ? 1 : 0);
-        }
-
-        for (int i = 0; i < output_size; i++)
-        {
-            write8(read8());
-        }
-
-        file_close_read();
-        file_close_write();
-
-        file_delete("tempSH308GK.bin");
-
-        if (g_flag && target_system == SYSTEM_NDS)
-            Validate_NDS(str_output, output_size);
-
-        if (v_flag)
-        {
-            printf("Success! :D\n");
-
-            if (g_flag && target_system == SYSTEM_GBA)
-            {
-                if (output_size < 262144)
-                {
-                    printf("ROM can be multibooted!!\n");
-                }
-            }
+            printf("Invalid target system!\n");
+            return -1;
         }
     }
     else

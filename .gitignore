@@ -1,2 +1,5 @@
 mmutil
-build
+build/
+*.nds
+*.gba
+*.sav
