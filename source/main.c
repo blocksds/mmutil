@@ -459,8 +459,6 @@ int main(int argc, char *argv[])
             output_size = file_size("tempSH308GK.bin");
             file_open_read("tempSH308GK.bin");
 
-            write32((output_size < 248832) ? 1 : 0);
-
             for (int i = 0; i < output_size; i++)
             {
                 write8(read8());
