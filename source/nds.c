@@ -127,17 +127,24 @@ static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_fl
 
     if (file_exists(icon_default_path))
     {
-        char *cmd = NULL;
-        int len = asprintf(&cmd, "-b %s \"NDS Demo;Maxmod;blocksds.skylyrac.net\"",
+        char cmd[1024];
+        int len = snprintf(cmd, sizeof(cmd),
+                           "-b %s \"NDS Demo;Maxmod;blocksds.skylyrac.net\"",
                            icon_default_path);
-        if (len < 0)
+        if ((len < 0) || ((size_t)len > sizeof(cmd)))
+        {
+            printf("Failed to generate banner command\n");
+            remove_temporary_files();
+            exit(EXIT_FAILURE);
+        }
+
+        *banner_arg = strdup(cmd);
+        if (*banner_arg == NULL)
         {
             printf("Failed to allocate banner command\n");
             remove_temporary_files();
             exit(EXIT_FAILURE);
         }
-
-        *banner_arg = cmd;
     }
     else if (file_exists("icon.gif"))
     {
