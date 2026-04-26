@@ -156,6 +156,15 @@ static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_fl
     }
 }
 
+static int create_dir(const char *path)
+{
+#ifdef _WIN32
+    return mkdir(path);
+#else
+    return mkdir(path, 0777);
+#endif
+}
+
 void Write_NDS(int argc, char *argv[], const char *out_path, bool v_flag)
 {
     // Make sure that we can create the new files
@@ -164,13 +173,13 @@ void Write_NDS(int argc, char *argv[], const char *out_path, bool v_flag)
 
     // Create components of the NDS ROM
 
-    if (mkdir(DIR_TEMP, 0777) != 0)
+    if (create_dir(DIR_TEMP) != 0)
     {
         perror("mkdir(" DIR_TEMP ")");
         exit(EXIT_FAILURE);
     }
 
-    if (mkdir(DIR_NITROFS, 0777) != 0)
+    if (create_dir(DIR_NITROFS) != 0)
     {
         perror("mkdir(" DIR_NITROFS ")");
         exit(EXIT_FAILURE);
