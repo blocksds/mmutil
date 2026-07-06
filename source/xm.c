@@ -659,16 +659,60 @@ int Load_XM(MAS_Module *mod, bool verbose)
 
     skip8(20); // tracker name
 
-    u16 xm_version      = read16();
-    u32 xm_headsize     = read32();
-    mod->order_count    = (u8)read16();
-    mod->restart_pos    = (u8)read16();
-    u16 xm_nchannels    = read16();
-    mod->patt_count     = (u8)read16();
-    mod->inst_count     = (u8)read16();
-    mod->freq_mode      = read16() & 1 ? true : false; // flags
-    mod->initial_speed  = (u8)read16();
-    mod->initial_tempo  = (u8)read16();
+    u16 xm_version = read16();
+    u32 xm_headsize = read32();
+
+    u16 order_count = read16();
+    if (order_count > 255)
+    {
+        printf("Order count higher than 255: %u\n", order_count);
+        return ERR_INVALID_MODULE;
+    }
+    mod->order_count = order_count;
+
+    u16 restart_pos = read16();
+    if (restart_pos > 255)
+    {
+        printf("Restart position higher than 255: %u\n", restart_pos);
+        return ERR_INVALID_MODULE;
+    }
+    mod->restart_pos = restart_pos;
+
+    u16 xm_nchannels = read16();
+
+    u16 patt_count = read16();
+    if (patt_count > 255)
+    {
+        printf("Pattern count higher than 255: %u\n", patt_count);
+        return ERR_INVALID_MODULE;
+    }
+    mod->patt_count = patt_count;
+
+    u16 inst_count = read16();
+    if (inst_count > 255)
+    {
+        printf("Instrument count higher than 255: %u\n", inst_count);
+        return ERR_INVALID_MODULE;
+    }
+    mod->inst_count = inst_count;
+
+    mod->freq_mode = read16() & 1 ? true : false; // flags
+
+    u16 initial_speed = read16();
+    if (initial_speed > 255)
+    {
+        printf("Initial speed higher than 255: %u\n", initial_speed);
+        return ERR_INVALID_MODULE;
+    }
+    mod->initial_speed = initial_speed;
+
+    u16 initial_tempo = read16();
+    if (initial_tempo > 255)
+    {
+        printf("Initial tempo higher than 255: %u\n", initial_tempo);
+        return ERR_INVALID_MODULE;
+    }
+    mod->initial_tempo = initial_tempo;
 
     if (verbose)
     {
