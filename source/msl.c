@@ -306,27 +306,32 @@ void MSL_LoadFile(char *filename, bool verbose)
     switch (f_ext)
     {
         case INPUT_TYPE_MOD:
-            Load_MOD(&mod, verbose);
+            if (Load_MOD(&mod, verbose))
+                exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_S3M:
-            Load_S3M(&mod, verbose);
+            if (Load_S3M(&mod, verbose))
+                exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_XM:
-            Load_XM(&mod, verbose);
+            if (Load_XM(&mod, verbose))
+                exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_IT:
-            Load_IT(&mod, verbose);
+            if (Load_IT(&mod, verbose))
+                exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_WAV:
-            Load_WAV(&wav, verbose, true);
+            if (Load_WAV(&wav, verbose, true))
+                exit(EXIT_FAILURE);
             wav.filename[0] = '#'; // set SFX flag (for demo)
             MSL_PrintDefinition(filename, MSL_AddSample(&wav), "SFX_");
             free(wav.data);
