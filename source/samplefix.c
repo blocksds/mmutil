@@ -183,7 +183,7 @@ thanks reduz!
 NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
 */
 
-void Resample(Sample *samp, u32 newsize)
+void Resample(Sample *samp, u32 oldrate, u32 newrate)
 {
     // output pointers
     u8 *dst8 = 0;
@@ -191,8 +191,12 @@ void Resample(Sample *samp, u32 newsize)
     u8 *src8 = (u8 *)samp->data;
     u16 *src16 = (u16 *)samp->data;
 
-    int oldlength = samp->sample_length;
+    // oldlength clips to loop-end for loop wraparound in resampler
     int lpoint = samp->loop_start;
+    int oldlength = (samp->loop_type ? samp->loop_end : samp->sample_length);
+    u32 oldlooplen = samp->loop_end-samp->loop_start;
+    u32 newsize = (u32)(((u64)oldlength*newrate-1)/oldrate) + 1;
+    u32 newlooplen = (u32)((u64)oldlooplen*newrate/oldrate);
 
     bool bit16 = samp->format & SAMPF_16BIT;
     double sign_diff;
@@ -209,7 +213,7 @@ void Resample(Sample *samp, u32 newsize)
         sign_diff = 128.0;
     }
 
-    double tscale = (double)oldlength / (double)newsize;
+    double tscale = (double)oldrate / (double)newrate;
     double posf;
 
     for (size_t i = 0; i < newsize; i++)
@@ -290,10 +294,8 @@ void Resample(Sample *samp, u32 newsize)
 
     samp->sample_length = newsize;
     samp->loop_end = newsize;
-    samp->loop_start = (int)(((double)samp->loop_start *
-                              (double)newsize + ((double)oldlength / 2)) / (double)oldlength);
-    samp->frequency = (int)(((double)samp->frequency *
-                             (double)newsize + ((double)oldlength / 2)) / (double)oldlength);
+    samp->loop_start = newsize - newlooplen;
+    samp->frequency = (int)((double)samp->frequency / tscale);
 }
 
 void Sample_8bit(Sample *samp)
@@ -441,7 +443,7 @@ void FixSample_NDS(Sample *samp)
                 {
                     int addition = (samp->loop_end - samp->loop_start);
                     if (addition > MAX_UNROLL_THRESHOLD)
-                        Resample(samp, samp->sample_length + 1);
+                        Resample(samp, looplen, looplen + 1);
                     else
                         Unroll_Sample_Loop(samp, 1);
                 }
@@ -469,7 +471,7 @@ void FixSample_NDS(Sample *samp)
 
                     int addition = looplen*count;
                     if (addition > MAX_UNROLL_THRESHOLD)
-                        Resample(samp, samp->sample_length + (4 - (looplen & 3)));
+                        Resample(samp, looplen, looplen + (4 - (looplen & 3)));
                     else
                         Unroll_Sample_Loop(samp, count);
                 }
@@ -487,7 +489,7 @@ void FixSample_NDS(Sample *samp)
 
             int addition = looplen * count;
             if (addition > MAX_UNROLL_THRESHOLD)
-                Resample(samp, samp->sample_length + (4 - (looplen & 7)));
+                Resample(samp, a, a + (4 - (a & 7)));
             else
                 Unroll_Sample_Loop(samp, count);
         }
