@@ -27,151 +27,95 @@
 
 extern int ignore_sflags;
 
-void Sample_PadStart(Sample *samp, u32 count)
-{
-    // Pad beginning of sample with zero
-
-    if (count == 0)
-        return; // nothing to do
-
-    if (samp->format & SAMPF_16BIT)
-    {
-        u16 *newdata16 = malloc((samp->sample_length + count) * 2);
-
-        for (u32 x = 0; x < count; x++)
-            newdata16[x] = 32768;
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata16[count + x] = ((u16 *)samp->data)[x];
-
-        free(samp->data);
-        samp->data = (void *)newdata16;
-    }
-    else
-    {
-        u8 *newdata8 = malloc(samp->sample_length + count);
-
-        for (u32 x = 0; x < count; x++)
-            newdata8[x] = 128;
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata8[count + x] = ((u8 *)samp->data)[x];
-
-        free(samp->data);
-        samp->data = (void *)newdata8;
-    }
-
-    samp->loop_start    += count;
-    samp->loop_end      += count;
-    samp->sample_length += count;
-}
-
 void Sample_PadEnd(Sample *samp, u32 count)
 {
-    // Pad end of sample with zero
+    // Pad end of sample with loop data (or zero) and shift loops forward
 
     if (count == 0)
         return; // nothing to do
-
+    
+    u32 lpoint = samp->loop_start;
+    u32 length = samp->loop_type ? samp->loop_end : samp->sample_length;
+        
     if (samp->format & SAMPF_16BIT)
     {
-        u16 *newdata16 = malloc((samp->sample_length + count) * 2);
+        u16 *newdata16 = realloc(samp->data, (length + count) * 2);
 
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata16[x] = ((u16 *)samp->data)[x];
-        for (u32 x = 0; x < count; x++)
-            newdata16[samp->sample_length + x] = 32768;
+        if (samp->loop_type)
+        {
+            for (u32 x = 0; x < count; x++)
+                newdata16[length + x] = newdata16[lpoint + x];
+        }
+        else
+        {
+            for (u32 x = 0; x < count; x++)
+                newdata16[length + x] = 32768;
+        }
 
-        free(samp->data);
         samp->data = (void *)newdata16;
     }
     else
     {
-        u8 *newdata8 = malloc(samp->sample_length + count);
+        u8 *newdata8 = realloc(samp->data, length + count);
 
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata8[x] = ((u8 *)samp->data)[x];
-        for (u32 x = 0; x < count; x++)
-            newdata8[samp->sample_length + x] = 128;
+        if (samp->loop_type)
+        {
+            for (u32 x = 0; x < count; x++)
+                newdata8[length + x] = newdata8[lpoint + x];
+        }
+        else
+        {
+            for (u32 x = 0; x < count; x++)
+                newdata8[length + x] = 128;
+        }
 
-        free(samp->data);
         samp->data = (void *)newdata8;
     }
-    samp->loop_end      += count;
-    samp->sample_length += count;
+
+    if (samp->loop_type)
+    {
+        samp->loop_start += count;
+        samp->loop_end   += count;
+    }
+    samp->sample_length = length + count;
 }
 
 void Unroll_Sample_Loop(Sample *samp, u32 count)
 {
-    // unrolls sample loop (count) times
-    // loop end MUST equal sample length
-
-    u32 looplen = samp->loop_end-samp->loop_start;
-    u32 newlen = samp->sample_length + looplen*count;
-
-    if (samp->format & SAMPF_16BIT)
-    {
-        u16 *newdata16 = malloc(newlen * 2);
-
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata16[x] = ((u16 *)samp->data)[x];
-        for (u32 x = 0; x < looplen * count; x++)
-            newdata16[samp->sample_length + x] = ((u16 *)samp->data)[samp->loop_start + (x % looplen)];
-
-        free(samp->data);
-        samp->data = (void*)newdata16;
-    }
-    else
-    {
-        u8 *newdata8 = malloc(newlen);
-
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata8[x] = ((u8 *)samp->data)[x];
-        for (u32 x = 0; x < looplen * count; x++)
-            newdata8[samp->sample_length + x] = ((u8 *)samp->data)[samp->loop_start + (x % looplen)];
-
-        free(samp->data);
-        samp->data = (void*)newdata8;
-    }
-
-    samp->loop_end += looplen*count;
-    samp->sample_length += looplen*count;
+    u32 addition = count*(samp->loop_end - samp->loop_start);
+    Sample_PadEnd(samp, addition);
+    samp->loop_start -= addition;
 }
 
 void Unroll_BIDI_Sample(Sample* samp)
 {
-    // sample length MUST equal sample loop end
     // sample MUST have loop type 2 (BIDI)
 
-    u32 looplen = samp->loop_end-samp->loop_start;
-    u32 newlen = (samp->sample_length + looplen);
-
+    u32 lpoint = samp->loop_start;
+    u32 length = samp->loop_end;
+    u32 looplen = length - lpoint;
+        
     if (samp->format & SAMPF_16BIT)
     {
-        u16 *newdata16 = malloc(newlen * 2);
+        u16 *newdata16 = realloc(samp->data, (length + looplen) * 2);
 
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata16[x] = ((u16 *)samp->data)[x];
         for (u32 x = 0; x < looplen; x++)
-            newdata16[x + samp->sample_length] = ((u16 *)samp->data)[samp->loop_end - 1 - x];
+            newdata16[length + x] = newdata16[length-1 - x];
 
-        free(samp->data);
         samp->data = (void *)newdata16;
     }
     else
     {
-        u8 *newdata8 = malloc(newlen);
+        u8 *newdata8 = realloc(samp->data, length + looplen);
 
-        for (u32 x = 0; x < samp->sample_length; x++)
-            newdata8[x] = ((u8 *)samp->data)[x];
         for (u32 x = 0; x < looplen; x++)
-            newdata8[x + samp->sample_length] = ((u8 *)samp->data)[samp->loop_end - 1 - x];
+            newdata8[length + x] = newdata8[length-1 - x];
 
-        free(samp->data);
         samp->data = (void *)newdata8;
     }
 
     samp->loop_type = 1;
-    samp->sample_length += looplen;
-    samp->loop_end += looplen;
+    samp->sample_length = samp->loop_end = length + looplen;
 }
 
 /*
@@ -452,14 +396,15 @@ void FixSample_NDS(Sample *samp)
             Unroll_Sample_Loop(samp, count);
     }
 
-    // Align loop_start
+    // Align loop_start (and thus loop_end), or pad sample_length if loop is disabled
     if (samp->loop_type)
     {
-        Sample_PadStart(samp, (-samp->loop_start) & alignmask);
+        Sample_PadEnd(samp, (-samp->loop_start) & alignmask);
     }
-
-    // Pad end, only happens when loop is disabled
-    Sample_PadEnd(samp, (-samp->sample_length) & alignmask);
+    else
+    {
+        Sample_PadEnd(samp, (-samp->sample_length) & alignmask);
+    }
 
     Sample_Sign(samp); // DS hardware takes signed samples
 
