@@ -489,7 +489,7 @@ void FixSample_NDS(Sample *samp)
 
             int addition = looplen * count;
             if (addition > MAX_UNROLL_THRESHOLD)
-                Resample(samp, a, a + (4 - (a & 7)));
+                Resample(samp, a, a + (8 - (a & 7)));
             else
                 Unroll_Sample_Loop(samp, count);
         }
