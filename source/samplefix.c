@@ -430,115 +430,36 @@ void FixSample_NDS(Sample *samp)
             samp->format |= SAMPF_COMP;
         }
     }
+    
+    u32 alignmask = (samp->format & SAMPF_COMP) ? 7 : (samp->format & SAMPF_16BIT) ? 1 : 3;
 
     // Resize loop
     if (samp->loop_type)
     {
-        int looplen = samp->loop_end-samp->loop_start;
-        if (!(samp->format & SAMPF_COMP))
+        u32 count = 0;
+        u32 looplen = samp->loop_end-samp->loop_start;
+        u32 unrolledlen = looplen;
+        while (unrolledlen & alignmask)
         {
-            if (samp->format & SAMPF_16BIT)
-            {
-                if (looplen & 1)
-                {
-                    int addition = (samp->loop_end - samp->loop_start);
-                    if (addition > MAX_UNROLL_THRESHOLD)
-                        Resample(samp, looplen, looplen + 1);
-                    else
-                        Unroll_Sample_Loop(samp, 1);
-                }
-            }
-            else
-            {
-                if (looplen & 3)
-                {
-                    int count = looplen & 3;
-                    switch (count)
-                    {
-                        case 0:
-                            count = 0;
-                            break;
-                        case 1:
-                            count = 3;
-                            break;
-                        case 2:
-                            count = 1;
-                            break;
-                        case 3:
-                            count = 3;
-                            break;
-                    }
-
-                    int addition = looplen*count;
-                    if (addition > MAX_UNROLL_THRESHOLD)
-                        Resample(samp, looplen, looplen + (4 - (looplen & 3)));
-                    else
-                        Unroll_Sample_Loop(samp, count);
-                }
-            }
+            count++;
+            unrolledlen += looplen;
         }
-        else
-        {
-            int a = looplen;
-            int count = 0;
-            while (looplen & 7)
-            {
-                count++;
-                looplen += a;
-            }
-
-            int addition = looplen * count;
-            if (addition > MAX_UNROLL_THRESHOLD)
-                Resample(samp, a, a + (8 - (a & 7)));
-            else
-                Unroll_Sample_Loop(samp, count);
-        }
+        
+        u32 addition = unrolledlen - looplen;
+        if (addition > MAX_UNROLL_THRESHOLD)
+            Resample(samp, looplen, looplen + ((-looplen) & alignmask));
+        else if (count > 0)
+            Unroll_Sample_Loop(samp, count);
     }
 
     // Align loop_start
     if (samp->loop_type)
     {
-        int padsize;
-        if (!(samp->format & SAMPF_COMP))
-        {
-            if (samp->format & SAMPF_16BIT) {
-                padsize = ((2 - (samp->loop_start & 1)) & 1);
-            } else {
-                padsize = ((4 - (samp->loop_start & 3)) & 3);
-            }
-        }
-        else
-        {
-            padsize = ((8 - (samp->loop_start & 7)) & 7);
-        }
-        Sample_PadStart(samp, padsize);
+        Sample_PadStart(samp, (-samp->loop_start) & alignmask);
     }
 
     // Pad end, only happens when loop is disabled
-    if (!(samp->format & SAMPF_COMP))
-    {
-        if (samp->format & SAMPF_16BIT)
-        {
-            if (samp->sample_length & 1)
-            {
-                Sample_PadEnd(samp, 2 - (samp->sample_length & 1));
-            }
-        }
-        else
-        {
-            if (samp->sample_length & 3)
-            {
-                Sample_PadEnd(samp, 4 - (samp->sample_length & 3));
-            }
-        }
-    }
-    else
-    {
-        if (samp->sample_length & 7)
-        {
-            Sample_PadEnd(samp, 8 - (samp->sample_length & 7));
-        }
-    }
+    Sample_PadEnd(samp, (-samp->sample_length) & alignmask);
 
     Sample_Sign(samp); // DS hardware takes signed samples
 
