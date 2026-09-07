@@ -33,10 +33,10 @@ void Sample_PadEnd(Sample *samp, u32 count)
 
     if (count == 0)
         return; // nothing to do
-    
+
     u32 lpoint = samp->loop_start;
     u32 length = samp->loop_type ? samp->loop_end : samp->sample_length;
-        
+
     if (samp->format & SAMPF_16BIT)
     {
         u16 *newdata16 = realloc(samp->data, (length + count) * 2);
@@ -94,7 +94,7 @@ void Unroll_BIDI_Sample(Sample* samp)
     u32 lpoint = samp->loop_start;
     u32 length = samp->loop_end;
     u32 looplen = length - lpoint;
-        
+
     if (samp->format & SAMPF_16BIT)
     {
         u16 *newdata16 = realloc(samp->data, (length + looplen) * 2);
@@ -316,27 +316,6 @@ void FixSample_GBA(Sample *samp)
     }
 }
 
-int strcmpshit(char *str1, char *str2)
-{
-    int x = 0;
-    int f = 0;
-
-    while (str1[x] != 0)
-    {
-        if (str1[x] == str2[f])
-            f++;
-        else
-            f = 0;
-
-        if (str2[f] == 0)
-            return 1;
-
-        x++;
-    }
-
-    return 0;
-}
-
 void FixSample_NDS(Sample *samp)
 {
     if (samp->sample_length == 0)
@@ -354,12 +333,17 @@ void FixSample_NDS(Sample *samp)
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);
 
-    // %o option
+    // %o option.
+    //
+    // Used to support the `9xx` command when using the DS hardware channels for
+    // playback. In MOD/XM (maybe others) you can use a sample offset command to
+    // start playing beyond the loop start, and then when the sample hits the
+    // loop end it'll still correctly loop back to the start.
     if (samp->loop_type)
     {
         if (!ignore_sflags)
         {
-            if (((strcmpshit(samp->name, "%o" )) > 0))
+            if (strstr(samp->name, "%o") != NULL)
             {
                 Unroll_Sample_Loop(samp, 1);
                 samp->loop_start += (samp->loop_end-samp->loop_start) / 2;
@@ -367,14 +351,17 @@ void FixSample_NDS(Sample *samp)
         }
     }
 
+    // %c option
+    //
+    // Compresses the sample using IMA-ADPCM.
     if (!ignore_sflags)
     {
-        if (((strcmpshit(samp->name, "%c")) > 0))
+        if (strstr(samp->name, "%c") != NULL)
         {
             samp->format |= SAMPF_COMP;
         }
     }
-    
+
     u32 alignmask = (samp->format & SAMPF_COMP) ? 7 : (samp->format & SAMPF_16BIT) ? 1 : 3;
 
     // Resize loop
@@ -388,7 +375,7 @@ void FixSample_NDS(Sample *samp)
             count++;
             unrolledlen += looplen;
         }
-        
+
         u32 addition = unrolledlen - looplen;
         if (addition > MAX_UNROLL_THRESHOLD)
             Resample(samp, looplen, looplen + ((-looplen) & alignmask));
