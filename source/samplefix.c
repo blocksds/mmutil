@@ -353,7 +353,8 @@ void FixSample_NDS(Sample *samp)
 
     // %c option
     //
-    // Compresses the sample using IMA-ADPCM.
+    // Compress the sample using IMA-ADPCM. This only works on NDS in hardware
+    // mixer mode.
     if (!ignore_sflags)
     {
         if (strstr(samp->name, "%c") != NULL)

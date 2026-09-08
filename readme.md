@@ -34,7 +34,8 @@ conversion.
   for playback. In MOD/XM (maybe others) you can use a sample offset command to
   start playing beyond the loop start, and then when the sample hits the loop
   end it'll still correctly loop back to the start.
-- `%c`: Compress the sample using IMA-ADPCM.
+- `%c`: Compress the sample using IMA-ADPCM. This only works on NDS in hardware
+  mixer mode.
 
 ## Examples
 
