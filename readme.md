@@ -27,8 +27,10 @@ Option       | Description
 `-z`         | Export raw WAV data (8-bit format).
 `-V`         | Print version string and exit.
 
+## Sample flags
+
 Sample flags are strings added to a sample name to modify the sample during
-conversion.
+conversion. They only work in NDS hardware mixing mode.
 
 - `%o`: Used to support the `9xx` command when using the DS hardware channels
   for playback. In MOD/XM (maybe others) you can use a sample offset command to
