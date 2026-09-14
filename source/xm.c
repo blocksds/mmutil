@@ -766,7 +766,7 @@ int Load_XM(MAS_Module *mod, bool verbose)
     for (int x = 0; x < mod->patt_count; x++)
     {
         if (verbose)
-            printf(vstr_xm_patt, x + 1);
+            printf(vstr_xm_patt, x);
 
         Load_XM_Pattern(&mod->patterns[x], xm_nchannels, verbose);
     }
