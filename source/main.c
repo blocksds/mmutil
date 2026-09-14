@@ -418,6 +418,8 @@ int main(int argc, char *argv[])
                 printf("Operation Canceled!\n");
                 return -1;
             }
+
+            file_delete(str_output);
         }
 
         if (file_open_write(str_output))
@@ -455,6 +457,7 @@ int main(int argc, char *argv[])
                 return -1;
             }
 
+            file_delete(str_output);
         }
 
         if (target_system == SYSTEM_GBA)
