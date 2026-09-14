@@ -524,6 +524,9 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
     if (read8() != 0)
         return ERR_UNKNOWNPATTERN;
 
+    if (headsize != 9)
+        printf("warning: Pattern header size is unusual: %u != 9\n", headsize);
+
     memset(patt, 0, sizeof(Pattern));
 
     patt->nrows = read16();
@@ -547,6 +550,9 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
         return ERR_NONE;
     }
 
+    // Keep track of the start of the data to ensure that we read all of it
+    u32 total_data_read = 0;
+
     // read pattern data
     for (u32 row = 0; row < patt->nrows; row++)
     {
@@ -554,12 +560,14 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
         {
             u32 e = row * MAX_CHANNELS + col;
             u8 b = read8();
+            total_data_read++;
 
             if (b & 128) // packed
             {
                 if (b & 1) // bit 0 set: Note follows
                 {
                     patt->data[e].note = read8(); // (byte) Note (1-96, 1 = C-0)
+                    total_data_read++;
                     if (patt->data[e].note == 97)
                         patt->data[e].note = 255;
                     else
@@ -569,11 +577,13 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
                 if (b & 2) // 1 set: Instrument follows
                 {
                     patt->data[e].inst = read8(); // (byte) Instrument (1-128)
+                    total_data_read++;
                 }
 
                 if (b & 4) // 2 set: Volume column byte follows
                 {
                     patt->data[e].vol = read8(); // (byte) Volume column byte
+                    total_data_read++;
                 }
 
                 u8 fx;
@@ -581,6 +591,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
                 if (b & 8) // 3 set: Effect type follows
                 {
                     fx = read8(); // (byte) Effect type
+                    total_data_read++;
                 }
                 else
                 {
@@ -592,6 +603,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
                 if (b & 16) // 4 set: Guess what!
                 {
                     param = read8(); // (byte) Effect parameter
+                    total_data_read++;
                 }
                 else
                 {
@@ -623,7 +635,33 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
                 CONV_XM_EFFECT(&fx, &param);  // convert effect
                 patt->data[e].fx = fx;
                 patt->data[e].param = param;
+
+                total_data_read += 4;
             }
+        }
+    }
+
+    // If we have read more than expected, the module is corrupt
+    if (total_data_read > clength)
+    {
+        printf("ERROR: Read too much pattern data: %u > %u\n",
+               total_data_read, clength);
+        return ERR_INVALID_MODULE;
+    }
+
+    // If there is a mismatch, warn the user, but don't exit. Some modules have
+    // some extra bytes (zeroes) after the real data.
+    if (total_data_read < clength)
+    {
+        printf("warning: Extra data found in pattern: %u < %u\n",
+               total_data_read, clength);
+
+        // Read the remaining pattern data to move pointer to the start of the
+        // next pattern.
+        while (total_data_read < clength)
+        {
+            read8();
+            total_data_read++;
         }
     }
 
