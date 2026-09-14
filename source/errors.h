@@ -25,6 +25,5 @@
 #define ERR_TOOMANYSAMPLES  0x09
 #define ERR_UNKNOWNINPUT    0x0A
 #define ERR_BADINPUT        0x0B
-#define ERR_RETARDEDSCRIPT  0x0C
 
 #endif // ERRORS_H__
