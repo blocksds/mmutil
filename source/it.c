@@ -527,10 +527,10 @@ int Load_IT(MAS_Module *itm, bool verbose)
     for (int x = 0; x < 28; x++)
         itm->title[x] = read8();
 
-    itm->order_count = (u16)read16();
-    itm->inst_count  = (u8)read16();
-    itm->samp_count  = (u8)read16();
-    itm->patt_count  = (u8)read16();
+    itm->order_count = read16();
+    itm->inst_count  = read16();
+    itm->samp_count  = read16();
+    itm->patt_count  = read16();
 
     u16 cwt = read16();
     (void)cwt; // Unused

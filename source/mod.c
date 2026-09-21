@@ -75,7 +75,7 @@ int Load_MOD_SampleData(Sample *samp)
     return ERR_NONE;
 }
 
-int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u8 *inst_count)
+int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count)
 {
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64; // MODs have fixed 64 rows per pattern

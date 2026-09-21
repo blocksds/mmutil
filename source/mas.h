@@ -147,10 +147,10 @@ typedef struct tMAS_Module
 {
     char    title[32];
     u16     order_count;
-    u8      inst_count;
-    u8      samp_count;
-    u8      patt_count;
-    u8      restart_pos;
+    u16     inst_count;
+    u16     samp_count;
+    u16     patt_count;
+    u16     restart_pos;
     bool    stereo;
     bool    inst_mode;
     u8      freq_mode;
@@ -159,8 +159,8 @@ typedef struct tMAS_Module
     bool    xm_mode;
     bool    old_mode;
     u8      global_volume;
-    u8      initial_speed;
-    u8      initial_tempo;
+    u16     initial_speed;
+    u16     initial_tempo;
     u8      channel_volume[MAX_CHANNELS];
     u8      channel_panning[MAX_CHANNELS];
     u8      orders[256];

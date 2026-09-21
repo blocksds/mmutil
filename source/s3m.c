@@ -273,10 +273,10 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     }
 
     skip8(2); // reserved space
-    mod->order_count = (u8)read16();
-    mod->inst_count = (u8)read16();
+    mod->order_count = read16();
+    mod->inst_count = read16();
     mod->samp_count = mod->inst_count;
-    mod->patt_count = (u8)read16();
+    mod->patt_count = read16();
 
     for (int x = 0; x < 32; x++)
         mod->channel_volume[x] = 64;

@@ -13,6 +13,10 @@
 #ifndef VERSION_H__
 #define VERSION_H__
 
+#ifdef MM_MMUTIL_DEVKITPRO_COMPAT
 #define MAS_VERSION 0x18
+#else
+#define MAS_VERSION 0x19
+#endif
 
 #endif // VERSION_H__

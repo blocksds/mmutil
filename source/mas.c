@@ -582,17 +582,72 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
 
     MAS_OFFSET = file_tell_write();
 
-    write8((u8)mod->order_count);
+#ifdef MM_MMUTIL_DEVKITPRO_COMPAT
+    if (mod->order_count > 255)
+    {
+        printf("Order count higher than 255: %u\n", mod->order_count);
+        return ERR_INVALID_MODULE;
+    }
+    write8(mod->order_count);
+
+    if (mod->inst_count > 255)
+    {
+        printf("Instrument count higher than 255: %u\n", mod->inst_count);
+        return ERR_INVALID_MODULE;
+    }
     write8(mod->inst_count);
+
+    if (mod->samp_count > 255)
+    {
+        printf("Sample count higher than 255: %u\n", mod->samp_count);
+        return ERR_INVALID_MODULE;
+    }
     write8(mod->samp_count);
+
+    if (mod->patt_count > 255)
+    {
+        printf("Pattern count higher than 255: %u\n", mod->patt_count);
+        return ERR_INVALID_MODULE;
+    }
     write8(mod->patt_count);
+#else
+    write16(mod->order_count);
+    write16(mod->inst_count);
+    write16(mod->samp_count);
+    write16(mod->patt_count);
+#endif
+
     write8((u8)((mod->link_gxx ? 1 : 0) | (mod->old_effects ? 2 : 0) |
                 (mod->freq_mode ? 4 : 0) | (mod->xm_mode ? 8 : 0) |
                 (msl_dep ? 16 : 0) | (mod->old_mode ? 32 : 0)));
     write8(mod->global_volume);
+
+#ifdef MM_MMUTIL_DEVKITPRO_COMPAT
+    if (mod->initial_speed > 255)
+    {
+        printf("Initial speed higher than 255: %u\n", mod->initial_speed);
+        return ERR_INVALID_MODULE;
+    }
     write8(mod->initial_speed);
+
+    if (mod->initial_tempo > 255)
+    {
+        printf("Initial tempo higher than 255: %u\n", mod->initial_tempo);
+        return ERR_INVALID_MODULE;
+    }
     write8(mod->initial_tempo);
+
+    if (mod->restart_pos > 255)
+    {
+        printf("Restart position higher than 255: %u\n", mod->restart_pos);
+        return ERR_INVALID_MODULE;
+    }
     write8(mod->restart_pos);
+#else
+    write16(mod->initial_speed);
+    write16(mod->initial_tempo);
+    write16(mod->restart_pos);
+#endif
 
 /*
     u8 rsamp = 0;
@@ -620,8 +675,17 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
     write8(rsamp);
 */
 
+    // Reserved
+#ifdef MM_MMUTIL_DEVKITPRO_COMPAT
     write8(BYTESMASHER);
-    write8(BYTESMASHER);write8(BYTESMASHER);
+    write8(BYTESMASHER);
+    write8(BYTESMASHER);
+#else
+    write8(BYTESMASHER);
+    write8(BYTESMASHER);
+    write8(BYTESMASHER);
+    write8(BYTESMASHER);
+#endif
 
     for (int x = 0; x < MAX_CHANNELS; x++)
         write8(mod->channel_volume[x]);
