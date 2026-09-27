@@ -39,7 +39,7 @@ void Sample_PadEnd(Sample *samp, u32 count)
 
     if (samp->format & SAMPF_16BIT)
     {
-        u16 *newdata16 = realloc(samp->data, (length + count) * 2);
+        u16 *newdata16 = (u16*)realloc(samp->data, (length + count) * 2);
 
         if (samp->loop_type)
         {
@@ -56,7 +56,7 @@ void Sample_PadEnd(Sample *samp, u32 count)
     }
     else
     {
-        u8 *newdata8 = realloc(samp->data, length + count);
+        u8 *newdata8 = (u8*)realloc(samp->data, length + count);
 
         if (samp->loop_type)
         {
@@ -97,7 +97,7 @@ void Unroll_BIDI_Sample(Sample* samp)
 
     if (samp->format & SAMPF_16BIT)
     {
-        u16 *newdata16 = realloc(samp->data, (length + looplen) * 2);
+        u16 *newdata16 = (u16*)realloc(samp->data, (length + looplen) * 2);
 
         for (u32 x = 0; x < looplen; x++)
             newdata16[length + x] = newdata16[length-1 - x];
@@ -106,7 +106,7 @@ void Unroll_BIDI_Sample(Sample* samp)
     }
     else
     {
-        u8 *newdata8 = realloc(samp->data, length + looplen);
+        u8 *newdata8 = (u8*)realloc(samp->data, length + looplen);
 
         for (u32 x = 0; x < looplen; x++)
             newdata8[length + x] = newdata8[length-1 - x];
@@ -148,12 +148,12 @@ void Resample(Sample *samp, u32 oldrate, u32 newrate)
     // allocate memory
     if (bit16)
     {
-        dst16 = malloc(newsize * 2);
+        dst16 = (u16*)malloc(newsize * 2);
         sign_diff = 32768.0;
     }
     else
     {
-        dst8 = malloc(newsize);
+        dst8 = (u8*)malloc(newsize);
         sign_diff = 128.0;
     }
 
@@ -246,7 +246,7 @@ void Sample_8bit(Sample *samp)
 {
     if (samp->format & SAMPF_16BIT)
     {
-        u8 *newdata = malloc(samp->sample_length);
+        u8 *newdata = (u8 *)malloc(samp->sample_length);
 
         for (u32 t = 0; t < samp->sample_length; t++)
             newdata[t] = ((u16 * )samp->data)[t] / 256;

@@ -24,7 +24,7 @@ static int file_byte_count;
 // Only report read errors once per file
 static bool read_error_reported = false;
 
-bool file_exists(char *filename)
+bool file_exists(const char *filename)
 {
     fin = fopen(filename, "rb");
     if (!fin)
@@ -34,7 +34,7 @@ bool file_exists(char *filename)
     return true;
 }
 
-int file_size(char *filename)
+int file_size(const char *filename)
 {
     FILE *f = fopen(filename, "rb");
     if (!f)
@@ -49,7 +49,7 @@ int file_size(char *filename)
     return a;
 }
 
-int file_open_read(char *filename)
+int file_open_read(const char *filename)
 {
     fin = fopen(filename, "rb");
     if (!fin)
@@ -64,7 +64,7 @@ int file_open_read(char *filename)
     return FILE_OPEN_OKAY;
 }
 
-int file_open_write(char *filename)
+int file_open_write(const char *filename)
 {
     fout = fopen(filename, "wb");
     if (!fout)
@@ -78,7 +78,7 @@ int file_open_write(char *filename)
     return FILE_OPEN_OKAY;
 }
 
-int file_open_write_end(char *filename)
+int file_open_write_end(const char *filename)
 {
     fout = fopen(filename, "r+b");
     if (!fout)
@@ -275,7 +275,7 @@ void skip8f(u32 count, FILE *p_file)
     fseek(p_file, count, SEEK_CUR);
 }
 
-void file_delete(char *filename)
+void file_delete(const char *filename)
 {
     if (file_exists(filename))
         remove(filename);

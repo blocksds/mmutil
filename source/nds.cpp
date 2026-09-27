@@ -86,7 +86,7 @@ static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_fl
 
     // Get the path to the BlocksDS environment, if any.
 
-    char *blocksds = getenv("BLOCKSDS");
+    const char *blocksds = getenv("BLOCKSDS");
 
     if (blocksds == NULL)
     {

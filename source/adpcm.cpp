@@ -94,7 +94,7 @@ static int calc_delta(int diff, int step)
 void adpcm_compress_sample(Sample *sample)
 {
     // Allocate space for sample (compressed size)
-    u8 *output = malloc(sample->sample_length / 2 + 4);
+    u8 *output = (u8 *)malloc(sample->sample_length / 2 + 4);
 
     // Determine best (or close to best) initial table value
 

@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
                 }
 
                 int strp = strlen(str_input);
-                str_output = malloc(strp + 2);
+                str_output = (char *)malloc(strp + 2);
                 strcpy(str_output, str_input);
                 strp=strlen(str_output)-1;
 
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
                 samp.msl_index = 0xFFFF;
 
                 mod.samp_count = 1;
-                mod.samples = malloc(sizeof(Sample));
+                mod.samples = (Sample *)malloc(sizeof(Sample));
                 memcpy(mod.samples, &samp, sizeof(Sample));
 
                 break;

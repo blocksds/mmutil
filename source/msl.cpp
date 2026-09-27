@@ -44,7 +44,7 @@ char str_msl[256];
 static char TMP_SAMP[] = "mm_samp_tmp.XXXXXXX";
 static char TMP_SONG[] = "mm_song_tmp.XXXXXXX";
 
-void MSL_PrintDefinition(char *filename, u16 id, char *prefix);
+void MSL_PrintDefinition(const char *filename, u16 id, const char *prefix);
 
 #define SAMPLE_HEADER_SIZE (12 + ((target_system == SYSTEM_NDS) ? 4 : 0))
 
@@ -185,7 +185,7 @@ u16 MSL_AddModule(MAS_Module *mod)
     return MSL_NSONGS - 1;
 }
 
-void MSL_Export(char *filename)
+void MSL_Export(const char *filename)
 {
     file_open_write(filename);
     write16(MSL_NSAMPS);
@@ -249,7 +249,7 @@ void MSL_Export(char *filename)
         free(parap_song);
 }
 
-void MSL_PrintDefinition(char* filename, u16 id, char* prefix)
+void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix)
 {
     char newtitle[64];
     int x, s = 0;
@@ -374,7 +374,7 @@ int MSL_CreateTemporaryFiles(bool verbose)
     return ERR_NONE;
 }
 
-int MSL_Create(char *argv[], int argc, char *output, char *header, bool verbose)
+int MSL_Create(char *argv[], int argc, const char *output, const char *header, bool verbose)
 {
     MSL_Erase();
 

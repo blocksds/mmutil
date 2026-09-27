@@ -387,7 +387,7 @@ int Load_IT_SampleData(Sample *samp, u16 cwmt)
     }
     else
     {
-        Load_IT_Sample_CMP(samp->data, samp->sample_length, cwmt,
+        Load_IT_Sample_CMP((u8*)samp->data, samp->sample_length, cwmt,
                            (bool)(samp->format & SAMPF_16BIT));
     }
 
@@ -589,9 +589,9 @@ int Load_IT(MAS_Module *itm, bool verbose)
     for (int x = 0; x < itm->order_count; x++)
         itm->orders[x] = read8();
 
-    u32 *parap_inst = malloc(itm->inst_count * sizeof(u32));
-    u32 *parap_samp = malloc(itm->samp_count * sizeof(u32));
-    u32 *parap_patt = malloc(itm->patt_count * sizeof(u32));
+    u32 *parap_inst = (u32*)malloc(itm->inst_count * sizeof(u32));
+    u32 *parap_samp = (u32*)malloc(itm->samp_count * sizeof(u32));
+    u32 *parap_patt = (u32*)malloc(itm->patt_count * sizeof(u32));
 
     for (int x = 0; x < itm->inst_count; x++)
         parap_inst[x] = read32();
@@ -785,7 +785,7 @@ int Load_IT_CompressedSampleBlock(u8 **buffer)
 {
     u32 size = read16();
 
-    (*buffer) = malloc(size + 4);
+    (*buffer) = (u8*)malloc(size + 4);
     (*buffer)[size + 0] = 0;
     (*buffer)[size + 1] = 0;
     (*buffer)[size + 2] = 0;

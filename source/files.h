@@ -15,10 +15,10 @@
 
 #include <stdio.h>
 
-int file_size(char *filename);
-int file_open_read(char *filename);
-int file_open_write(char *filename);
-int file_open_write_end(char *filename);
+int file_size(const char *filename);
+int file_open_read(const char *filename);
+int file_open_write(const char *filename);
+int file_open_write_end(const char *filename);
 void file_close_read(void);
 void file_close_write(void);
 u8 read8(void);
@@ -43,9 +43,9 @@ u32 read32f(FILE *p_fin);
 void align32f(FILE *p_file);
 void skip8f(u32 count, FILE *p_file);
 
-void file_delete(char *filename);
+void file_delete(const char *filename);
 
-bool file_exists(char *filename);
+bool file_exists(const char *filename);
 
 int file_get_byte_count(void);
 
