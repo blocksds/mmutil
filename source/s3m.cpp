@@ -52,6 +52,8 @@
 #define vstr_s3m_pattern " * %2i%s"
 #endif
 
+#define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
+
 int Load_S3M_SampleData(Sample *samp, u8 ffi)
 {
     if (samp->sample_length == 0)
@@ -141,7 +143,7 @@ int Load_S3M_Sample(Sample *samp, bool verbose)
         for (u32 x = 0;x < 28; x++)
             samp->name[x] = read8();
 
-        if (read32() != 'SRCS')
+        if (read32() != ID4('S', 'C', 'R', 'S'))
             return ERR_UNKNOWNSAMPLE;
 
         if (verbose)
@@ -292,7 +294,7 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     u16 cwt = read16();
     (void)cwt;
     u16 ffi = read16();
-    if (read32() != 'MRCS') // "SCRM" mark
+    if (read32() != ID4('S', 'C', 'R', 'M')) // "SCRM" mark
         return ERR_INVALID_MODULE;
 
     mod->global_volume = read8()*2;

@@ -54,6 +54,8 @@
 #define vstr_xm_samp_bottom "`-----------------------------------------------'\n"
 #endif
 
+#define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
+
 int Get_XM_Frequency(s8 relnote, s8 finetune)
 {
     double rn = relnote;
@@ -677,8 +679,11 @@ int Load_XM(MAS_Module *mod, bool verbose)
     mod->global_volume = 64;
     mod->old_mode = false;
 
-    if (read32() != 'etxE' || read32() != 'dedn' || read32() != 'doM ' ||
-        read32() != ':elu' || read8() != ' ')
+    if ((read32() != ID4('E', 'x', 't', 'e')) ||
+        (read32() != ID4('n', 'd', 'e', 'd')) ||
+        (read32() != ID4(' ', 'M', 'o', 'd')) ||
+        (read32() != ID4('u', 'l', 'e', ':')) ||
+        (read8() != ' '))
     {
         return ERR_INVALID_MODULE;
     }

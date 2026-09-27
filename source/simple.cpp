@@ -38,45 +38,43 @@ u32 readbits(u8 *buffer, unsigned int pos, unsigned int size)
     return result;
 }
 
-int get_ext(char *filename)
+int get_ext(const char *filename)
 {
     int strl = strlen(filename);
 
     if (strl < 4)
         return INPUT_TYPE_UNK;
 
-    u32 a = 0;
+    const char *ext = NULL;
 
     for (int x = 0; x < 4; x++)
     {
-        if (filename[strl - x - 1] != '.')
-            a |= tolower(filename[strl - x - 1]) << (x * 8);
-        else
+        if (filename[strl - x - 1] == '.')
+        {
+            ext = filename + strl - x;
             break;
+        }
     }
 
-    //a = tolower(filename[strl - 1]) | (tolower(filename[strl - 1]) << 8) |
-    //    tolower(filename[strl - 2] << 16) | tolower(filename[strl - 3] << 24);
+    if (ext == NULL)
+        return INPUT_TYPE_UNK;
 
-    switch (a)
-    {
-        case 'mod':
-            return INPUT_TYPE_MOD;
-        case 's3m':
-            return INPUT_TYPE_S3M;
-        case 'txt':
-            return INPUT_TYPE_TXT;
-        case 'wav':
-            return INPUT_TYPE_WAV;
-        case 'msl':
-            return INPUT_TYPE_MSL;
-        case 'xm':
-            return INPUT_TYPE_XM;
-        case 'it':
-            return INPUT_TYPE_IT;
-        case 'h':
-            return INPUT_TYPE_H;
-    }
+    if (strcasecmp(ext, "mod") == 0)
+        return INPUT_TYPE_MOD;
+    else if (strcasecmp(ext, "s3m") == 0)
+        return INPUT_TYPE_S3M;
+    else if (strcasecmp(ext, "txt") == 0)
+        return INPUT_TYPE_TXT;
+    else if (strcasecmp(ext, "wav") == 0)
+        return INPUT_TYPE_WAV;
+    else if (strcasecmp(ext, "msl") == 0)
+        return INPUT_TYPE_MSL;
+    else if (strcasecmp(ext, "xm") == 0)
+        return INPUT_TYPE_XM;
+    else if (strcasecmp(ext, "it") == 0)
+        return INPUT_TYPE_IT;
+    else if (strcasecmp(ext, "h") == 0)
+        return INPUT_TYPE_H;
 
     return INPUT_TYPE_UNK;
 }

@@ -47,6 +47,8 @@
 #define vstr_mod_pattern " * %2i%s"
 #endif
 
+#define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
+
 int Create_MOD_Instrument(Instrument *inst, u8 sample)
 {
     memset(inst, 0, sizeof(Instrument));
@@ -217,37 +219,38 @@ int Load_MOD(MAS_Module *mod, bool verbose)
 
     switch (sig)
     {
-        case 'NHC1':
+        case ID4('1', 'C', 'H', 'N'):
             mod_channels = 1;
             break;
-        case 'NHC2':
+        case ID4('2', 'C', 'H', 'N'):
             mod_channels = 2;
             break;
-        case 'NHC3':
+        case ID4('3', 'C', 'H', 'N'):
             mod_channels = 3;
             break;
-        case '.K.M': // compare them to "M.K."  - if true we have a 4 channel mod
-        case 'NHC4':
+        case ID4('M', '.', 'K', '.'):
+        case ID4('4', 'C', 'H', 'N'):
             mod_channels = 4;
             break;
-        case 'NHC5':
+        case ID4('5', 'C', 'H', 'N'):
             mod_channels = 5;
             break;
-        case 'NHC6': // compare them to "6CHN"  - if true we have a 6 channel mod
+        case ID4('6', 'C', 'H', 'N'):
             mod_channels = 6;
             break;
-        case 'NHC7':
+        case ID4('7', 'C', 'H', 'N'):
             mod_channels = 7;
             break;
-        case 'NHC8': // compare them to "8CHN"  - if true we have an 8 channel mod
+        case ID4('8', 'C', 'H', 'N'):
             mod_channels = 8;
             break;
-        case 'NHC9':
+        case ID4('9', 'C', 'H', 'N'):
             mod_channels = 9;
             break;
         default: // There are also rare tunes that use **CH where ** = 10-32 channels
         {
-            if (sig >> 16 == 'HC')
+            if ((((sig >> 16) & 0xFF) == 'C') &&
+                (((sig >> 24) & 0xFF) == 'H'))
             {
                 char chn_number[3];
                 chn_number[0] = (char)(sig & 0xFF);

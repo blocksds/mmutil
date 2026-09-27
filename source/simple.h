@@ -23,7 +23,7 @@
 #define INPUT_TYPE_H    7
 #define INPUT_TYPE_MSL  8
 
-int get_ext(char *filename);
+int get_ext(const char *filename);
 u32 calc_samplooplen(Sample *s);
 u32 calc_samplen(Sample *s);
 u32 calc_samplen_ex2(Sample *s);

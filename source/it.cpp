@@ -57,6 +57,8 @@
 #define vstr_it_pattern " * %2i"
 #endif
 
+#define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
+
 bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
 {
     // Read envelopes
@@ -269,7 +271,7 @@ int Load_IT_Sample(Sample *samp)
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
 
-    if (read32() != 'SPMI')
+    if (read32() != ID4('I', 'M', 'P', 'S'))
         return ERR_UNKNOWNSAMPLE;
 
     for (int x = 0; x < 12; x++) // DOS filename
@@ -521,7 +523,7 @@ int Load_IT(MAS_Module *itm, bool verbose)
 
     memset(itm, 0, sizeof(MAS_Module));
 
-    if (read32() != 'MPMI')
+    if (read32() != ID4('I', 'M', 'P', 'M'))
         return ERR_INVALID_MODULE;
 
     for (int x = 0; x < 28; x++)

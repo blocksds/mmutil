@@ -22,6 +22,8 @@
 #include "simple.h"
 #include "samplefix.h"
 
+#define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
+
 int Load_WAV(Sample *samp, bool verbose, bool fix)
 {
     if (verbose)
@@ -55,7 +57,7 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
         // parse chunk code
         switch (chunk_code)
         {
-            case ' tmf': // format chunk
+            case ID4('f', 'm', 't', ' '): // format chunk
             {
                 // check compression code (1 = PCM)
                 if (read16() != 1)
@@ -103,7 +105,7 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
                 break;
             }
 
-            case 'atad': // data chunk
+            case ID4('d', 'a', 't', 'a'): // data chunk
             {
                 size_t t, c;
                 int dat;
@@ -152,7 +154,7 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
                 break;
             }
 
-            case 'lpms': // sampler chunk
+            case ID4('s', 'm', 'p', 'l'): // sampler chunk
             {
                 smpl_chunk_pos = file_tell_read();
                 skip8(chunk_size);
