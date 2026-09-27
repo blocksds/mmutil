@@ -31,8 +31,6 @@
 #include "systems.h"
 #include "samplefix.h"
 
-FILE *F_SCRIPT = NULL;
-
 FILE *F_SAMP = NULL;
 FILE *F_SONG = NULL;
 
