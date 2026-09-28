@@ -18,6 +18,7 @@ Option       | Description
 -------------|---------------------------------------------------
 `-o<output>` | Set output file.
 `-h<header>` | Set header output file.
+`-D`         | Add list of sample and module names to soundbank.
 `-m`         | Output MAS file rather than soundbank.
 `-d`         | Use for NDS projects.
 `-b`         | Create test ROM. (use -d for .nds, otherwise .gba)

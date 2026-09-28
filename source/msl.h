@@ -13,6 +13,7 @@
 #ifndef MSL_H__
 #define MSL_H__
 
-int MSL_Create(char *argv[], int argc, const char *output, const char *header, bool verbose);
+int MSL_Create(char *argv[], int argc, const char *output, const char *header,
+               bool export_dictionary, bool verbose);
 
 #endif // MSL_H__

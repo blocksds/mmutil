@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: ISC
 //
 // Copyright (c) 2008, Mukunda Johnson (mukunda@maxmod.org)
+// Copyright (c) 2026, Antonio Niño Díaz
 
 /****************************************************************************
  *                ____ ___  ____ __  ______ ___  ____  ____/ /              *
@@ -16,6 +17,10 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+
+#include <algorithm>
+#include <string>
+#include <vector>
 
 #include "errors.h"
 #include "defs.h"
@@ -39,12 +44,27 @@ FILE *F_HEADER = NULL;
 u16 MSL_NSAMPS;
 u16 MSL_NSONGS;
 
+typedef struct
+{
+    uint32_t id;
+    std::string name;
+}
+MSL_Name_Entry;
+
+static bool MSL_Name_Entry_Compare(MSL_Name_Entry a, MSL_Name_Entry b)
+{
+    return a.id < b.id;
+}
+
+static std::vector<MSL_Name_Entry> msl_sample_names = {};
+static std::vector<MSL_Name_Entry> msl_module_names = {};
+
 char str_msl[256];
 
 static char TMP_SAMP[] = "mm_samp_tmp.XXXXXXX";
 static char TMP_SONG[] = "mm_song_tmp.XXXXXXX";
 
-void MSL_PrintDefinition(const char *filename, u16 id, const char *prefix);
+static void MSL_PrintDefinition(const char *filename, u16 id, const char *prefix);
 
 #define SAMPLE_HEADER_SIZE (12 + ((target_system == SYSTEM_NDS) ? 4 : 0))
 
@@ -54,6 +74,9 @@ void MSL_Erase(void)
     MSL_NSONGS = 0;
     file_delete(TMP_SAMP);
     file_delete(TMP_SONG);
+
+    msl_sample_names = {};
+    msl_module_names = {};
 }
 
 u16 MSL_AddSample(Sample *samp)
@@ -66,7 +89,7 @@ u16 MSL_AddSample(Sample *samp)
             + SAMPLE_HEADER_SIZE + 4); // +4 for sample padding
     write8((target_system == SYSTEM_GBA) ? MAS_TYPE_SAMPLE_GBA : MAS_TYPE_SAMPLE_NDS);
     write8(MAS_VERSION);
-    write8(samp->filename[0] == '#' ? 1 : 0);
+    write8(samp->filename[0] == '#' ? 1 : 0); // TODO: This isn't used by Maxmod
     write8(BYTESMASHER);
 
     Write_SampleData(samp);
@@ -185,7 +208,126 @@ u16 MSL_AddModule(MAS_Module *mod)
     return MSL_NSONGS - 1;
 }
 
-void MSL_Export(const char *filename)
+static std::vector<u8> msl_names_dict = {};
+
+static void MSL_CreateDictionary(void)
+{
+    // Sort all names by their ID
+
+    std::sort(msl_sample_names.begin(), msl_sample_names.end(), MSL_Name_Entry_Compare);
+    std::sort(msl_module_names.begin(), msl_module_names.end(), MSL_Name_Entry_Compare);
+
+    // Sample names
+
+    std::vector<u8> samples_dict = {};
+
+    for (auto entry : msl_sample_names)
+    {
+        size_t len = entry.name.length();
+
+        // We need to save at least one terminator, plus padding
+        size_t len_with_padding = ((len + 1) + 3) & ~3;
+
+        if (len_with_padding > 255)
+        {
+            printf("Sample name too long (%zu) [%s]", len, entry.name.c_str());
+            exit(EXIT_FAILURE);
+        }
+
+        if (entry.id > 0xFFFFFF)
+        {
+            printf("Sample ID too big (%u > %u)", entry.id, 0xFFFFFF);
+            exit(EXIT_FAILURE);
+        }
+
+        samples_dict.push_back((entry.id >> 0) & 0xFF);
+        samples_dict.push_back((entry.id >> 8) & 0xFF);
+        samples_dict.push_back((entry.id >> 16) & 0xFF);
+        samples_dict.push_back(len_with_padding);
+
+        size_t i = 0;
+        for ( ; i < len; i++)
+            samples_dict.push_back(entry.name[i]);
+        for ( ; i < len_with_padding; i++)
+            samples_dict.push_back(0);
+    }
+
+    samples_dict.push_back(0); // End list
+    samples_dict.push_back(0);
+    samples_dict.push_back(0);
+    samples_dict.push_back(0);
+
+    // Module names
+
+    std::vector<u8> modules_dict = {};
+
+    for (auto entry : msl_module_names)
+    {
+        size_t len = entry.name.length();
+
+        // We need to save at least one terminator, plus padding
+        size_t len_with_padding = ((len + 1) + 3) & ~3;
+
+        if (len_with_padding > 255)
+        {
+            printf("Module name too long (%zu) [%s]", len, entry.name.c_str());
+            exit(EXIT_FAILURE);
+        }
+
+        if (entry.id > 0xFFFFFF)
+        {
+            printf("Module ID too big (%u > %u)", entry.id, 0xFFFFFF);
+            exit(EXIT_FAILURE);
+        }
+
+        modules_dict.push_back((entry.id >> 0) & 0xFF);
+        modules_dict.push_back((entry.id >> 8) & 0xFF);
+        modules_dict.push_back((entry.id >> 16) & 0xFF);
+        modules_dict.push_back(len_with_padding);
+
+        size_t i = 0;
+        for ( ; i < len; i++)
+            modules_dict.push_back(entry.name[i]);
+        for ( ; i < len_with_padding; i++)
+            modules_dict.push_back(0);
+    }
+
+    modules_dict.push_back(0); // End list
+    modules_dict.push_back(0);
+    modules_dict.push_back(0);
+    modules_dict.push_back(0);
+
+    // Build dictionary header
+
+    u32 samples_dict_size = samples_dict.size();
+    u32 modules_dict_size = modules_dict.size();
+
+    std::vector<u8> header = {
+        (u8)(samples_dict_size >> 0),
+        (u8)(samples_dict_size >> 8),
+        (u8)(samples_dict_size >> 16),
+        (u8)(samples_dict_size >> 24),
+
+        (u8)(modules_dict_size >> 0),
+        (u8)(modules_dict_size >> 8),
+        (u8)(modules_dict_size >> 16),
+        (u8)(modules_dict_size >> 24),
+    };
+
+    // Generate final dictionary
+
+    msl_names_dict = header;
+    msl_names_dict.insert(msl_names_dict.end(), samples_dict.begin(), samples_dict.end());
+    msl_names_dict.insert(msl_names_dict.end(), modules_dict.begin(), modules_dict.end());
+}
+
+static void MSL_ExportDictionary(void)
+{
+    for (uint8_t i : msl_names_dict)
+        write8(i);
+}
+
+static void MSL_Export(const char *filename, bool export_dictionary)
 {
     file_open_write(filename);
     write16(MSL_NSAMPS);
@@ -203,10 +345,21 @@ void MSL_Export(const char *filename)
     u32 *parap_song = (u32*)malloc(MSL_NSONGS * sizeof(u32));
 
     // reserve space for parapointers
-    for (u32 x = 0; x < MSL_NSAMPS; x++)
+    for (u32 x = 0; x < MSL_NSAMPS; x++) // List of samples
         write32(0xAAAAAAAA);
-    for (u32 x = 0; x < MSL_NSONGS; x++)
+    for (u32 x = 0; x < MSL_NSONGS; x++) // List of modules
         write32(0xAAAAAAAA);
+    write32(0xAAAAAAAA); // Dictionary of module and sample names
+
+    // Generate dictionary of sample and module names
+
+    u32 parap_names_dict = 0xFFFFFFFF; // 0xFFFFFFFF = not present
+
+    if (export_dictionary)
+    {
+        parap_names_dict = file_tell_write();
+        MSL_ExportDictionary();
+    }
 
     // copy samples
     file_open_read(TMP_SAMP);
@@ -235,11 +388,14 @@ void MSL_Export(const char *filename)
     }
     file_close_read();
 
+    // Go back to the start to write the parapointers
+
     file_seek_write(0x0C, SEEK_SET);
     for (u32 x = 0; x < MSL_NSAMPS; x++)
         write32(parap_samp[x]);
     for (u32 x = 0; x < MSL_NSONGS; x++)
         write32(parap_song[x]);
+    write32(parap_names_dict);
 
     file_close_write();
 
@@ -247,9 +403,10 @@ void MSL_Export(const char *filename)
         free(parap_samp);
     if (parap_song)
         free(parap_song);
+
 }
 
-void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix)
+static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix)
 {
     char newtitle[64];
     int x, s = 0;
@@ -262,6 +419,18 @@ void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix)
         if (filename[x] == '\\' || filename[x] == '/')
             s = x + 1;
     }
+
+    {
+        MSL_Name_Entry entry;
+        entry.id = id;
+        entry.name = std::string(filename + s);
+
+        if (strcmp(prefix, "SFX_") == 0)
+            msl_sample_names.push_back(entry);
+        else if (strcmp(prefix, "MOD_") == 0)
+            msl_module_names.push_back(entry);
+    }
+
     for (x = s; x < (int)strlen(filename); x++)
     {
         if (filename[x] != '.')
@@ -374,7 +543,8 @@ int MSL_CreateTemporaryFiles(bool verbose)
     return ERR_NONE;
 }
 
-int MSL_Create(char *argv[], int argc, const char *output, const char *header, bool verbose)
+int MSL_Create(char *argv[], int argc, const char *output, const char *header,
+               bool export_dictionary, bool verbose)
 {
     MSL_Erase();
 
@@ -407,7 +577,10 @@ int MSL_Create(char *argv[], int argc, const char *output, const char *header, b
         }
     }
 
-    MSL_Export(output);
+    if (export_dictionary)
+        MSL_CreateDictionary();
+
+    MSL_Export(output, export_dictionary);
 
     if (F_HEADER)
     {

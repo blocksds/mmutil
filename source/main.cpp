@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: ISC
 //
 // Copyright (c) 2008, Mukunda Johnson (mukunda@maxmod.org)
+// Copyright (c) 2026, Antonio Niño Díaz
 
 /****************************************************************************
  *                ____ ___  ____ __  ______ ___  ____  ____/ /              *
@@ -54,6 +55,7 @@ void print_usage(void)
         "|------------|----------------------------------------------------|\n"
         "| -o<output> | Set output file.                                   |\n"
         "| -h<header> | Set header output file.                            |\n"
+        "| -D         | Add list of sample and module names to soundbank.  |\n"
         "| -m         | Output MAS file rather than soundbank.             |\n"
         "| -d         | Use for NDS projects.                              |\n"
         "| -b         | Create test ROM. (use -d for .nds, otherwise .gba) |\n"
@@ -162,6 +164,8 @@ int main(int argc, char *argv[])
     bool m_flag = false;
     bool z_flag = false;
 
+    bool msl_export_dictionary = false;
+
     int output_size;
 
     ignore_sflags = false;
@@ -198,6 +202,8 @@ int main(int argc, char *argv[])
                 m_flag = true;
             else if (argv[a][1] == 'z')
                 z_flag = true;
+            else if (argv[a][1] == 'D')
+                msl_export_dictionary = true;
         }
         else if (!str_input)
         {
@@ -467,7 +473,7 @@ int main(int argc, char *argv[])
 
         if (target_system == SYSTEM_GBA)
         {
-            MSL_Create(argv, argc, "tempSH308GK.bin", 0, v_flag);
+            MSL_Create(argv, argc, "tempSH308GK.bin", 0, msl_export_dictionary, v_flag);
 
             if (file_open_write(str_output))
             {
@@ -500,7 +506,7 @@ int main(int argc, char *argv[])
         }
         else if (target_system == SYSTEM_NDS)
         {
-            Write_NDS(argc, argv, str_output, v_flag);
+            Write_NDS(argc, argv, str_output, msl_export_dictionary, v_flag);
         }
         else
         {
@@ -510,7 +516,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        MSL_Create(argv, argc, str_output, str_header, v_flag);
+        MSL_Create(argv, argc, str_output, str_header, msl_export_dictionary, v_flag);
     }
 
     return 0;

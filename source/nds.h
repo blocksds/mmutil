@@ -15,6 +15,7 @@
 
 #include <stdbool.h>
 
-void Write_NDS(int argc, char *argv[], const char *out_path, bool v_flag);
+void Write_NDS(int argc, char *argv[], const char *out_path,
+               bool msl_export_dictionary, bool v_flag);
 
 #endif // NDS_H__
