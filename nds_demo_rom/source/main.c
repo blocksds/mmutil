@@ -93,8 +93,8 @@ int main(int argc, char **argv)
     printf("\n");
     printf("Soundbank information:\n");
     printf("\n");
-    printf("  Sample count: %u\n", sample_count);
-    printf("  Module count: %u\n", module_count);
+    printf("  Sample count: %lu\n", sample_count);
+    printf("  Module count: %lu\n", module_count);
 
     consoleSetCursor(NULL, 0, 20);
 
@@ -198,12 +198,16 @@ int main(int argc, char **argv)
         printf("   %c Volume:    %u\n", SEL_OPTION(MENU_SFX_VOLUME), selected_sfx_volume);
         printf("   %c Panning:   %u\n", SEL_OPTION(MENU_SFX_PANNING), selected_sfx_panning);
         printf("\n");
+        printf("Name: %s\n", mmGetSampleNameById(selected_sfx_id));
+        printf("\n");
         printf("          [Module]\n");
         printf("\n");
         printf("   %c Module ID: %u\n", SEL_OPTION(MENU_MOD_ID), selected_module_id);
         printf("   %c Tempo:     %u\n", SEL_OPTION(MENU_MOD_TEMPO), selected_module_tempo);
         printf("   %c Pitch:     %u\n", SEL_OPTION(MENU_MOD_PITCH), selected_module_pitch);
         printf("   %c Volume:    %u\n", SEL_OPTION(MENU_MOD_VOLUME), selected_module_volume);
+        printf("\n");
+        printf("Name: %s\n", mmGetModuleNameById(selected_module_id));
 
         scanKeys();
 

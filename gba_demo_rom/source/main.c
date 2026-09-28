@@ -179,14 +179,14 @@ int main(void)
     mm_sfxhand active_sfx_handle = MM_SFXHAND_INVALID;
 
     tte_write("\n");
-    tte_printf("            [SFX]\n");
+    tte_printf("[SFX] %s\n", mmGetSampleNameById(selected_sfx_id));
     tte_printf("\n");
     tte_printf("     Sample ID: %u\n", selected_sfx_id);
     tte_printf("     Rate:      %u\n", selected_sfx_rate);
     tte_printf("     Volume:    %u\n", selected_sfx_volume);
     tte_printf("     Panning:   %u\n", selected_sfx_panning);
     tte_printf("\n");
-    tte_printf("          [Module]\n");
+    tte_printf("[Module] %s\n", mmGetModuleNameById(selected_module_id));
     tte_printf("\n");
     tte_printf("     Module ID: %u\n", selected_module_id);
     tte_printf("     Tempo:     %u\n", selected_module_tempo);
@@ -214,6 +214,8 @@ int main(void)
                 else
                     selected_sfx_id--;
 
+                tte_set_pos(0, 48);
+                tte_printf("[SFX] %s                    \n", mmGetSampleNameById(selected_sfx_id));
                 tte_set_pos(128, 64);
                 tte_printf("%u   ", selected_sfx_id);
             }
@@ -259,6 +261,8 @@ int main(void)
                 else
                     selected_module_id--;
 
+                tte_set_pos(0, 104);
+                tte_printf("[Module] %s                 \n", mmGetModuleNameById(selected_module_id));
                 tte_set_pos(128, 120);
                 tte_printf("%u   ", selected_module_id);
             }
@@ -307,6 +311,8 @@ int main(void)
                 if (selected_sfx_id == sample_count)
                     selected_sfx_id = 0;
 
+                tte_set_pos(0, 48);
+                tte_printf("[SFX] %s                    \n", mmGetSampleNameById(selected_sfx_id));
                 tte_set_pos(128, 64);
                 tte_printf("%u   ", selected_sfx_id);
             }
@@ -351,6 +357,8 @@ int main(void)
                 if (selected_module_id == module_count)
                     selected_module_id = 0;
 
+                tte_set_pos(0, 104);
+                tte_printf("[Module] %s                 \n", mmGetModuleNameById(selected_module_id));
                 tte_set_pos(128, 120);
                 tte_printf("%u   ", selected_module_id);
             }
