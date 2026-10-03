@@ -573,6 +573,9 @@ int Load_IT(MAS_Module *itm, bool verbose)
         printf(vstr_it_div);
     }
 
+    if (itm->old_effects)
+        printf("warning: IT 'Old Effects' flag is enabled, but Maxmod ignores it\n.");
+
     skip8(12); // SEP, PWD, MSGLENGTH, MESSAGE OFFSET, [RESERVED]
     for (int x = 0; x < 64; x++)
     {
