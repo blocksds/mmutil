@@ -180,7 +180,7 @@ int Load_S3M_Sample(Sample *samp, bool verbose)
     return ERR_NONE;
 }
 
-int Load_S3M_Pattern(Pattern *patt)
+int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 {
     int clength = read16();
     // unpack s3m data
@@ -229,10 +229,24 @@ int Load_S3M_Pattern(Pattern *patt)
             {
                 patt->data[z].fx = read8();
                 patt->data[z].param = read8();
-                if (patt->data[z].fx == 3) // convert pattern break to hexadecimal
+
+                if (patt->data[z].fx == 3) // Pattern break
                 {
-                    patt->data[z].param = (patt->data[z].param & 0xF)
-                                        + (patt->data[z].param / 16) * 10;
+                    u32 new_row = (patt->data[z].param & 0xF)
+                                + (patt->data[z].param >> 4) * 10;
+
+                    // The valid range is 0 to 63. Higher values are ignored.
+                    if (new_row < 64)
+                    {
+                        patt->data[z].param = new_row;
+                    }
+                    else
+                    {
+                        printf("warning: Pattern %d. Ignored 'Cxx' from row %d to row %d\n",
+                               pattern_number, row, new_row);
+                        patt->data[z].fx = 0;
+                        patt->data[z].param = 0;
+                    }
                 }
                 if (patt->data[z].fx == 'X' - 64) // Set panning
                 {
@@ -455,7 +469,7 @@ int Load_S3M(MAS_Module *mod, bool verbose)
         }
         //printf("%i...", x+1);
         file_seek_read(parap_patt[x] * 16, SEEK_SET);
-        Load_S3M_Pattern(&mod->patterns[x]);
+        Load_S3M_Pattern(&mod->patterns[x], x);
     }
 
     if (verbose)
