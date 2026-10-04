@@ -234,9 +234,14 @@ int Load_S3M_Pattern(Pattern *patt)
                     patt->data[z].param = (patt->data[z].param & 0xF)
                                         + (patt->data[z].param / 16) * 10;
                 }
-                if (patt->data[z].fx == 'X' - 64)
+                if (patt->data[z].fx == 'X' - 64) // Set panning
                 {
-                    patt->data[z].param *= 2; // multiply volume scale by 2
+                    //  00h (left) to 80h (right)
+                    u32 value = patt->data[z].param * 2;
+                    if (value > 255)
+                        value = 255;
+                    patt->data[z].param = value;
+
                 }
                 if (patt->data[z].fx == 'V' - 64)
                 {
