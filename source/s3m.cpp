@@ -309,6 +309,14 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     mod->old_mode = true;
 
     u16 s3m_flags = read16();
+
+    if (s3m_flags & 4)
+    {
+        printf("warning: S3M Amiga Limits flag is enabled, but this isn't supported\n");
+        // This isn't as easy as ignoring all notes that are outside of the
+        // valid limits, other effects like "slide up" are also affected.
+    }
+
     (void)s3m_flags;
     u16 cwt = read16();
     (void)cwt;
