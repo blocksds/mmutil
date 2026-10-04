@@ -59,12 +59,18 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
         {
             case ID4('f', 'm', 't', ' '): // format chunk
             {
-                // check compression code (1 = PCM)
-                if (read16() != 1)
-                {
-                    if (verbose)
-                        printf("Unsupported WAV format.\n");
+                // Check format code (1 = PCM, 2 = ADPCM)
+                u16 format = read16();
 
+                if (format == 2) // TODO: Support ADPCM?
+                {
+                    printf("error: Unsupported ADPCM WAV file. Only PCM format is supported.\n");
+                    return LOADWAV_UNKNOWN_COMP;
+                }
+                else if (format != 1)
+                {
+                    printf("error: Unsupported WAV format %d. Only PCM format is supported.\n",
+                           format);
                     return LOADWAV_UNKNOWN_COMP;
                 }
 
