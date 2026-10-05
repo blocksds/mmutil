@@ -233,7 +233,9 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                 patt->data[z].fx = read8();
                 patt->data[z].param = read8();
 
-                if (patt->data[z].fx == 3) // Pattern break
+                char letter = patt->data[z].fx + 64;
+
+                if (letter == 'C') // Pattern break
                 {
                     u32 new_row = (patt->data[z].param & 0xF)
                                 + (patt->data[z].param >> 4) * 10;
@@ -251,7 +253,7 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         patt->data[z].param = 0;
                     }
                 }
-                if (patt->data[z].fx == 'X' - 64) // Set panning
+                else if (letter == 'X') // Set panning
                 {
                     //  00h (left) to 80h (right)
                     u32 value = patt->data[z].param * 2;
@@ -260,7 +262,7 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     patt->data[z].param = value;
 
                 }
-                if (patt->data[z].fx == 'V' - 64)
+                else if (letter == 'V')
                 {
                     u32 vol = patt->data[z].param;
                     if (vol <= 64)
@@ -338,7 +340,7 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     if (read32() != ID4('S', 'C', 'R', 'M')) // "SCRM" mark
         return ERR_INVALID_MODULE;
 
-    mod->global_volume = read8()*2;
+    mod->global_volume = read8() * 2;
     mod->initial_speed = read8();
     mod->initial_tempo = read8();
 
