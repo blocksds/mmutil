@@ -14,6 +14,5 @@
 #define XM_H__
 
 int Load_XM(MAS_Module *mod, bool verbose);
-void CONV_XM_EFFECT(u8 *fx, u8 *param);
 
 #endif // XM_H__

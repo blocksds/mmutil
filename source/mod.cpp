@@ -19,7 +19,6 @@
 #include "defs.h"
 #include "mas.h"
 #include "mod.h"
-#include "xm.h"
 #include "files.h"
 #include "simple.h"
 #include "errors.h"
@@ -77,6 +76,177 @@ int Load_MOD_SampleData(Sample *samp)
     return ERR_NONE;
 }
 
+// XM effects are an extension of MOD. The MAS format expects S3M/IT effects, so
+// this function converts from MOD to MAS.
+static void conv_mod_to_mas(u8 *fx, u8 *param)
+{
+#define cho 64
+
+    int wfx = *fx;
+    int wpm = *param;
+
+    switch (wfx)
+    {
+        case 0: // 0xy arpeggio
+            if (wpm != 0)
+                wfx = 'J' - cho;
+            else
+                wfx = wpm = 0;
+            break;
+
+        case 1: // 1xx porta up
+            wfx = 'F' - cho;
+            if (wpm >= 0xE0)
+                wpm = 0xDF;
+            break;
+
+        case 2: // 2xx porta down
+            wfx = 'E' - cho;
+            if (wpm >= 0xE0)
+                wpm = 0xDF;
+            break;
+
+        case 3: // 3xx porta to note
+            wfx = 'G' - cho;
+            break;
+
+        case 4: // 4xy vibrato
+            wfx = 'H' - cho;
+            break;
+
+        case 5: // 5xy volslide+glissando
+            wfx = 'L' - cho;
+            break;
+
+        case 6: // 6xy volslide+vibrato
+            wfx = 'K' - cho;
+            break;
+
+        case 7: // 7xy tremolo
+            wfx = 'R' - cho;
+            break;
+
+        case 8: // 8xx set panning
+            wfx = 'X' - cho;
+            break;
+
+        case 9: // 9xx set offset
+            wfx = 'O' - cho;
+            break;
+
+        case 0xA: // Axy volume slide
+            wfx = 'D' - cho;
+            break;
+
+        case 0xB: // Bxx position jump
+            wfx = 'B' - cho;
+            break;
+
+        case 0xC: // Cxx set volume
+            wfx = 27; // compatibility effect
+            break;
+
+        case 0xD: // Dxx pattern break
+            wfx = 'C' - cho;
+            wpm = (wpm & 0xF) + (wpm >> 4) * 10;
+            break;
+
+        case 0xE: // Exy extended
+            switch (wpm >> 4)
+            {
+                case 1: // fine porta up
+                    wfx = 'F' - cho;
+                    wpm = 0xF0 | (wpm & 0xF);
+                    break;
+
+                case 2: // fine porta down
+                    wfx = 'E' - cho;
+                    wpm = 0xF0 | (wpm & 0xF);
+                    break;
+
+                case 3: // glissando control
+                case 5: // set finetune
+                    // UNSUPPORTED :(
+                    wfx = 0;
+                    wpm = 0;
+                    break;
+
+                case 4: // vibrato control
+                    wfx = 'S' - cho;
+                    wpm = 0x30 | (wpm & 0xF);
+                    break;
+
+                case 6: // pattern loop
+                    wfx = 'S' - cho;
+                    wpm = 0xB0 | (wpm & 0xF);
+                    break;
+
+                case 7: // tremolo control
+                    wfx = 'S' - cho;
+                    wpm = 0x40 | (wpm & 0xF);
+                    break;
+
+                case 8: // set panning
+                    wfx = 'X' - cho;
+                    wpm = (wpm & 0xF) * 16;
+                    break;
+
+                case 9: // old retrig
+                    wfx = 'S' - cho;
+                    wpm = 0x20 | (wpm & 0xF);
+                    break;
+
+                case 10: // fine volslide up
+                    wfx = 'S' - cho;
+                    wpm = 0x00 | (wpm & 0xF);
+                    break;
+
+                case 11: // fine volslide down
+                    wfx = 'S' - cho;
+                    wpm = 0x10 | (wpm & 0xF);
+                    break;
+
+                case 12: // note cut
+                    wfx = 'S' - cho;
+                    wpm = 0xC0 | (wpm & 0xF);
+                    break;
+
+                case 13: // note delay
+                    wfx = 'S' - cho;
+                    wpm = 0xD0 | (wpm & 0xF);
+                    break;
+
+                case 14: // pattern delay
+                    wfx = 'S' - cho;
+                    wpm = 0xE0 | (wpm & 0xF);
+                    break;
+                case 15: // event
+                    wfx = 'S' - cho;
+                    wpm = wpm;
+                    break;
+                case 0: // set filter
+                    wfx = 0;
+                    wpm = 0;
+                    break;
+            }
+            break;
+
+        case 0xF: // Fxx set speed
+            if (wpm >= 32)
+                wfx = 'T' - cho;
+            else
+                wfx = 'A' - cho;
+            break;
+
+        default:
+            wfx = 0;
+            wpm = 0;
+            break;
+    }
+    *fx = wfx;
+    *param = wpm;
+}
+
 int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count)
 {
     memset(patt, 0, sizeof(Pattern));
@@ -114,7 +284,7 @@ int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count)
             PatternEntry* p = &patt->data[row * MAX_CHANNELS + col]; // copy data to pattern entry
 
             p->inst = inst;
-            CONV_XM_EFFECT(&effect, &param);
+            conv_mod_to_mas(&effect, &param);
             p->fx = effect;
             p->param = param;
 

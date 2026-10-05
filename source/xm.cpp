@@ -24,8 +24,6 @@
 #include "math.h"
 #include "samplefix.h"
 
-#define cho 64
-
 #ifdef SUPER_ASCII
 #define vstr_xm_samp    "  %2i   │   %s%s   │ %-22s │\n"
 #define vstr_xm_nosamp  "  --   │   --   │ %-22s │\n"
@@ -279,8 +277,12 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
     return ERR_NONE;
 }
 
-void CONV_XM_EFFECT(u8 *fx, u8 *param)
+// XM effects are an extension of MOD effects. The MAS format expects S3M/IT
+// effects, so this function converts from XM to MAS.
+static void conv_xm_to_mas(u8 *fx, u8 *param)
 {
+#define cho 64
+
     int wfx = *fx;
     int wpm = *param;
 
@@ -614,7 +616,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
 
                 if (fx != 0 || param != 0)
                 {
-                    CONV_XM_EFFECT(&fx, &param);        // convert effect
+                    conv_xm_to_mas(&fx, &param);        // convert effect
                     patt->data[e].fx = fx;
                     patt->data[e].param = param;
                 }
@@ -634,7 +636,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
                 u8 fx = read8();              // (byte) Effect type
                 u8 param = read8();           // (byte) Effect parameter
 
-                CONV_XM_EFFECT(&fx, &param);  // convert effect
+                conv_xm_to_mas(&fx, &param);  // convert effect
                 patt->data[e].fx = fx;
                 patt->data[e].param = param;
 
