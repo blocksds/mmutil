@@ -222,6 +222,9 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
             if (what & 64) // & 64 = follows;  BYTE:volume
             {
+                // 0 to 64 = Mute to max volume
+                // 0x80 | (0 to 64) = Left to right panning (non-standard)
+                // 255 = ignore (use instrument volume)
                 patt->data[z].vol = read8();
             }
 
