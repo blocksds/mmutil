@@ -253,6 +253,32 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         patt->data[z].param = 0;
                     }
                 }
+                else if (letter == 'S') // Extended effects
+                {
+                    u8 param = patt->data[z].param;
+
+                    bool supported = true;
+
+                    switch (param >> 4)
+                    {
+                        case 1: // Glissando Control
+                        case 2: // Set Finetune
+                        case 5: // Set Panbrello Waveform
+                            supported = false;
+                            break;
+                        default:
+                            supported = true;
+                            break;
+                    }
+
+                    if (!supported)
+                    {
+                        printf("warning: Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
+                               pattern_number, row, patt->data[z].param);
+                        patt->data[z].fx = 0;
+                        patt->data[z].param = 0;
+                    }
+                }
                 else if (letter == 'X') // Set panning
                 {
                     //  00h (left) to 80h (right)
@@ -276,6 +302,13 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         patt->data[z].fx = 0;
                         patt->data[z].param = 0;
                     }
+                }
+                else if ((letter == 'Y') || (letter == 'Z'))
+                {
+                    printf("warning: Pattern %d, Row %d. Unsupported effect '%c'\n",
+                           pattern_number, row, patt->data[z].fx + 64);
+                    patt->data[z].fx = 0;
+                    patt->data[z].param = 0;
                 }
             }
 
