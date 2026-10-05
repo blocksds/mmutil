@@ -17,6 +17,7 @@
 
 #include "defs.h"
 #include "files.h"
+#include "log.h"
 #include "mas.h"
 #include "wav.h"
 #include "simple.h"
@@ -24,10 +25,9 @@
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
-int Load_WAV(Sample *samp, bool verbose, bool fix)
+int Load_WAV(Sample *samp, bool fix)
 {
-    if (verbose)
-        printf("Loading WAV file...\n");
+    VERBOSE("Loading WAV file...\n");
 
     // initialize data
     memset(samp, 0, sizeof(Sample));
@@ -64,13 +64,13 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
 
                 if (format == 2) // TODO: Support ADPCM?
                 {
-                    printf("error: Unsupported ADPCM WAV file. Only PCM format is supported.\n");
+                    ERROR("Unsupported ADPCM WAV file. Only PCM format is supported.\n");
                     return LOADWAV_UNKNOWN_COMP;
                 }
                 else if (format != 1)
                 {
-                    printf("error: Unsupported WAV format %d. Only PCM format is supported.\n",
-                           format);
+                    ERROR("Unsupported WAV format %d. Only PCM format is supported.\n",
+                          format);
                     return LOADWAV_UNKNOWN_COMP;
                 }
 
@@ -88,8 +88,7 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
                 bit_depth = read16();
                 if (bit_depth != 8 && bit_depth != 16)
                 {
-                    if (verbose)
-                        printf("Unsupported bit-depth.\n");
+                    VERBOSE("Unsupported bit-depth.\n");
                     return LOADWAV_UNSUPPORTED_BD;
                 }
 
@@ -97,11 +96,8 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
                     samp->format |= SAMPF_16BIT;
 
                 // print verbose data
-                if (verbose)
-                {
-                    printf("Sample Rate...%i\n", samp->frequency);
-                    printf("Bit Depth.....%i-bit\n", bit_depth);
-                }
+                VERBOSE("Sample Rate...%i\n", samp->frequency);
+                VERBOSE("Bit Depth.....%i-bit\n", bit_depth);
 
                 // skip the rest of the chunk (if any)
                 if ((chunk_size - 0x10) > 0)
@@ -117,12 +113,9 @@ int Load_WAV(Sample *samp, bool verbose, bool fix)
                 int dat;
 
                 if (!hasformat)
-                {
                     return LOADWAV_CORRUPT;
-                }
 
-                if (verbose)
-                    printf("Loading Sample Data...\n");
+                VERBOSE("Loading Sample Data...\n");
 
                 // clip chunk size against end of file (for some borked wavs...)
                 {

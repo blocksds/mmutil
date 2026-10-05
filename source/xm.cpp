@@ -19,6 +19,7 @@
 #include "mas.h"
 #include "xm.h"
 #include "files.h"
+#include "log.h"
 #include "simple.h"
 #include "errors.h"
 #include "math.h"
@@ -63,7 +64,7 @@ int Get_XM_Frequency(s8 relnote, s8 finetune)
     return (int)freq;
 }
 
-int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool verbose)
+int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
 {
     int ns = *p_nextsample;
 
@@ -75,8 +76,7 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
     for (int x = 0; x < 22; x++)
         inst->name[x] = read8(); // instrument name
 
-    //if (verbose)
-    //    printf("  Name=\"%s\"\n", inst->name);
+    //VERBOSE("  Name=\"%s\"\n", inst->name);
     //if (read8() != 0)
     //    return ERR_UNKNOWNINST;
 
@@ -147,17 +147,15 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
         inst->fadeout = read16()/32;            // apply scalar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         file_seek_read(inst_headstart+inst_size, SEEK_SET);
 
-/*        if (verbose)
-        {
-            if (volbits & 1)
-                printf("  Has Volume Envelope\n");
-            if (panbits & 1)
-                printf("  Has Panning Envelope\n");
-            if (nsamples != 1)
-                printf("  Contains %i samples...\n", nsamples);
-            else
-                printf("  Loading sample\n");
-        }
+/*
+        if (volbits & 1)
+            VERBOSE("  Has Volume Envelope\n");
+        if (panbits & 1)
+            VERBOSE("  Has Panning Envelope\n");
+        if (nsamples != 1)
+            VERBOSE("  Contains %i samples...\n", nsamples);
+        else
+            VERBOSE("  Loading sample\n");
 */
         // read sample headers
         for (int x = 0; x < nsamples; x++)
@@ -168,8 +166,8 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
 
             Sample *samp = &mas->samples[ns + x];
 
-//            if (verbose && nsamples != 1)
-//                printf("  Loading sample %i...\n", x+1);
+//            if (nsamples != 1)
+//                VERBOSE("  Loading sample %i...\n", x+1);
             memset(samp, 0, sizeof(Sample));
             samp->msl_index = 0xFFFF;
             samp->sample_length = read32();
@@ -210,21 +208,18 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
             file_seek_read(samp_headstart + samp_headsize, SEEK_SET);
 
             /*
-            if (verbose)
-            {
-                printf("    Length........%i\n", samp->sample_length);
-                if (samp->loop_type == 0)
-                    printf("    Loop..........Disabled\n");
-                else if (samp->loop_type == 1)
-                    printf("    Loop..........Forward %i->%i\n", samp->loop_start, samp->loop_end);
-                else if (samp->loop_type == 2)
-                    printf("    Loop..........BIDI %i->%i\n", samp->loop_start, samp->loop_end);
-                printf("    Volume........%i\n", samp->default_volume);
-                printf("    Panning.......%i\n", samp->default_panning & 127);
-                printf("    Middle C......%ihz\n", samp->frequency);
-                printf("    16 bit........%s\n",
-                       (samp->format & SAMPF_16BIT) ? "yes (will be converted)" : "no");
-            }
+            VERBOSE("    Length........%i\n", samp->sample_length);
+            if (samp->loop_type == 0)
+                VERBOSE("    Loop..........Disabled\n");
+            else if (samp->loop_type == 1)
+                VERBOSE("    Loop..........Forward %i->%i\n", samp->loop_start, samp->loop_end);
+            else if (samp->loop_type == 2)
+                VERBOSE("    Loop..........BIDI %i->%i\n", samp->loop_start, samp->loop_end);
+            VERBOSE("    Volume........%i\n", samp->default_volume);
+            VERBOSE("    Panning.......%i\n", samp->default_panning & 127);
+            VERBOSE("    Middle C......%ihz\n", samp->frequency);
+            VERBOSE("    16 bit........%s\n",
+                    (samp->format & SAMPF_16BIT) ? "yes (will be converted)" : "no");
             */
         }
 
@@ -259,19 +254,15 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
 
         *p_nextsample = ns + nsamples;
 
-        if (verbose)
-        {
-            printf(vstr_xm_samp, nsamples, (volbits & 1) ? "V" : "-",
-                   (panbits & 1) ? "P" : "-", inst->name);
-        }
+        VERBOSE(vstr_xm_samp, nsamples, (volbits & 1) ? "V" : "-",
+                (panbits & 1) ? "P" : "-", inst->name);
     }
     else
     {
         inst->is_valid = false;
 
         file_seek_read(inst_headstart + inst_size, SEEK_SET);
-        if (verbose)
-            printf(vstr_xm_nosamp, inst->name);
+        VERBOSE(vstr_xm_nosamp, inst->name);
     }
 
     return ERR_NONE;
@@ -359,8 +350,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                 case 3: // glissando control
                 case 5: // set finetune
                     // TODO: Unsupported
-                    printf("warning: Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
-                           pattern, row, channel, wpm);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
+                            pattern, row, channel, wpm);
                     wfx = 0;
                     wpm = 0;
                     break;
@@ -506,7 +497,7 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
     *param = wpm;
 }
 
-int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
+int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 {
     u32 headstart = file_tell_read();
     u32 headsize = read32();
@@ -515,7 +506,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
         return ERR_UNKNOWNPATTERN;
 
     if (headsize != 9)
-        printf("warning: Pattern header size is unusual: %u != 9\n", headsize);
+        WARNING("Pattern header size is unusual: %u != 9\n", headsize);
 
     memset(patt, 0, sizeof(Pattern));
 
@@ -523,8 +514,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
 
     u16 clength = read16();
 
-    if (verbose)
-        printf("- %i rows, %.2f KB\n", patt->nrows, (float)(clength) / 1000);
+    VERBOSE("- %i rows, %.2f KB\n", patt->nrows, (float)(clength) / 1000);
 
     for (u32 row = 0; row < patt->nrows * MAX_CHANNELS; row++)
     {
@@ -634,8 +624,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
     // If we have read more than expected, the module is corrupt
     if (total_data_read > clength)
     {
-        printf("ERROR: Read too much pattern data: %u > %u\n",
-               total_data_read, clength);
+        ERROR("Read too much pattern data: %u > %u\n", total_data_read, clength);
         return ERR_INVALID_MODULE;
     }
 
@@ -643,8 +632,8 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
     // some extra bytes (zeroes) after the real data.
     if (total_data_read < clength)
     {
-        printf("warning: Extra data found in pattern: %u < %u\n",
-               total_data_read, clength);
+        WARNING("Extra data found in pattern: %u < %u\n",
+                total_data_read, clength);
 
         // Read the remaining pattern data to move pointer to the start of the
         // next pattern.
@@ -658,7 +647,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
     return ERR_NONE;
 }
 
-int Load_XM(MAS_Module *mod, bool verbose)
+int Load_XM(MAS_Module *mod)
 {
     memset(mod, 0, sizeof(MAS_Module));
 
@@ -679,11 +668,8 @@ int Load_XM(MAS_Module *mod, bool verbose)
     for (int x = 0; x < 20; x++)
         mod->title[x] = read8();
 
-    if (verbose)
-    {
-        printf(vstr_xm_div);
-        printf("Loading XM, \"%s\"\n", mod->title);
-    }
+    VERBOSE(vstr_xm_div);
+    VERBOSE("Loading XM, \"%s\"\n", mod->title);
 
     if (read8() != 0x1a)
         return ERR_INVALID_MODULE;
@@ -706,18 +692,15 @@ int Load_XM(MAS_Module *mod, bool verbose)
     mod->initial_speed = read16();
     mod->initial_tempo = read16();
 
-    if (verbose)
-    {
-        printf("Version....%i.%i\n", xm_version >> 8 & 0xFF, xm_version & 0xFF);
-        printf("Length.....%i\n", mod->order_count);
-        printf("Restart....%i\n", mod->restart_pos);
-        printf("Channels...%i\n", xm_nchannels);
-        printf("#Patterns..%i\n", mod->patt_count);
-        printf("#Instr.....%i\n", mod->inst_count);
-        printf("Freq Mode..%s\n", mod->freq_mode ? "Linear" : "Amiga");
-        printf("Speed......%i\n", mod->initial_speed);
-        printf("Tempo......%i\n", mod->initial_tempo);
-    }
+    VERBOSE("Version....%i.%i\n", xm_version >> 8 & 0xFF, xm_version & 0xFF);
+    VERBOSE("Length.....%i\n", mod->order_count);
+    VERBOSE("Restart....%i\n", mod->restart_pos);
+    VERBOSE("Channels...%i\n", xm_nchannels);
+    VERBOSE("#Patterns..%i\n", mod->patt_count);
+    VERBOSE("#Instr.....%i\n", mod->inst_count);
+    VERBOSE("Freq Mode..%s\n", mod->freq_mode ? "Linear" : "Amiga");
+    VERBOSE("Speed......%i\n", mod->initial_speed);
+    VERBOSE("Tempo......%i\n", mod->initial_tempo);
 
     for (int x = 0; x < 32; x++)
     {
@@ -725,11 +708,8 @@ int Load_XM(MAS_Module *mod, bool verbose)
         mod->channel_panning[x] = 128;
     }
 
-    if (verbose)
-    {
-        printf(vstr_xm_div);
-        printf("Reading sequence...\n");
-    }
+    VERBOSE(vstr_xm_div);
+    VERBOSE("Reading sequence...\n");
 
     int z;
     for (z = 0; z < 200; z++) // read order table
@@ -747,20 +727,16 @@ int Load_XM(MAS_Module *mod, bool verbose)
 
     file_seek_read(60 + xm_headsize, SEEK_SET); // or maybe 60..
 
-    if (verbose)
-    {
-        printf(vstr_xm_div);
-        printf("Loading patterns...\n");
-        printf(vstr_xm_div);
-    }
+    VERBOSE(vstr_xm_div);
+    VERBOSE("Loading patterns...\n");
+    VERBOSE(vstr_xm_div);
 
     mod->patterns = (Pattern*)calloc(mod->patt_count, sizeof(Pattern));
     for (int x = 0; x < mod->patt_count; x++)
     {
-        if (verbose)
-            printf(vstr_xm_patt, x);
+        VERBOSE(vstr_xm_patt, x);
 
-        Load_XM_Pattern(&mod->patterns[x], xm_nchannels, x, verbose);
+        Load_XM_Pattern(&mod->patterns[x], xm_nchannels, x);
     }
 
     mod->instruments = (Instrument*)calloc(mod->inst_count, sizeof(Instrument));
@@ -768,33 +744,25 @@ int Load_XM(MAS_Module *mod, bool verbose)
 
     u8 next_sample = 0;
 
-    if (verbose)
-    {
-        printf(vstr_xm_div);
-        printf("Loading instruments...\n");
-        printf(vstr_xm_samp_top);
-        printf(vstr_xm_samp_header);
-        printf(vstr_xm_samp_slice);
-    }
+    VERBOSE(vstr_xm_div);
+    VERBOSE("Loading instruments...\n");
+    VERBOSE(vstr_xm_samp_top);
+    VERBOSE(vstr_xm_samp_header);
+    VERBOSE(vstr_xm_samp_slice);
 
     for (int x = 0; x < mod->inst_count; x++)
     {
-        //if (verbose)
-        //    printf("Reading Instrument %i...\n", x + 1);
-        if (verbose)
-            printf(vstr_xm_samp_prefix, x + 1);
+        //VERBOSE("Reading Instrument %i...\n", x + 1);
+        VERBOSE(vstr_xm_samp_prefix, x + 1);
 
-        Load_XM_Instrument(&mod->instruments[x], mod, &next_sample, verbose);
+        Load_XM_Instrument(&mod->instruments[x], mod, &next_sample);
     }
 
-    if (verbose)
-    {
-        printf(vstr_xm_samp_bottom);
-    }
+    VERBOSE(vstr_xm_samp_bottom);
 
     mod->samp_count = next_sample;
 
-    Sanitize_Module(mod, verbose);
+    Sanitize_Module(mod);
 
     return ERR_NONE;
 }

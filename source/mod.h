@@ -13,6 +13,6 @@
 #ifndef MOD_H__
 #define MOD_H__
 
-int Load_MOD(MAS_Module *mod, bool verbose);
+int Load_MOD(MAS_Module *mod);
 
 #endif // MOD_H__

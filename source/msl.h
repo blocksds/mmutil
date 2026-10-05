@@ -14,6 +14,6 @@
 #define MSL_H__
 
 int MSL_Create(char *argv[], int argc, const char *output, const char *header,
-               bool export_dictionary, bool verbose);
+               bool export_dictionary);
 
 #endif // MSL_H__

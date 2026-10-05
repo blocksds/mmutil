@@ -15,6 +15,7 @@
 
 #include "defs.h"
 #include "files.h"
+#include "log.h"
 
 static FILE *fin;
 static FILE *fout;
@@ -39,7 +40,7 @@ int file_size(const char *filename)
     FILE *f = fopen(filename, "rb");
     if (!f)
     {
-        printf("Can't check size of file: %s\n", filename);
+        ERROR("Can't check size of file: %s\n", filename);
         exit(EXIT_FAILURE);
     }
 
@@ -54,12 +55,12 @@ int file_open_read(const char *filename)
     fin = fopen(filename, "rb");
     if (!fin)
     {
-        printf("Can't open file for reading: %s\n", filename);
+        ERROR("Can't open file for reading: %s\n", filename);
         exit(EXIT_FAILURE);
     }
 
     read_error_reported = false;
-    printf("File opened for reading: %s\n", filename);
+    INFO("File opened for reading: %s\n", filename);
 
     return FILE_OPEN_OKAY;
 }
@@ -69,11 +70,11 @@ int file_open_write(const char *filename)
     fout = fopen(filename, "wb");
     if (!fout)
     {
-        printf("Can't open file for writing: %s\n", filename);
+        ERROR("Can't open file for writing: %s\n", filename);
         exit(EXIT_FAILURE);
     }
 
-    printf("File opened for writing: %s\n", filename);
+    INFO("File opened for writing: %s\n", filename);
 
     return FILE_OPEN_OKAY;
 }
@@ -83,7 +84,7 @@ int file_open_write_end(const char *filename)
     fout = fopen(filename, "r+b");
     if (!fout)
     {
-        printf("Can't open file for appending: %s\n", filename);
+        ERROR("Can't open file for appending: %s\n", filename);
         exit(EXIT_FAILURE);
     }
 
@@ -91,7 +92,7 @@ int file_open_write_end(const char *filename)
 
     // This is too verbose to be enabled. Temporary files are opened in append
     // mode many times, so this ends up being printed on the terminal a lot.
-    //printf("File opened for appending: %s\n", filename);
+    //VERBOSE("File opened for appending: %s\n", filename);
 
     return FILE_OPEN_OKAY;
 }
@@ -148,7 +149,7 @@ u8 read8(void)
         if (!read_error_reported)
         {
             read_error_reported = true;
-            printf("ERROR: Can't read input file\n");
+            ERROR("Can't read input file\n");
         }
         return 0;
     }
@@ -189,7 +190,7 @@ u8 read8f(FILE *p_fin)
     u8 a;
     if (fread(&a, 1, 1, p_fin) != 1)
     {
-        printf("Unable to read file\n");
+        ERROR("Unable to read file\n");
         exit(EXIT_FAILURE);
     }
     return a;

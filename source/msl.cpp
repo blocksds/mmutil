@@ -27,6 +27,7 @@
 #include "files.h"
 #include "mas.h"
 #include "mod.h"
+#include "log.h"
 #include "s3m.h"
 #include "xm.h"
 #include "it.h"
@@ -200,7 +201,7 @@ u16 MSL_AddModule(MAS_Module *mod)
     }
 
     file_open_write_end(TMP_SONG);
-    Write_MAS(mod, false, true);
+    Write_MAS(mod, true);
     file_close_write();
 
     MSL_NSONGS++;
@@ -230,13 +231,13 @@ static void MSL_CreateDictionary(void)
 
         if (len_with_padding > 255)
         {
-            printf("Sample name too long (%zu) [%s]", len, entry.name.c_str());
+            ERROR("Sample name too long (%zu) [%s]", len, entry.name.c_str());
             exit(EXIT_FAILURE);
         }
 
         if (entry.id > 0xFFFFFF)
         {
-            printf("Sample ID too big (%u > %u)", entry.id, 0xFFFFFF);
+            ERROR("Sample ID too big (%u > %u)", entry.id, 0xFFFFFF);
             exit(EXIT_FAILURE);
         }
 
@@ -270,13 +271,13 @@ static void MSL_CreateDictionary(void)
 
         if (len_with_padding > 255)
         {
-            printf("Module name too long (%zu) [%s]", len, entry.name.c_str());
+            ERROR("Module name too long (%zu) [%s]", len, entry.name.c_str());
             exit(EXIT_FAILURE);
         }
 
         if (entry.id > 0xFFFFFF)
         {
-            printf("Module ID too big (%u > %u)", entry.id, 0xFFFFFF);
+            ERROR("Module ID too big (%u > %u)", entry.id, 0xFFFFFF);
             exit(EXIT_FAILURE);
         }
 
@@ -458,14 +459,14 @@ static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix
     }
 }
 
-void MSL_LoadFile(char *filename, bool verbose)
+void MSL_LoadFile(char *filename)
 {
     Sample wav;
     MAS_Module mod;
 
     if (file_open_read(filename))
     {
-        printf("Cannot open %s for reading! Skipping.\n", filename);
+        ERROR("Cannot open %s for reading! Skipping.\n", filename);
         return;
     }
 
@@ -473,31 +474,31 @@ void MSL_LoadFile(char *filename, bool verbose)
     switch (f_ext)
     {
         case INPUT_TYPE_MOD:
-            if (Load_MOD(&mod, verbose))
+            if (Load_MOD(&mod))
                 exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_S3M:
-            if (Load_S3M(&mod, verbose))
+            if (Load_S3M(&mod))
                 exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_XM:
-            if (Load_XM(&mod, verbose))
+            if (Load_XM(&mod))
                 exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_IT:
-            if (Load_IT(&mod, verbose))
+            if (Load_IT(&mod))
                 exit(EXIT_FAILURE);
             MSL_PrintDefinition(filename, MSL_AddModule(&mod), "MOD_");
             Delete_Module(&mod);
             break;
         case INPUT_TYPE_WAV:
-            if (Load_WAV(&wav, verbose, true))
+            if (Load_WAV(&wav, true))
                 exit(EXIT_FAILURE);
             wav.filename[0] = '#'; // set SFX flag (for demo)
             MSL_PrintDefinition(filename, MSL_AddSample(&wav), "SFX_");
@@ -505,18 +506,18 @@ void MSL_LoadFile(char *filename, bool verbose)
             break;
         default:
             // print error/warning
-            printf("Unknown file %s...\n", filename);
+            ERROR("Unknown file %s...\n", filename);
     }
 
     file_close_read();
 }
 
-int MSL_CreateTemporaryFiles(bool verbose)
+int MSL_CreateTemporaryFiles(void)
 {
     int fd_samp = mkstemp(TMP_SAMP);
     if (fd_samp == -1)
     {
-        printf("Can't generate temporary file for samples\n");
+        ERROR("Can't generate temporary file for samples\n");
         perror("mkstemp");
         return ERR_NOWRITE;
     }
@@ -525,7 +526,7 @@ int MSL_CreateTemporaryFiles(bool verbose)
     int fd_song = mkstemp(TMP_SONG);
     if (fd_song == -1)
     {
-        printf("Can't generate temporary file for songs\n");
+        ERROR("Can't generate temporary file for songs\n");
         perror("mkstemp");
         return ERR_NOWRITE;
     }
@@ -535,16 +536,13 @@ int MSL_CreateTemporaryFiles(bool verbose)
     // ends through a call to exit().
     atexit(MSL_Erase);
 
-    if (verbose)
-    {
-        printf("Temporary files: %s and %s\n", TMP_SAMP, TMP_SONG);
-    }
+    VERBOSE("Temporary files: %s and %s\n", TMP_SAMP, TMP_SONG);
 
     return ERR_NONE;
 }
 
 int MSL_Create(char *argv[], int argc, const char *output, const char *header,
-               bool export_dictionary, bool verbose)
+               bool export_dictionary)
 {
     MSL_Erase();
 
@@ -556,12 +554,12 @@ int MSL_Create(char *argv[], int argc, const char *output, const char *header,
         F_HEADER = fopen(header, "wb");
         if (F_HEADER == NULL)
         {
-            printf("Can't open output header file: %s\n", header);
+            ERROR("Can't open output header file: %s\n", header);
             return ERR_NOWRITE;
         }
     }
 
-    int ret = MSL_CreateTemporaryFiles(verbose);
+    int ret = MSL_CreateTemporaryFiles();
     if (ret != ERR_NONE)
         return ret;
 
@@ -573,7 +571,7 @@ int MSL_Create(char *argv[], int argc, const char *output, const char *header,
         }
         else
         {
-            MSL_LoadFile(argv[x], verbose);
+            MSL_LoadFile(argv[x]);
         }
     }
 

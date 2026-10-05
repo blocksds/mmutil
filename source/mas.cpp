@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include "defs.h"
 #include "files.h"
+#include "log.h"
 #include "mas.h"
 #include "simple.h"
 #include "systems.h"
@@ -40,7 +41,7 @@ static int CalcInstrumentSize(Instrument *instr)
     return size;
 }
 
-void Sanitize_Module(MAS_Module *mod, bool verbose)
+void Sanitize_Module(MAS_Module *mod)
 {
     // Sanitize instruments
     for (int i = 0; i < mod->inst_count; i++)
@@ -65,8 +66,8 @@ void Sanitize_Module(MAS_Module *mod, bool verbose)
                     {
                         warned[sample - 1] = true;
 
-                        printf("warning: Empty sample %u for instrument %u at note map entry %u\n",
-                               sample, i + 1, x);
+                        WARNING("Empty sample %u for instrument %u at note map entry %u\n",
+                                sample, i + 1, x);
                     }
 
                     // Remove the sample from this note map entry
@@ -96,8 +97,8 @@ void Sanitize_Module(MAS_Module *mod, bool verbose)
 
                     if (!inst->is_valid)
                     {
-                        printf("warning: Invalid instrument %u at pattern %d row %u chan %u\n",
-                               pe->inst, p, r, c + 1);
+                        WARNING("Invalid instrument %u at pattern %d row %u chan %u\n",
+                                pe->inst, p, r, c + 1);
                         pe->inst = 0;
                     }
                 }
@@ -126,8 +127,7 @@ void Sanitize_Module(MAS_Module *mod, bool verbose)
             if (mod->orders[i] < 254)
             {
                 clamped = true;
-                printf("warning: Too many pattern orders (%u > 200)\n",
-                       mod->order_count);
+                WARNING("Too many pattern orders (%u > 200)\n", mod->order_count);
                 break;
             }
         }
@@ -136,11 +136,8 @@ void Sanitize_Module(MAS_Module *mod, bool verbose)
         {
             // If all the extra pattern orders are empty we should only print
             // some information in verbose mode.
-            if (verbose)
-            {
-                printf("verbose: Too many pattern orders (%u > 200), but they are empty\n",
-                       mod->order_count);
-            }
+            VERBOSE("Too many pattern orders (%u > 200), but they are empty\n",
+                    mod->order_count);
         }
 
         mod->order_count = 200;
@@ -570,7 +567,7 @@ void Mark_Patterns(MAS_Module *mod)
     }
 }
 
-int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
+int Write_MAS(MAS_Module *mod, bool msl_dep)
 {
     file_get_byte_count();
 
@@ -585,28 +582,28 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
 #ifdef MM_MMUTIL_DEVKITPRO_COMPAT
     if (mod->order_count > 255)
     {
-        printf("Order count higher than 255: %u\n", mod->order_count);
+        ERROR("Order count higher than 255: %u\n", mod->order_count);
         return ERR_INVALID_MODULE;
     }
     write8(mod->order_count);
 
     if (mod->inst_count > 255)
     {
-        printf("Instrument count higher than 255: %u\n", mod->inst_count);
+        ERROR("Instrument count higher than 255: %u\n", mod->inst_count);
         return ERR_INVALID_MODULE;
     }
     write8(mod->inst_count);
 
     if (mod->samp_count > 255)
     {
-        printf("Sample count higher than 255: %u\n", mod->samp_count);
+        ERROR("Sample count higher than 255: %u\n", mod->samp_count);
         return ERR_INVALID_MODULE;
     }
     write8(mod->samp_count);
 
     if (mod->patt_count > 255)
     {
-        printf("Pattern count higher than 255: %u\n", mod->patt_count);
+        ERROR("Pattern count higher than 255: %u\n", mod->patt_count);
         return ERR_INVALID_MODULE;
     }
     write8(mod->patt_count);
@@ -625,21 +622,21 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
 #ifdef MM_MMUTIL_DEVKITPRO_COMPAT
     if (mod->initial_speed > 255)
     {
-        printf("Initial speed higher than 255: %u\n", mod->initial_speed);
+        ERROR("Initial speed higher than 255: %u\n", mod->initial_speed);
         return ERR_INVALID_MODULE;
     }
     write8(mod->initial_speed);
 
     if (mod->initial_tempo > 255)
     {
-        printf("Initial tempo higher than 255: %u\n", mod->initial_tempo);
+        ERROR("Initial tempo higher than 255: %u\n", mod->initial_tempo);
         return ERR_INVALID_MODULE;
     }
     write8(mod->initial_tempo);
 
     if (mod->restart_pos > 255)
     {
-        printf("Restart position higher than 255: %u\n", mod->restart_pos);
+        ERROR("Restart position higher than 255: %u\n", mod->restart_pos);
         return ERR_INVALID_MODULE;
     }
     write8(mod->restart_pos);
@@ -729,8 +726,7 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
 
     // WRITE INSTRUMENTS
 
-    if (verbose)
-        printf("Header: %i bytes\n", file_get_byte_count());
+    VERBOSE("Header: %i bytes\n", file_get_byte_count());
 
     for (int x = 0; x < mod->inst_count; x++)
         Write_Instrument(&mod->instruments[x]);
@@ -738,8 +734,7 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
     for (int x = 0; x < mod->samp_count; x++)
         Write_Sample(&mod->samples[x]);
 
-    if (verbose)
-        printf("Instruments: %i bytes\n", file_get_byte_count());
+    VERBOSE("Instruments: %i bytes\n", file_get_byte_count());
 
     Mark_Patterns(mod);
     for (int x = 0; x < mod->patt_count; x++)
@@ -752,8 +747,7 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
     }
     align32();
 
-    if (verbose)
-        printf("Patterns: %i bytes\n", file_get_byte_count());
+    VERBOSE("Patterns: %i bytes\n", file_get_byte_count());
 
     MAS_FILESIZE = file_tell_write() - MAS_OFFSET;
 
@@ -765,12 +759,10 @@ int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep)
         write32(mod->instruments[x].parapointer);
     for (int x = 0; x < mod->samp_count; x++)
     {
-        if (verbose)
-        {
-            printf("sample %s is at %d/%d of %d\n", mod->samples[x].name,
-                   mod->samples[x].parapointer, file_tell_write(),
-                   mod->samples[x].sample_length);
-        }
+        VERBOSE("sample %s is at %d/%d of %d\n", mod->samples[x].name,
+                mod->samples[x].parapointer, file_tell_write(),
+                mod->samples[x].sample_length);
+
         write32(mod->samples[x].parapointer);
     }
     for (int x = 0; x < mod->patt_count; x++)

@@ -16,6 +16,6 @@
 #include <stdbool.h>
 
 void Write_NDS(int argc, char *argv[], const char *out_path,
-               bool msl_export_dictionary, bool v_flag);
+               bool msl_export_dictionary);
 
 #endif // NDS_H__

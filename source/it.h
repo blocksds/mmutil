@@ -13,6 +13,6 @@
 #ifndef IT_H__
 #define IT_H__
 
-int Load_IT(MAS_Module *itm, bool verbose);
+int Load_IT(MAS_Module *itm);
 
 #endif // IT_H__

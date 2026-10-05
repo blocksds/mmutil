@@ -13,6 +13,6 @@
 #ifndef XM_H__
 #define XM_H__
 
-int Load_XM(MAS_Module *mod, bool verbose);
+int Load_XM(MAS_Module *mod);
 
 #endif // XM_H__

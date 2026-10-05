@@ -175,10 +175,10 @@ void Write_Instrument(Instrument *inst);
 void Write_SampleData(Sample *samp);
 void Write_Sample(Sample *samp);
 void Write_Pattern(Pattern *patt, bool xm_vol);
-int Write_MAS(MAS_Module *mod, bool verbose, bool msl_dep);
+int Write_MAS(MAS_Module *mod, bool msl_dep);
 void Delete_Module(MAS_Module *mod);
 
-void Sanitize_Module(MAS_Module *mod, bool verbose);
+void Sanitize_Module(MAS_Module *mod);
 
 extern u32 MAS_FILESIZE;
 

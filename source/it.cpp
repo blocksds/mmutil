@@ -19,6 +19,7 @@
 #include "mas.h"
 #include "it.h"
 #include "files.h"
+#include "log.h"
 #include "simple.h"
 #include "errors.h"
 #include "samplefix.h"
@@ -143,7 +144,7 @@ bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
     return env_enabled;
 }
 
-int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
+int Load_IT_Instrument(Instrument *inst, int index)
 {
     u16 a;
 
@@ -198,55 +199,52 @@ int Load_IT_Instrument(Instrument *inst, bool verbose, int index)
     if (inst->envelope_pitch.env_enabled)
         inst->env_flags |= MAS_INSTR_FLAG_PITCH_ENV_EXISTS;
 
-    if (verbose)
+    VERBOSE(vstr_it_instr,
+            index + 1,
+            (inst->global_volume * 100) / 128,
+            ((inst->nna == 0) ? "CUT" : ((inst->nna == 1) ? "CON" :
+                ((inst->nna == 2) ? "OFF" : ((inst->nna == 3) ? "FAD" : "???")))),
+            (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED) ? "V" : "-",
+            (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS) ? "P" : "-",
+            (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) ? "T" : "-",
+            inst->name);
+
+/*
+    VERBOSE("%i%%    ", (inst->global_volume * 100) / 128);
+    switch (inst->nna)
     {
-        printf(vstr_it_instr,
-               index + 1,
-               (inst->global_volume * 100) / 128,
-               ((inst->nna == 0) ? "CUT" : ((inst->nna == 1) ? "CON" :
-                   ((inst->nna == 2) ? "OFF" : ((inst->nna == 3) ? "FAD" : "???")))),
-               (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED) ? "V" : "-",
-               (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS) ? "P" : "-",
-               (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) ? "T" : "-",
-               inst->name);
-
-    /*
-        printf("%i%%    ", (inst->global_volume * 100) / 128);
-        switch (inst->nna)
-        {
-            case 0:
-                printf("%s    ", "CUT");
-                break;
-            case 1:
-                printf("%s    ", "OFF");
-                break;
-            case 2:
-                printf("%s    ", "CONT");
-                break;
-            case 3:
-                printf("%s    ", "FADE");
-                break;
-        }
-
-        if ((!(inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)) &&
-            (!(inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)) &&
-            (!(inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)))
-        {
-            printf("-    ");
-        }
-        else
-        {
-            if (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)
-                printf("V");
-            if (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)
-                printf("P");
-            if (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)
-                printf("S");
-            printf("    ");
-        }
-        printf("%s\n", inst->name);
-    */
+        case 0:
+            VERBOSE("%s    ", "CUT");
+            break;
+        case 1:
+            VERBOSE("%s    ", "OFF");
+            break;
+        case 2:
+            VERBOSE("%s    ", "CONT");
+            break;
+        case 3:
+            VERBOSE("%s    ", "FADE");
+            break;
     }
+
+    if ((!(inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)) &&
+        (!(inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)) &&
+        (!(inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)))
+    {
+        VERBOSE("-    ");
+    }
+    else
+    {
+        if (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)
+            VERBOSE("V");
+        if (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)
+            VERBOSE("P");
+        if (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)
+            VERBOSE("S");
+        VERBOSE("    ");
+    }
+    VERBOSE("%s\n", inst->name);
+*/
 
     skip8(7);
     return 0;
@@ -517,7 +515,7 @@ GetNextChannelMarker:
     return ERR_NONE;
 }
 
-int Load_IT(MAS_Module *itm, bool verbose)
+int Load_IT(MAS_Module *itm)
 {
     int cc;
 
@@ -554,27 +552,24 @@ int Load_IT(MAS_Module *itm, bool verbose)
     itm->initial_speed = read8();
     itm->initial_tempo = read8();
 
-    if (verbose)
-    {
-        printf(vstr_it_div);
-        printf("Loading IT, \"%s\"\n", itm->title);
-        printf(vstr_it_div);
-        printf("#Orders......%i\n", itm->order_count);
-        printf("#Instr.......%i\n", itm->inst_count);
-        printf("#Samples.....%i\n", itm->samp_count);
-        printf("#Patterns....%i\n", itm->patt_count);
-        printf("Stereo.......%s\n", itm->stereo ? "Yes" : "No");
-        printf("Slides.......%s\n", itm->freq_mode ? "Linear" : "Amiga");
-        printf("Old Effects..%s\n", itm->old_effects ? "Yes" : "No");
-        printf("Global Vol...%i%%\n", (itm->global_volume * 100) / 128);
-        printf("Speed........%i\n", itm->initial_speed);
-        printf("Tempo........%i\n", itm->initial_tempo);
-        printf("Instruments..%s\n", instr_mode ? "Yes" : "Will be supplied");
-        printf(vstr_it_div);
-    }
+    VERBOSE(vstr_it_div);
+    VERBOSE("Loading IT, \"%s\"\n", itm->title);
+    VERBOSE(vstr_it_div);
+    VERBOSE("#Orders......%i\n", itm->order_count);
+    VERBOSE("#Instr.......%i\n", itm->inst_count);
+    VERBOSE("#Samples.....%i\n", itm->samp_count);
+    VERBOSE("#Patterns....%i\n", itm->patt_count);
+    VERBOSE("Stereo.......%s\n", itm->stereo ? "Yes" : "No");
+    VERBOSE("Slides.......%s\n", itm->freq_mode ? "Linear" : "Amiga");
+    VERBOSE("Old Effects..%s\n", itm->old_effects ? "Yes" : "No");
+    VERBOSE("Global Vol...%i%%\n", (itm->global_volume * 100) / 128);
+    VERBOSE("Speed........%i\n", itm->initial_speed);
+    VERBOSE("Tempo........%i\n", itm->initial_tempo);
+    VERBOSE("Instruments..%s\n", instr_mode ? "Yes" : "Will be supplied");
+    VERBOSE(vstr_it_div);
 
     if (itm->old_effects)
-        printf("warning: IT 'Old Effects' flag is enabled, but Maxmod ignores it\n.");
+        WARNING("IT 'Old Effects' flag is enabled, but Maxmod ignores it\n.");
 
     skip8(12); // SEP, PWD, MSGLENGTH, MESSAGE OFFSET, [RESERVED]
     for (int x = 0; x < 64; x++)
@@ -611,42 +606,33 @@ int Load_IT(MAS_Module *itm, bool verbose)
     if (instr_mode)
     {
         itm->instruments = (Instrument *)calloc(itm->inst_count, sizeof(Instrument));
-        if (verbose)
-        {
-            printf("Loading Instruments...\n");
-            printf(vstr_it_instr_top);
-            printf(vstr_it_instr_head);
+
+        VERBOSE("Loading Instruments...\n");
+        VERBOSE(vstr_it_instr_top);
+        VERBOSE(vstr_it_instr_head);
 #ifdef vstr_it_instr_slice
-            printf(vstr_it_instr_slice);
+        VERBOSE(vstr_it_instr_slice);
 #endif
-            //printf("INDEX    VOLUME    NNA    ENV    NAME\n");
-        }
+        //VERBOSE("INDEX    VOLUME    NNA    ENV    NAME\n");
 
         // read instruments
         for (int x = 0; x < itm->inst_count; x++)
         {
-            //if (verbose)
-            //    printf("%i    ", x + 1);
+            //VERBOSE("%i    ", x + 1);
             file_seek_read(parap_inst[x], SEEK_SET);
-            Load_IT_Instrument(&itm->instruments[x], verbose, x);
+            Load_IT_Instrument(&itm->instruments[x], x);
         }
 
-        if (verbose)
-        {
-            printf(vstr_it_instr_bottom);
-        }
+        VERBOSE(vstr_it_instr_bottom);
     }
 
-    if (verbose)
-    {
-        printf("Loading Samples...\n");
-        printf(vstr_it_samp_top);
-        printf(vstr_it_samp_head);
+    VERBOSE("Loading Samples...\n");
+    VERBOSE(vstr_it_samp_top);
+    VERBOSE(vstr_it_samp_head);
 #ifdef vstr_it_samp_slice
-        printf(vstr_it_samp_slice);
+    VERBOSE(vstr_it_samp_slice);
 #endif
-        //printf("INDEX    VOLUME    DVOLUME    LOOP    MID-C    NAME\n");
-    }
+    //VERBOSE("INDEX    VOLUME    DVOLUME    LOOP    MID-C    NAME\n");
 
     // read samples
     for (int x = 0; x < itm->samp_count; x++)
@@ -654,35 +640,26 @@ int Load_IT(MAS_Module *itm, bool verbose)
         file_seek_read(parap_samp[x], SEEK_SET);
         Load_IT_Sample(&itm->samples[x]);
 
-        if (verbose)
-        {
-            printf(vstr_it_samp, x + 1, (itm->samples[x].global_volume * 100) / 64,
-                   (itm->samples[x].default_volume * 100) / 64,
-                   itm->samples[x].loop_type == 0 ?
-                       "None" : (itm->samples[x].loop_type == 1 ? "Forw" : "BIDI"),
-                   itm->samples[x].frequency, itm->samples[x].name);
+        VERBOSE(vstr_it_samp, x + 1, (itm->samples[x].global_volume * 100) / 64,
+                (itm->samples[x].default_volume * 100) / 64,
+                itm->samples[x].loop_type == 0 ?
+                    "None" : (itm->samples[x].loop_type == 1 ? "Forw" : "BIDI"),
+                itm->samples[x].frequency, itm->samples[x].name);
 
-            //printf("%i    %i%%    %i%%    %s    %ihz    %s\n", x + 1,
-            //       (itm->samples[x].global_volume * 100) / 64,
-            //       (itm->samples[x].default_volume * 100) / 64,
-            //       itm->samples[x].loop_type == 0 ?
-            //           "None" : (itm->samples[x].loop_type == 1 ? "Yes" : "BIDI"),
-            //       itm->samples[x].frequency, itm->samples[x].name);
-        }
+        //VERBOSE("%i    %i%%    %i%%    %s    %ihz    %s\n", x + 1,
+        //       (itm->samples[x].global_volume * 100) / 64,
+        //       (itm->samples[x].default_volume * 100) / 64,
+        //       itm->samples[x].loop_type == 0 ?
+        //           "None" : (itm->samples[x].loop_type == 1 ? "Yes" : "BIDI"),
+        //       itm->samples[x].frequency, itm->samples[x].name);
     }
 
-    if (verbose)
-    {
-        printf(vstr_it_samp_bottom);
-    }
+    VERBOSE(vstr_it_samp_bottom);
 
     if (!instr_mode)
     {
-        if (verbose)
-        {
-            printf("Adding Instrument Templates...\n");
-            printf(vstr_it_div);
-        }
+        VERBOSE("Adding Instrument Templates...\n");
+        VERBOSE(vstr_it_div);
 
         itm->inst_count = itm->samp_count;
         itm->instruments = (Instrument*)calloc(itm->inst_count, sizeof(Instrument));
@@ -692,34 +669,25 @@ int Load_IT(MAS_Module *itm, bool verbose)
 
         for (x = 0; x < itm->samp_count; x++)
         {
-            if (verbose)
+            VERBOSE(" * %2i", x + 1);
+            cc++;
+            if (cc == 15)
             {
-                printf(" * %2i", x + 1);
-                cc++;
-                if (cc == 15)
-                {
-                    cc = 0;
-                    printf("\n");
-                }
+                cc = 0;
+                VERBOSE("\n");
             }
 
             if (itm->samples[x].sample_length > 0)
                 Create_IT_Instrument(&itm->instruments[x], x + 1);
         }
 
-        if (verbose)
-        {
-            if (cc != 0)
-                printf((((x + 1) % 15) == 0) ? "" : "\n");
-            printf(vstr_it_div);
-        }
+        if (cc != 0)
+            VERBOSE((((x + 1) % 15) == 0) ? "" : "\n");
+        VERBOSE(vstr_it_div);
     }
 
-    if (verbose)
-    {
-        printf("Reading Patterns...\n");
-        printf(vstr_it_div);
-    }
+    VERBOSE("Reading Patterns...\n");
+    VERBOSE(vstr_it_div);
 
     // read patterns
     cc = 0;
@@ -729,16 +697,14 @@ int Load_IT(MAS_Module *itm, bool verbose)
 
         if (parap_patt[x] != 0)
         {
-            if (verbose)
+            VERBOSE(vstr_it_pattern, x+1);
+            cc++;
+            if (cc == 15)
             {
-                printf(vstr_it_pattern, x+1);
-                cc++;
-                if (cc == 15)
-                {
-                    cc = 0;
-                    printf("\n");
-                }
+                cc = 0;
+                VERBOSE("\n");
             }
+
             Load_IT_Pattern(&itm->patterns[x]);
         }
         else
@@ -748,13 +714,11 @@ int Load_IT(MAS_Module *itm, bool verbose)
         }
     }
 
-    if (verbose)
-    {
-        if (cc != 0)
-            printf("\n");
-        printf(vstr_it_div);
-        printf("Loading Sample Data...\n");
-    }
+    if (cc != 0)
+        VERBOSE("\n");
+    VERBOSE(vstr_it_div);
+    VERBOSE("Loading Sample Data...\n");
+
     // read sample data
     for (int x = 0; x < itm->samp_count; x++)
     {
@@ -762,16 +726,13 @@ int Load_IT(MAS_Module *itm, bool verbose)
         Load_IT_SampleData(&itm->samples[x], cmwt);
     }
 
-    if (verbose)
-    {
-        printf(vstr_it_div);
-    }
+    VERBOSE(vstr_it_div);
 
     free(parap_inst);
     free(parap_samp);
     free(parap_patt);
 
-    Sanitize_Module(itm, verbose);
+    Sanitize_Module(itm);
 
     return ERR_NONE;
 }

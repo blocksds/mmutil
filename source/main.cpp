@@ -24,6 +24,7 @@
 #include "it.h"
 #include "gba.h"
 #include "nds.h"
+#include "log.h"
 #include "files.h"
 #include "errors.h"
 #include "simple.h"
@@ -39,7 +40,7 @@ int PANNING_SEP;
 
 void print_usage(void)
 {
-    printf(
+    INFO(
         "\n"
         "******************\n"
         "* Maxmod Utility * " VERSION_STRING "\n"
@@ -109,7 +110,7 @@ void print_usage(void)
 
 void print_version_and_exit(void)
 {
-    printf("mmutil " VERSION_STRING "\n");
+    INFO("mmutil " VERSION_STRING "\n");
     exit(EXIT_SUCCESS);
 }
 
@@ -118,19 +119,19 @@ void print_error(int err)
     switch (err)
     {
         case ERR_INVALID_MODULE:
-            printf("Invalid module!\n");
+            ERROR("Invalid module!\n");
             break;
         case ERR_MANYARGS:
-            printf("Too many arguments!\n");
+            ERROR("Too many arguments!\n");
             break;
         case ERR_NOINPUT:
-            printf("No input file!\n");
+            ERROR("No input file!\n");
             break;
         case ERR_NOWRITE:
-            printf("Unable to write file!\n");
+            ERROR("Unable to write file!\n");
             break;
         case ERR_BADINPUT:
-            printf("Cannot parse input filename!\n");
+            ERROR("Cannot parse input filename!\n");
             break;
     }
 }
@@ -143,7 +144,7 @@ int GetYesNo(void)
 
     while (c != 'y' && c != 'n')
     {
-        printf("Was that a yes? ");
+        INFO("Was that a yes? ");
         c = tolower(getchar());
         while (getchar() != '\n');
     }
@@ -160,7 +161,6 @@ int main(int argc, char *argv[])
     Sample samp = { 0 };
 
     bool g_flag = false;
-    bool v_flag = false;
     bool m_flag = false;
     bool z_flag = false;
 
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
             else if (argv[a][1] == 'b')
                 g_flag = true;
             else if (argv[a][1] == 'v')
-                v_flag = true;
+                set_log_level(LOG_VERBOSE);
             else if (argv[a][1] == 'd')
                 target_system = SYSTEM_NDS;
             else if (argv[a][1] == 'i')
@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
 
     if (str_output == NULL)
     {
-        printf("No output file specified with -o\n");
+        ERROR("No output file specified with -o\n");
         return -1;
     }
 
@@ -233,7 +233,7 @@ int main(int argc, char *argv[])
         file_open_read(str_input);
         Sample s;
 
-        Load_WAV(&s, v_flag, false);
+        Load_WAV(&s, false);
 
         s.name[0] = '%';
         s.name[1] = 'c';
@@ -248,19 +248,19 @@ int main(int argc, char *argv[])
             write8(((u8 *)s.data)[i]);
 
         file_close_write();
-        printf("okay\n");
+        INFO("Done\n");
         return 0;
     }
 
     if (m_flag & g_flag)
     {
-        printf("-m and -g cannot be combined.\n");
+        ERROR("-m and -g cannot be combined.\n");
         return -1;
     }
 
     if (m_flag && number_of_inputs != 1)
     {
-        printf("-m only supports one input.\n");
+        ERROR("-m only supports one input.\n");
         return -1;
     }
 
@@ -328,7 +328,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                printf("No output file! (-o option)\n");
+                ERROR("No output file! (-o option)\n");
                 return -1;
             }
         }
@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
     {
         if (file_open_read(str_input))
         {
-            printf("Cannot open %s for reading!\n", str_input);
+            ERROR("Cannot open %s for reading!\n", str_input);
             return -1;
         }
 
@@ -356,7 +356,7 @@ int main(int argc, char *argv[])
         {
             case INPUT_TYPE_MOD:
             {
-                if (Load_MOD(&mod, v_flag))
+                if (Load_MOD(&mod))
                 {
                     print_error(ERR_INVALID_MODULE);
                     file_close_read();
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
 
             case INPUT_TYPE_S3M:
             {
-                if (Load_S3M(&mod, v_flag))
+                if (Load_S3M(&mod))
                 {
                     print_error(ERR_INVALID_MODULE);
                     file_close_read();
@@ -378,7 +378,7 @@ int main(int argc, char *argv[])
 
             case INPUT_TYPE_XM:
             {
-                if (Load_XM(&mod, v_flag))
+                if (Load_XM(&mod))
                 {
                     print_error(ERR_INVALID_MODULE);
                     file_close_read();
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
 
             case INPUT_TYPE_IT:
             {
-                if (Load_IT(&mod, v_flag))
+                if (Load_IT(&mod))
                 {
                     // ERROR!
                     print_error(ERR_INVALID_MODULE);
@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 
             case INPUT_TYPE_WAV:
             {
-                if (Load_WAV(&samp, v_flag, false))
+                if (Load_WAV(&samp, false))
                 {
                     print_error(ERR_INVALID_MODULE);
                     file_close_read();
@@ -423,10 +423,10 @@ int main(int argc, char *argv[])
 
         if (file_exists(str_output))
         {
-            printf("Output file exists! Overwrite? (y/n) ");
+            INFO("Output file exists! Overwrite? (y/n) ");
             if (!GetYesNo())
             {
-                printf("Operation Canceled!\n");
+                ERROR("Operation Canceled!\n");
                 return -1;
             }
 
@@ -439,32 +439,29 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        printf("Writing .mas............\n");
+        INFO("Writing .mas............\n");
 
         // output MAS
-        output_size = Write_MAS(&mod, v_flag, false);
+        output_size = Write_MAS(&mod, false);
 
         file_close_write();
 
         Delete_Module(&mod);
 
-        if (v_flag)
-        {
 #ifdef SUPER_ASCII
-            printf("Success! \x02\n");
+        VERBOSE("Success! \x02\n");
 #else
-            printf("Success! :)\n");
+        VERBOSE("Success! :)\n");
 #endif
-        }
     }
     else if (g_flag)
     {
         if (file_exists(str_output))
         {
-            printf("Output file exists! Overwrite? (y/n) ");
+            INFO("Output file exists! Overwrite? (y/n) ");
             if (!GetYesNo())
             {
-                printf("Operation Canceled!\n");
+                ERROR("Operation Canceled!\n");
                 return -1;
             }
 
@@ -473,7 +470,7 @@ int main(int argc, char *argv[])
 
         if (target_system == SYSTEM_GBA)
         {
-            MSL_Create(argv, argc, "tempSH308GK.bin", 0, msl_export_dictionary, v_flag);
+            MSL_Create(argv, argc, "tempSH308GK.bin", 0, msl_export_dictionary);
 
             if (file_open_write(str_output))
             {
@@ -481,8 +478,7 @@ int main(int argc, char *argv[])
                 return -1;
             }
 
-            if (v_flag)
-                printf("Making GBA ROM.......\n");
+            VERBOSE("Making GBA ROM.......\n");
 
             Write_GBA();
 
@@ -499,24 +495,24 @@ int main(int argc, char *argv[])
 
             file_delete("tempSH308GK.bin");
 
-            printf("Success! :D\n");
+            INFO("Success! :D\n");
 
             if (output_size < 262144)
-                printf("ROM can be multibooted!!\n");
+                INFO("ROM can be multibooted!!\n");
         }
         else if (target_system == SYSTEM_NDS)
         {
-            Write_NDS(argc, argv, str_output, msl_export_dictionary, v_flag);
+            Write_NDS(argc, argv, str_output, msl_export_dictionary);
         }
         else
         {
-            printf("Invalid target system!\n");
+            ERROR("Invalid target system!\n");
             return -1;
         }
     }
     else
     {
-        MSL_Create(argv, argc, str_output, str_header, msl_export_dictionary, v_flag);
+        MSL_Create(argv, argc, str_output, str_header, msl_export_dictionary);
     }
 
     return 0;

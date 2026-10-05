@@ -19,6 +19,7 @@
 #include "defs.h"
 #include "mas.h"
 #include "mod.h"
+#include "log.h"
 #include "files.h"
 #include "simple.h"
 #include "errors.h"
@@ -158,8 +159,8 @@ static void conv_mod_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel
                 case 3: // glissando control
                 case 5: // set finetune
                     // TODO: Unsupported
-                    printf("warning: Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
-                           pattern, row, channel, wpm);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
+                            pattern, row, channel, wpm);
                     wfx = 0;
                     wpm = 0;
                     break;
@@ -302,7 +303,7 @@ int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pattern)
     return ERR_NONE;
 }
 
-int Load_MOD_Sample(Sample *samp, bool verbose, int index)
+int Load_MOD_Sample(Sample *samp, int index)
 {
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
@@ -336,40 +337,37 @@ int Load_MOD_Sample(Sample *samp, bool verbose, int index)
         samp->loop_type = 1;
     }
 
-    if (verbose)
+    if (samp->sample_length != 0)
     {
-        if (samp->sample_length != 0)
+        //VERBOSE("%i    %s    %i%%    %ihz\n", samp->sample_length,
+        //       samp->loop_type != 0 ? "Yes" : "No", (samp->default_volume * 100) / 64,
+        //       samp->frequency);
+        VERBOSE(vstr_mod_samp, index + 1, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
+                (samp->default_volume * 100) / 64, samp->frequency, samp->name);
+        /*
+        VERBOSE("  Length......%i\n", samp->sample_length);
+        if (samp->loop_type != 0)
         {
-            //printf("%i    %s    %i%%    %ihz\n", samp->sample_length,
-            //       samp->loop_type != 0 ? "Yes" : "No", (samp->default_volume * 100) / 64,
-            //       samp->frequency);
-            printf(vstr_mod_samp, index + 1, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
-                   (samp->default_volume * 100) / 64, samp->frequency, samp->name);
-            /*
-            printf("  Length......%i\n", samp->sample_length);
-            if (samp->loop_type != 0)
-            {
-                printf("  Loop........%i->%i\n", samp->loop_start, samp->loop_end);
-            }
-            else
-            {
-                printf("  Loop........None\n");
-            }
-            printf("  Volume......%i\n", samp->default_volume);
-            printf("  Middle C....%ihz\n", samp->frequency);*/
+            VERBOSE("  Loop........%i->%i\n", samp->loop_start, samp->loop_end);
         }
         else
         {
-            //printf("---\n");
+            VERBOSE("  Loop........None\n");
         }
+        VERBOSE("  Volume......%i\n", samp->default_volume);
+        VERBOSE("  Middle C....%ihz\n", samp->frequency);*/
     }
+    else
+    {
+        //VERBOSE("---\n");
+    }
+
     return ERR_NONE;
 }
 
-int Load_MOD(MAS_Module *mod, bool verbose)
+int Load_MOD(MAS_Module *mod)
 {
-    if (verbose)
-        printf("Loading MOD, ");
+    VERBOSE("Loading MOD, ");
 
     memset(mod, 0, sizeof(MAS_Module));
 
@@ -441,11 +439,8 @@ int Load_MOD(MAS_Module *mod, bool verbose)
     for (int x = 0; x < 20; x++)
         mod->title[x] = read8();          // - read in 20 bytes, store as MODULE_NAME.
 
-    if (verbose)
-    {
-        printf("\"%s\"\n", mod->title);
-        printf("%i channels (%s)\n", mod_channels, sigs);
-    }
+    VERBOSE("\"%s\"\n", mod->title);
+    VERBOSE("%i channels (%s)\n", mod_channels, sigs);
 
     for (int x = 0; x < MAX_CHANNELS; x++)
     {
@@ -473,22 +468,19 @@ int Load_MOD(MAS_Module *mod, bool verbose)
     mod->xm_mode = true;
     mod->old_mode = true;
 
-    if (verbose)
-    {
-        printf(vstr_mod_div);
-        printf("Loading Samples...\n");
-        printf(vstr_mod_samp_top);
-        printf(vstr_mod_samp_header);
+    VERBOSE(vstr_mod_div);
+    VERBOSE("Loading Samples...\n");
+    VERBOSE(vstr_mod_samp_top);
+    VERBOSE(vstr_mod_samp_header);
 #ifdef vstr_mod_samp_slice
-        printf(vstr_mod_samp_slice);
+    VERBOSE(vstr_mod_samp_slice);
 #endif
-    }
+
     // Load Sample Information
     for (int x = 0; x < 31; x++)
     {
-    //    if (verbose)
-            //printf("Loading Sample %i...\n", x+1);
-        Load_MOD_Sample(&mod->samples[x], verbose, x);
+        //VERBOSE("Loading Sample %i...\n", x+1);
+        Load_MOD_Sample(&mod->samples[x], x);
 
         // Only setup instrument for samples that have any length
         if (mod->samples[x].sample_length != 0)
@@ -522,35 +514,25 @@ int Load_MOD(MAS_Module *mod, bool verbose)
     mod->patt_count = npatterns;
     mod->patterns = (Pattern *)calloc(mod->patt_count, sizeof(Pattern));
 
-    if (verbose)
-    {
-        printf(vstr_mod_samp_bottom);
-        printf("Sequence has %i entries.\n", mod->order_count);
-        printf("Module has %i pattern%s.\n", mod->patt_count, mod->patt_count == 1 ? "" : "s");
-        printf(vstr_mod_div);
-        printf("Loading Patterns...\n");
-        printf(vstr_mod_div);
-    }
+    VERBOSE(vstr_mod_samp_bottom);
+    VERBOSE("Sequence has %i entries.\n", mod->order_count);
+    VERBOSE("Module has %i pattern%s.\n", mod->patt_count, mod->patt_count == 1 ? "" : "s");
+    VERBOSE(vstr_mod_div);
+    VERBOSE("Loading Patterns...\n");
+    VERBOSE(vstr_mod_div);
 
     // Load Patterns
     for (int x = 0; x < mod->patt_count; x++)
     {
-        if (verbose)
-        {
-            printf(vstr_mod_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
-        }
+        VERBOSE(vstr_mod_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
         Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count), x);
     }
 
-    if (verbose)
-    {
-        printf("\n");
-        printf(vstr_mod_div);
-    }
+    VERBOSE("\n");
+    VERBOSE(vstr_mod_div);
 
     // Load Sample Data
-    if (verbose)
-        printf("Loading Sample Data...\n");
+    VERBOSE("Loading Sample Data...\n");
 
     mod->samp_count = mod->inst_count;
     for (int x = 0; x < 31; x++)
@@ -558,10 +540,9 @@ int Load_MOD(MAS_Module *mod, bool verbose)
         Load_MOD_SampleData(&mod->samples[x]);
     }
 
-    if (verbose)
-        printf(vstr_mod_div);
+    VERBOSE(vstr_mod_div);
 
-    Sanitize_Module(mod, verbose);
+    Sanitize_Module(mod);
 
     return ERR_NONE;
 }

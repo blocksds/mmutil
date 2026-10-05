@@ -16,6 +16,7 @@
 
 #include "defs.h"
 #include "files.h"
+#include "log.h"
 #include "mas.h"
 #include "msl.h"
 
@@ -36,21 +37,21 @@ static void save_array_to_file(const char *path, const void *data, size_t data_s
     FILE *f = fopen(path, "wb");
     if (f == NULL)
     {
-        printf("Failed to open: %s\n", path);
+        ERROR("Failed to open: %s\n", path);
         perror("fopen");
         exit(EXIT_FAILURE);
     }
 
     if (fwrite(data, 1, data_size, f) != data_size)
     {
-        printf("Failed to write: %s\n", path);
+        ERROR("Failed to write: %s\n", path);
         perror("fwrite");
         exit(EXIT_FAILURE);
     }
 
     if (fclose(f) != 0)
     {
-        printf("Failed to close: %s\n", path);
+        ERROR("Failed to close: %s\n", path);
         perror("fclose");
         exit(EXIT_FAILURE);
     }
@@ -77,7 +78,7 @@ static void remove_temporary_files(void)
     remove(DIR_TEMP);
 }
 
-static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_flag)
+static void get_paths_to_tools(char **ndstool_path, char **banner_arg)
 {
     // Look for ndstool and a ROM icon in a BlocksDS environment. If the user
     // doesn't have BlocksDS installed (for example, they have received a
@@ -90,14 +91,11 @@ static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_fl
 
     if (blocksds == NULL)
     {
-        if (v_flag)
-            printf("BLOCKSDS environment variable not found. Using default path.\n");
-
+        VERBOSE("BLOCKSDS environment variable not found. Using default path.\n");
         blocksds = "/opt/blocksds/core";
     }
 
-    if (v_flag)
-        printf("BLOCKSDS=%s\n", blocksds);
+    VERBOSE("BLOCKSDS=%s\n", blocksds);
 
     // Try to get the path for ndstool.
     //
@@ -133,7 +131,7 @@ static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_fl
                            icon_default_path);
         if ((len < 0) || ((size_t)len > sizeof(cmd)))
         {
-            printf("Failed to generate banner command\n");
+            ERROR("Failed to generate banner command\n");
             remove_temporary_files();
             exit(EXIT_FAILURE);
         }
@@ -141,7 +139,7 @@ static void get_paths_to_tools(char **ndstool_path, char **banner_arg, bool v_fl
         *banner_arg = strdup(cmd);
         if (*banner_arg == NULL)
         {
-            printf("Failed to allocate banner command\n");
+            ERROR("Failed to allocate banner command\n");
             remove_temporary_files();
             exit(EXIT_FAILURE);
         }
@@ -166,7 +164,7 @@ static int create_dir(const char *path)
 }
 
 void Write_NDS(int argc, char *argv[], const char *out_path,
-               bool msl_export_dictionary, bool v_flag)
+               bool msl_export_dictionary)
 {
     // Make sure that we can create the new files
 
@@ -186,15 +184,14 @@ void Write_NDS(int argc, char *argv[], const char *out_path,
         exit(EXIT_FAILURE);
     }
 
-    MSL_Create(argv, argc, FILE_SOUNDBANK, 0, msl_export_dictionary, v_flag);
+    MSL_Create(argv, argc, FILE_SOUNDBANK, 0, msl_export_dictionary);
 
     save_array_to_file(FILE_ARM7_ELF, nds_arm7_elf, sizeof(nds_arm7_elf));
     save_array_to_file(FILE_ARM9_ELF, nds_arm9_elf, sizeof(nds_arm9_elf));
 
     // Run ndstool to generate the NDS ROM
 
-    if (v_flag)
-        printf("Generating NDS Demo ROM...\n");
+    VERBOSE("Generating NDS Demo ROM...\n");
 
     char cmd[2048];
 
@@ -202,7 +199,7 @@ void Write_NDS(int argc, char *argv[], const char *out_path,
         char *ndstool_path = NULL;
         char *banner_arg = NULL;
 
-        get_paths_to_tools(&ndstool_path, &banner_arg, v_flag);
+        get_paths_to_tools(&ndstool_path, &banner_arg);
 
         snprintf(cmd, sizeof(cmd),
                  "%s -c %s %s"
@@ -214,13 +211,12 @@ void Write_NDS(int argc, char *argv[], const char *out_path,
         free(banner_arg);
     }
 
-    if (v_flag)
-        printf("Running [%s]\n", cmd);
+    VERBOSE("Running [%s]\n", cmd);
 
     int rc = system(cmd);
     if (rc != 0)
     {
-        printf("Failed while running [%s]\n", cmd);
+        ERROR("Failed while running [%s]\n", cmd);
         remove_temporary_files();
         exit(EXIT_FAILURE);
     }
@@ -229,5 +225,5 @@ void Write_NDS(int argc, char *argv[], const char *out_path,
 
     remove_temporary_files();
 
-    printf("Success! :D\n");
+    INFO("Success! :D\n");
 }

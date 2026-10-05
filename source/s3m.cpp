@@ -17,6 +17,7 @@
 #include "defs.h"
 #include "mas.h"
 #include "s3m.h"
+#include "log.h"
 #include "files.h"
 #include "simple.h"
 #include "errors.h"
@@ -109,7 +110,7 @@ int Load_S3M_SampleData(Sample *samp, u8 ffi)
     return ERR_NONE;
 }
 
-int Load_S3M_Sample(Sample *samp, bool verbose)
+int Load_S3M_Sample(Sample *samp)
 {
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
@@ -146,35 +147,29 @@ int Load_S3M_Sample(Sample *samp, bool verbose)
         if (read32() != ID4('S', 'C', 'R', 'S'))
             return ERR_UNKNOWNSAMPLE;
 
-        if (verbose)
-        {
-            //printf("────────────────────────────────────────────\n");
-            //printf("Loading Samples...\n");
-            //printf("┌─────┬──────┬────┬──────┬─────┬─────────────────────────────┐\n");
-            //printf("│LENGTH│LOOP│VOLUME│ MID-C │             NAME            │\n");
-            //printf("┼──────┼────┼──────┼─────┼─────────────────────────────┤\n");
-            printf(vstr_s3m_samp, samp->sample_length, samp->loop_type ? "Yes" : "No",
-                   (samp->default_volume * 100) / 64, samp->frequency, samp->name);
-            /*
-            printf("  Name......%s\n", samp->name);
-            printf("  Length....%i\n", samp->sample_length);
-            if (samp->loop_type)
-                printf("     Loop......%i->%i\n", samp->loop_start, samp->loop_end);
-            else
-                printf("  Loop......Disabled\n");
-            printf("  Volume....%i\n", samp->default_volume);
-            printf("  Middle C..%ihz\n", samp->frequency);
-            if (samp->bit16)
-                printf("  16 bit....yes\n");
-            */
-        }
+        //VERBOSE("────────────────────────────────────────────\n");
+        //VERBOSE("Loading Samples...\n");
+        //VERBOSE("┌─────┬──────┬────┬──────┬─────┬─────────────────────────────┐\n");
+        //VERBOSE("│LENGTH│LOOP│VOLUME│ MID-C │             NAME            │\n");
+        //VERBOSE("┼──────┼────┼──────┼─────┼─────────────────────────────┤\n");
+        VERBOSE(vstr_s3m_samp, samp->sample_length, samp->loop_type ? "Yes" : "No",
+                (samp->default_volume * 100) / 64, samp->frequency, samp->name);
+        /*
+        VERBOSE("  Name......%s\n", samp->name);
+        VERBOSE("  Length....%i\n", samp->sample_length);
+        if (samp->loop_type)
+            VERBOSE("     Loop......%i->%i\n", samp->loop_start, samp->loop_end);
+        else
+            VERBOSE("  Loop......Disabled\n");
+        VERBOSE("  Volume....%i\n", samp->default_volume);
+        VERBOSE("  Middle C..%ihz\n", samp->frequency);
+        if (samp->bit16)
+            VERBOSE("  16 bit....yes\n");
+        */
     }
     else
     {
-        if (verbose)
-        {
-            printf(vstr_s3m_sampe, samp->name);
-        }
+        VERBOSE(vstr_s3m_sampe, samp->name);
     }
 
     return ERR_NONE;
@@ -247,8 +242,8 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     }
                     else
                     {
-                        printf("warning: Pattern %d. Ignored 'Cxx' from row %d to row %d\n",
-                               pattern_number, row, new_row);
+                        WARNING("Pattern %d. Ignored 'Cxx' from row %d to row %d\n",
+                                pattern_number, row, new_row);
                         patt->data[z].fx = 0;
                         patt->data[z].param = 0;
                     }
@@ -273,8 +268,8 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
                     if (!supported)
                     {
-                        printf("warning: Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
-                               pattern_number, row, patt->data[z].param);
+                        WARNING("Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
+                                pattern_number, row, patt->data[z].param);
                         patt->data[z].fx = 0;
                         patt->data[z].param = 0;
                     }
@@ -297,16 +292,16 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     }
                     else
                     {
-                        printf("warning: Pattern %d, Row %d. Ignored 'V%2X' (max is 'V40')\n",
-                               pattern_number, row, vol);
+                        WARNING("Pattern %d, Row %d. Ignored 'V%2X' (max is 'V40')\n",
+                                pattern_number, row, vol);
                         patt->data[z].fx = 0;
                         patt->data[z].param = 0;
                     }
                 }
                 else if ((letter == 'Y') || (letter == 'Z'))
                 {
-                    printf("warning: Pattern %d, Row %d. Unsupported effect '%c'\n",
-                           pattern_number, row, patt->data[z].fx + 64);
+                    WARNING("Pattern %d, Row %d. Unsupported effect '%c'\n",
+                            pattern_number, row, patt->data[z].fx + 64);
                     patt->data[z].fx = 0;
                     patt->data[z].param = 0;
                 }
@@ -323,7 +318,7 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
     return ERR_NONE;
 }
 
-int Load_S3M(MAS_Module *mod, bool verbose)
+int Load_S3M(MAS_Module *mod)
 {
     memset(mod, 0, sizeof(MAS_Module));
     for (int x = 0; x < 28; x++)
@@ -336,11 +331,8 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     if (read8() != 16)
         return ERR_INVALID_MODULE;
 
-    if (verbose)
-    {
-        printf(vstr_s3m_div);
-        printf("Loading S3M, \"%s\"\n", mod->title);
-    }
+    VERBOSE(vstr_s3m_div);
+    VERBOSE("Loading S3M, \"%s\"\n", mod->title);
 
     skip8(2); // reserved space
     mod->order_count = read16();
@@ -361,7 +353,7 @@ int Load_S3M(MAS_Module *mod, bool verbose)
 
     if (s3m_flags & 4)
     {
-        printf("warning: S3M Amiga Limits flag is enabled, but this isn't supported\n");
+        WARNING("S3M Amiga Limits flag is enabled, but this isn't supported\n");
         // This isn't as easy as ignoring all notes that are outside of the
         // valid limits, other effects like "slide up" are also affected.
     }
@@ -467,31 +459,25 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     mod->samples = (Sample *)calloc(mod->samp_count, sizeof(Sample));
     mod->patterns = (Pattern *)calloc(mod->patt_count, sizeof(Pattern));
 
-    if (verbose)
-    {
-        printf(vstr_s3m_div);
-        printf("Loading Samples...\n");
-        printf(vstr_s3m_sampt_top);
-        printf(vstr_s3m_sampt_mid);
+    VERBOSE(vstr_s3m_div);
+    VERBOSE("Loading Samples...\n");
+    VERBOSE(vstr_s3m_sampt_top);
+    VERBOSE(vstr_s3m_sampt_mid);
 #ifdef vstr_s3m_sampt_slice
-        printf(vstr_s3m_sampt_slice);
+    VERBOSE(vstr_s3m_sampt_slice);
 #endif
-    }
 
     // load instruments
     for (int x = 0; x < mod->inst_count; x++)
     {
-        if (verbose)
-        {
-            printf(vstr_s3m_sampt_index, x + 1);
-            //printf("Sample %i\n", x + 1);
-        }
+        VERBOSE(vstr_s3m_sampt_index, x + 1);
+        //VERBOSE("Sample %i\n", x + 1);
 
         // load sample
         file_seek_read(parap_inst[x] * 16, SEEK_SET);
-        if (Load_S3M_Sample(&mod->samples[x], verbose))
+        if (Load_S3M_Sample(&mod->samples[x]))
         {
-            printf("Error loading sample!\n");
+            ERROR("S3M: Error loading sample!\n");
             return ERR_UNKNOWNSAMPLE;
         }
 
@@ -511,30 +497,21 @@ int Load_S3M(MAS_Module *mod, bool verbose)
     }
 
     // load patterns
-    if (verbose)
-    {
-        printf(vstr_s3m_sampt_bottom);
-        printf("Loading Patterns...\n");
-        printf(vstr_s3m_div);
-    }
+    VERBOSE(vstr_s3m_sampt_bottom);
+    VERBOSE("Loading Patterns...\n");
+    VERBOSE(vstr_s3m_div);
 
     for (int x = 0; x < mod->patt_count; x++)
     {
-        if (verbose)
-        {
-            printf(vstr_s3m_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
-        }
-        //printf("%i...", x+1);
+        VERBOSE(vstr_s3m_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
+        //VERBOSE("%i...", x+1);
         file_seek_read(parap_patt[x] * 16, SEEK_SET);
         Load_S3M_Pattern(&mod->patterns[x], x);
     }
 
-    if (verbose)
-    {
-        printf("\n");
-        printf(vstr_s3m_div);
-        printf("Loading Sample Data...\n");
-    }
+    VERBOSE("\n");
+    VERBOSE(vstr_s3m_div);
+    VERBOSE("Loading Sample Data...\n");
 
     for (int x = 0; x < mod->samp_count; x++)
     {
@@ -542,12 +519,9 @@ int Load_S3M(MAS_Module *mod, bool verbose)
         Load_S3M_SampleData(&mod->samples[x], (u8)ffi);
     }
 
-    if (verbose)
-    {
-        printf(vstr_s3m_div);
-    }
+    VERBOSE(vstr_s3m_div);
 
-    Sanitize_Module(mod, verbose);
+    Sanitize_Module(mod);
 
     return ERR_NONE;
 }
