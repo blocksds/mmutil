@@ -350,25 +350,19 @@ static void conv_xm_to_mas(u8 *fx, u8 *param)
         case 0xD: // Dxx pattern break
             wfx = 'C' - cho;
             wpm = (wpm & 0xF) + (wpm >> 4) * 10;
-            /*
-            if (wpm >= 0xF0) // what is this
-            {
-                wpm = 0xE0 | (wpm&0xF);
-            }
-            if (wpm & 0xF == 0xF)
-            {
-                wpm = 0x0F | (wpm&0xF0);
-            }
-            */
             break;
 
         case 0xE: // Exy extended
-            //if ((wpm & 0xF0) != 0xC0)
-            //{
-            //    int foo = 1;
-            //}
             switch (wpm >> 4)
             {
+                case 0: // set filter
+                case 3: // glissando control
+                case 5: // set finetune
+                    // TODO: Unsupported
+                    wfx = 0;
+                    wpm = 0;
+                    break;
+
                 case 1: // fine porta up
                     wfx = 'F' - cho;
                     wpm = 0xF0 | (wpm & 0xF);
@@ -377,13 +371,6 @@ static void conv_xm_to_mas(u8 *fx, u8 *param)
                 case 2: // fine porta down
                     wfx = 'E' - cho;
                     wpm = 0xF0 | (wpm & 0xF);
-                    break;
-
-                case 3: // glissando control
-                case 5: // set finetune
-                    // UNSUPPORTED :(
-                    wfx = 0;
-                    wpm = 0;
                     break;
 
                 case 4: // vibrato control
@@ -435,13 +422,10 @@ static void conv_xm_to_mas(u8 *fx, u8 *param)
                     wfx = 'S' - cho;
                     wpm = 0xE0 | (wpm & 0xF);
                     break;
-                case 15: // event
+
+                case 15: // Unused. Maxmod uses it as "Event callback"
                     wfx = 'S' - cho;
                     wpm = wpm;
-                    break;
-                case 0: // set filter
-                    wfx = 0;
-                    wpm = 0;
                     break;
             }
             break;
