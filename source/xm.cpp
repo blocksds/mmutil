@@ -279,7 +279,7 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample, bool
 
 // XM effects are an extension of MOD effects. The MAS format expects S3M/IT
 // effects, so this function converts from XM to MAS.
-static void conv_xm_to_mas(u8 *fx, u8 *param)
+static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
 {
 #define cho 64
 
@@ -359,6 +359,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param)
                 case 3: // glissando control
                 case 5: // set finetune
                     // TODO: Unsupported
+                    printf("warning: Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
+                           pattern, row, channel, wpm);
                     wfx = 0;
                     wpm = 0;
                     break;
@@ -504,7 +506,7 @@ static void conv_xm_to_mas(u8 *fx, u8 *param)
     *param = wpm;
 }
 
-int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
+int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern, bool verbose)
 {
     u32 headstart = file_tell_read();
     u32 headsize = read32();
@@ -600,7 +602,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
 
                 if (fx != 0 || param != 0)
                 {
-                    conv_xm_to_mas(&fx, &param);        // convert effect
+                    conv_xm_to_mas(&fx, &param, pattern, row, col); // convert effect
                     patt->data[e].fx = fx;
                     patt->data[e].param = param;
                 }
@@ -620,7 +622,7 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, bool verbose)
                 u8 fx = read8();              // (byte) Effect type
                 u8 param = read8();           // (byte) Effect parameter
 
-                conv_xm_to_mas(&fx, &param);  // convert effect
+                conv_xm_to_mas(&fx, &param, pattern, row, col); // convert effect
                 patt->data[e].fx = fx;
                 patt->data[e].param = param;
 
@@ -758,7 +760,7 @@ int Load_XM(MAS_Module *mod, bool verbose)
         if (verbose)
             printf(vstr_xm_patt, x);
 
-        Load_XM_Pattern(&mod->patterns[x], xm_nchannels, verbose);
+        Load_XM_Pattern(&mod->patterns[x], xm_nchannels, x, verbose);
     }
 
     mod->instruments = (Instrument*)calloc(mod->inst_count, sizeof(Instrument));

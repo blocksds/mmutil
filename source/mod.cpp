@@ -78,7 +78,7 @@ int Load_MOD_SampleData(Sample *samp)
 
 // XM effects are an extension of MOD. The MAS format expects S3M/IT effects, so
 // this function converts from MOD to MAS.
-static void conv_mod_to_mas(u8 *fx, u8 *param)
+static void conv_mod_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
 {
 #define cho 64
 
@@ -158,6 +158,8 @@ static void conv_mod_to_mas(u8 *fx, u8 *param)
                 case 3: // glissando control
                 case 5: // set finetune
                     // TODO: Unsupported
+                    printf("warning: Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
+                           pattern, row, channel, wpm);
                     wfx = 0;
                     wpm = 0;
                     break;
@@ -245,7 +247,7 @@ static void conv_mod_to_mas(u8 *fx, u8 *param)
     *param = wpm;
 }
 
-int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count)
+int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pattern)
 {
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64; // MODs have fixed 64 rows per pattern
@@ -282,7 +284,7 @@ int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count)
             PatternEntry* p = &patt->data[row * MAX_CHANNELS + col]; // copy data to pattern entry
 
             p->inst = inst;
-            conv_mod_to_mas(&effect, &param);
+            conv_mod_to_mas(&effect, &param, pattern, row, col);
             p->fx = effect;
             p->param = param;
 
@@ -537,7 +539,7 @@ int Load_MOD(MAS_Module *mod, bool verbose)
         {
             printf(vstr_mod_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
         }
-        Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count));
+        Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count), x);
     }
 
     if (verbose)
