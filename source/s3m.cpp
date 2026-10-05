@@ -262,7 +262,18 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                 }
                 if (patt->data[z].fx == 'V' - 64)
                 {
-                    patt->data[z].param *= 2; // multiply volume scale by 2
+                    u32 vol = patt->data[z].param;
+                    if (vol <= 64)
+                    {
+                        patt->data[z].param = vol * 2; // multiply volume scale by 2
+                    }
+                    else
+                    {
+                        printf("warning: Pattern %d, Row %d. Ignored 'V%2X' (max is 'V40')\n",
+                               pattern_number, row, vol);
+                        patt->data[z].fx = 0;
+                        patt->data[z].param = 0;
+                    }
                 }
             }
 
