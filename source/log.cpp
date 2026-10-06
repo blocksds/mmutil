@@ -45,7 +45,7 @@ void print_log(log_level level, const char *msg, ...)
             log_color_enabled = false;
     }
 
-    if (curr_log_level <= level)
+    if (curr_log_level < level)
         return;
 
     if (level == LOG_ERROR)
