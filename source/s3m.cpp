@@ -298,10 +298,10 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         patt->data[z].param = 0;
                     }
                 }
-                else if ((letter == 'Y') || (letter == 'Z'))
+                else if ((letter == 'I') || (letter == 'Y') || (letter == 'Z'))
                 {
                     WARNING("Pattern %d, Row %d. Unsupported effect '%c'\n",
-                            pattern_number, row, patt->data[z].fx + 64);
+                            pattern_number, row, letter);
                     patt->data[z].fx = 0;
                     patt->data[z].param = 0;
                 }

@@ -367,6 +367,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     break;
 
                 case 4: // vibrato control
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
+                            pattern, row, channel, wpm);
                     wfx = 'S' - cho;
                     wpm = 0x30 | (wpm & 0xF);
                     break;
@@ -377,6 +379,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     break;
 
                 case 7: // tremolo control
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
+                            pattern, row, channel, wpm);
                     wfx = 'S' - cho;
                     wpm = 0x40 | (wpm & 0xF);
                     break;
@@ -417,6 +421,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     break;
 
                 case 15: // Unused. Maxmod uses it as "Event callback"
+                    VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
+                            pattern, row, channel, wpm & 0xF);
                     wfx = 'S' - cho;
                     wpm = wpm;
                     break;
