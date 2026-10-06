@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "log.h"
 
@@ -17,7 +18,7 @@
 #define BOLD    "\033[1m"
 
 static log_level curr_log_level = LOG_INFO;
-static bool log_env_var_read = false;
+static bool logging_initialized = false;
 static bool log_color_enabled = false;
 
 void set_log_level(log_level level)
@@ -27,22 +28,29 @@ void set_log_level(log_level level)
 
 void print_log(log_level level, const char *msg, ...)
 {
-    if (!log_env_var_read)
+    if (!logging_initialized)
     {
-        log_env_var_read = true;
+        logging_initialized = true;
 
-        // https://no-color.org/
-        //
-        // Command-line software which adds ANSI color to its output by default
-        // should check for a NO_COLOR environment variable that, when present
-        // and not an empty string (regardless of its value), prevents the
-        // addition of ANSI color.
+        if (isatty(STDOUT_FILENO))
+        {
+            // https://no-color.org/
+            //
+            // Command-line software which adds ANSI color to its output by
+            // default should check for a NO_COLOR environment variable that,
+            // when present and not an empty string (regardless of its value),
+            // prevents the addition of ANSI color.
 
-        char *no_color = getenv("NO_COLOR");
+            char *no_color = getenv("NO_COLOR");
 
-        log_color_enabled = true;
-        if (no_color != NULL && no_color[0] != '\0')
+            log_color_enabled = true;
+            if (no_color != NULL && no_color[0] != '\0')
+                log_color_enabled = false;
+        }
+        else
+        {
             log_color_enabled = false;
+        }
     }
 
     if (curr_log_level < level)
