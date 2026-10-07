@@ -34,7 +34,7 @@
 #define vstr_mod_samp           "│ %2i  │%5i │ %3s │ %3i%% │ %ihz│ %-22s│\n"
 #define vstr_mod_samp_bottom    "└─────┴──────┴─────┴──────┴───────┴───────────────────────┘\n"
 
-#define vstr_mod_pattern " \x0e %2i%s"
+#define vstr_mod_pattern " * %2i\n"
 #else
 #define vstr_mod_div "--------------------------------------------\n"
 
@@ -44,7 +44,7 @@
 #define vstr_mod_samp           " %-2i    %-5i  %-3s   %3i%%    %ihz  %-22s \n"
 #define vstr_mod_samp_bottom    vstr_mod_div
 
-#define vstr_mod_pattern " * %2i%s"
+#define vstr_mod_pattern " * %2i\n"
 #endif
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
@@ -530,7 +530,7 @@ int Load_MOD(MAS_Module *mod)
     // Load Patterns
     for (int x = 0; x < mod->patt_count; x++)
     {
-        VERBOSE(vstr_mod_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
+        VERBOSE(vstr_mod_pattern, x + 1);
         Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count), x);
     }
 

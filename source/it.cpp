@@ -39,7 +39,7 @@
 #define vstr_it_samp        "│%3i  │ %3i%% │ %3i%%  │ %4s │%6ihz │ %-26s│\n"
 #define vstr_it_samp_bottom "└─────┴──────┴───────┴──────┴─────────┴───────────────────────────┘\n"
 
-#define vstr_it_pattern " \x0e %2i"
+#define vstr_it_pattern " * %2i\n"
 #else
 #define vstr_it_div "--------------------------------------------\n"
 
@@ -55,7 +55,7 @@
 #define vstr_it_samp        " %-3i   %3i%%   %3i%%    %4s  %6ihz   %-26s \n"
 #define vstr_it_samp_bottom vstr_it_div
 
-#define vstr_it_pattern " * %2i"
+#define vstr_it_pattern " * %2i\n"
 #endif
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))

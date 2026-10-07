@@ -37,7 +37,7 @@
 #define vstr_s3m_sampt_index    "│ %2i  │"
 #define vstr_s3m_sampt_bottom   "└─────┴───────┴─────┴──────┴───────┴─────────────────────────────┘\n"
 
-#define vstr_s3m_pattern " \x0e %2i%s"
+#define vstr_s3m_pattern " * %2i\n"
 #else
 #define vstr_s3m_samp  "%-5i   %-3s   %3i%%   %5ihz  %-28s \n"
 #define vstr_s3m_sampe "-----   ---   ----   -------  %-28s\n"
@@ -50,7 +50,7 @@
 #define vstr_s3m_sampt_index    " %-2i    "
 #define vstr_s3m_sampt_bottom   vstr_s3m_div
 
-#define vstr_s3m_pattern " * %2i%s"
+#define vstr_s3m_pattern " * %2i\n"
 #endif
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
@@ -507,7 +507,7 @@ int Load_S3M(MAS_Module *mod)
 
     for (int x = 0; x < mod->patt_count; x++)
     {
-        VERBOSE(vstr_s3m_pattern, x + 1, ((x + 1) % 15) ? "" : "\n");
+        VERBOSE(vstr_s3m_pattern, x + 1);
         //VERBOSE("%i...", x+1);
         file_seek_read(parap_patt[x] * 16, SEEK_SET);
         Load_S3M_Pattern(&mod->patterns[x], x);

@@ -31,7 +31,7 @@
 
 #define vstr_xm_div "────────────────────────────────────────────\n"
 
-#define vstr_xm_patt " \x0e %2i "
+#define vstr_xm_patt " * %2i\n"
 
 #define vstr_xm_samp_top    "┌─────┬───────┬────────┬────────────────────────┐\n"
 #define vstr_xm_samp_header "│INDEX│SAMPLES│ENVELOPE│          NAME          │\n"
@@ -44,7 +44,7 @@
 
 #define vstr_xm_div "--------------------------------------------\n"
 
-#define vstr_xm_patt " Pattern %2i "
+#define vstr_xm_patt " * %2i\n"
 
 #define vstr_xm_samp_top    ".-----------------------------------------------.\n"
 #define vstr_xm_samp_header "|INDEX|SAMPLES|ENVELOPE|          NAME          |\n"
