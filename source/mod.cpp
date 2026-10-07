@@ -345,9 +345,6 @@ int Load_MOD_Sample(Sample *samp, int index)
 
     if (samp->sample_length != 0)
     {
-        //VERBOSE("%i    %s    %i%%    %ihz\n", samp->sample_length,
-        //       samp->loop_type != 0 ? "Yes" : "No", (samp->default_volume * 100) / 64,
-        //       samp->frequency);
         VERBOSE(vstr_mod_samp, index + 1, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
                 (samp->default_volume * 100) / 64, samp->frequency, samp->name);
         /*
@@ -361,7 +358,8 @@ int Load_MOD_Sample(Sample *samp, int index)
             VERBOSE("  Loop........None\n");
         }
         VERBOSE("  Volume......%i\n", samp->default_volume);
-        VERBOSE("  Middle C....%ihz\n", samp->frequency);*/
+        VERBOSE("  Middle C....%ihz\n", samp->frequency);
+        */
     }
     else
     {
