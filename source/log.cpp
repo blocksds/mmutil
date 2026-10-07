@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: ISC
 //
-// Copyright (C) 2025-2026 Antonio Niño Díaz
+// Copyright (c) 2025-2026 Antonio Niño Díaz
 
 #include <stdarg.h>
 #include <stdbool.h>

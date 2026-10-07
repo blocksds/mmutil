@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: ISC
 //
-// Copyright (C) 2025-2026 Antonio Niño Díaz
+// Copyright (c) 2025-2026 Antonio Niño Díaz
 
 #ifndef LOG_H__
 #define LOG_H__

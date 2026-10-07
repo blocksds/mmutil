@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: ISC
 //
-// Copyright (c) 2008, Mukunda Johnson (mukunda@maxmod.org)
+// Copyright (c) 2008 Mukunda Johnson (mukunda@maxmod.org)
 
 /****************************************************************************
  *                ____ ___  ____ __  ______ ___  ____  ____/ /              *

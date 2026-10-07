@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: ISC
 //
-// Copyright (c) 2026, Antonio Niño Díaz
+// Copyright (c) 2026 Antonio Niño Díaz
 
 /****************************************************************************
  *                ____ ___  ____ __  ______ ___  ____  ____/ /              *
