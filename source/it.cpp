@@ -410,7 +410,7 @@ int Empty_IT_Pattern(Pattern *patt)
     return ERR_NONE;
 }
 
-int Load_IT_Pattern(Pattern *patt)
+int Load_IT_Pattern(Pattern *patt, int pattern_number)
 {
     u8 old_maskvar[MAX_CHANNELS];
     u8 old_note[MAX_CHANNELS];
@@ -484,10 +484,79 @@ GetNextChannelMarker:
         // if (maskvariable & 8), then read command (byte value) and commandvalue
         if (maskvar & 8)
         {
-            old_fx[chan] = read8();
-            patt->data[x * MAX_CHANNELS + chan].fx = old_fx[chan];
-            old_param[chan] = read8();
-            patt->data[x * MAX_CHANNELS + chan].param = old_param[chan];
+            u32 fx = read8();
+            u32 param = read8();
+
+            char letter = fx + 64;
+
+            if ((letter == 'I') || (letter == 'P') || (letter == 'Y') ||
+                (letter == 'Z') || (letter == '\\'))
+            {
+                WARNING("Pattern %d, Row %d. Unsupported effect '%c%02X'\n",
+                        pattern_number, x, letter, param);
+
+                fx = 0;
+                param = 0;
+            }
+            else if (letter == 'S')
+            {
+                bool supported = true;
+
+                switch (param >> 4)
+                {
+                    case 1: // Glissando Control
+                    case 2: // Set Finetune
+                    case 3: // Set Vibrato Waveform
+                    case 4: // Set Tremolo Waveform
+                    case 5: // Set Panbrello Waveform
+                    case 9: // Sound Control
+                    case 10: // High Offset
+                        supported = false;
+
+                    case 7:
+                    {
+                        switch (param & 0xF)
+                        {
+                            case 3: // NNA Note Cut
+                            case 4: // NNA Note Continue
+                            case 5: // NNA Note Off
+                            case 6: // NNA Note Fade
+                            case 7: // Volume Envelope Off
+                            case 8: // Volume Envelope On
+                                supported = true;
+                                break;
+
+                            case 0: // Past Note Cut
+                            case 1: // Past Note Off
+                            case 2: // Past Note Fade
+                            case 9: // Panning Envelope Off
+                            case 10: // Panning Envelope On
+                            case 11: // Pitch Envelope Off
+                            case 12: // Pitch Envelope On
+                            default:
+                                supported = false;
+                                break;
+                        }
+                        break;
+                    }
+                    default:
+                        supported = true;
+                        break;
+                }
+
+                if (!supported)
+                {
+                    WARNING("Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
+                            pattern_number, x, param);
+                    fx = 0;
+                    param = 0;
+                }
+            }
+
+            old_fx[chan] = fx;
+            old_param[chan] = param;
+            patt->data[x * MAX_CHANNELS + chan].fx = fx;
+            patt->data[x * MAX_CHANNELS + chan].param = param;
         }
 
         // if (maskvariable & 16), then note = lastnote for channel
@@ -706,7 +775,7 @@ int Load_IT(MAS_Module *itm)
                 VERBOSE("\n");
             }
 
-            Load_IT_Pattern(&itm->patterns[x]);
+            Load_IT_Pattern(&itm->patterns[x], x);
         }
         else
         {
