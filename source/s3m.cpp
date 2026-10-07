@@ -116,7 +116,13 @@ int Load_S3M_Sample(Sample *samp)
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
 
-    if (read8() == 1) // type, 1 = sample
+    u8 type = read8();
+
+    if (type == 0) // Empty instrument (message only)
+    {
+        VERBOSE(vstr_s3m_sampe, samp->name);
+    }
+    else if (type == 1) // 1 = PCM instrument
     {
         for (u32 x = 0; x < 12; x++)
             samp->filename[x] = read8();
@@ -170,7 +176,19 @@ int Load_S3M_Sample(Sample *samp)
     }
     else
     {
-        VERBOSE(vstr_s3m_sampe, samp->name);
+        const char *instr_type_str[8] =
+        {
+            [0] = "Empty instrument (message only)",
+            [1] = "PCM instrument",
+            [2] = "Adlib melody instrument",
+            [3] = "Adlib percussive: bass drum",
+            [4] = "Adlib percussive: snare",
+            [5] = "Adlib percussive: tom tom",
+            [6] = "Adlib percussive: top cymbal",
+            [7] = "Adlib percussive: hi-hat",
+        };
+
+        ERROR("Unsupported instrument type: %s\n", instr_type_str[type]);
     }
 
     return ERR_NONE;
