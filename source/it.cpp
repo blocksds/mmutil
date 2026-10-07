@@ -401,7 +401,7 @@ int Empty_IT_Pattern(Pattern *patt)
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64;
 
-    for (int x = 0; x < patt->nrows*MAX_CHANNELS; x++)
+    for (int x = 0; x < patt->nrows * MAX_CHANNELS; x++)
     {
         patt->data[x].note = 250; // Special clears for vol and note
         patt->data[x].vol = 255;

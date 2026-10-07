@@ -233,6 +233,7 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
                 if (letter == 'C') // Pattern break
                 {
+                    // The row is stored in the file as BCD
                     u32 new_row = (patt->data[z].param & 0xF)
                                 + (patt->data[z].param >> 4) * 10;
 
@@ -243,7 +244,7 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     }
                     else
                     {
-                        WARNING("Pattern %d. Ignored 'Cxx' from row %d to row %d\n",
+                        WARNING("Pattern %d, row %d. Ignored 'C%02X'.\n",
                                 pattern_number, row, new_row);
                         patt->data[z].fx = 0;
                         patt->data[z].param = 0;
