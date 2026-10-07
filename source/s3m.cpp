@@ -258,7 +258,11 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     {
                         case 1: // Glissando Control
                         case 2: // Set Finetune
+                        case 3: // Set Vibrato Waveform
+                        case 4: // Set Tremolo Waveform
                         case 5: // Set Panbrello Waveform
+                        case 9: // Sound Control
+                        case 10: // High Offset
                             supported = false;
                             break;
                         default:
@@ -281,7 +285,6 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     if (value > 255)
                         value = 255;
                     patt->data[z].param = value;
-
                 }
                 else if (letter == 'V')
                 {
@@ -298,7 +301,8 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         patt->data[z].param = 0;
                     }
                 }
-                else if ((letter == 'I') || (letter == 'Y') || (letter == 'Z'))
+                else if ((letter == 'I') || (letter == 'P') || (letter == 'Y') ||
+                         (letter == 'Z'))
                 {
                     WARNING("Pattern %d, Row %d. Unsupported effect '%c'\n",
                             pattern_number, row, letter);
