@@ -285,6 +285,13 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         case 10: // High Offset
                             supported = false;
                             break;
+
+                        case 15: // Unused effect. Maxmod uses it as "Event callback"
+                            VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
+                                    pattern_number, row, col, param & 0xF);
+                            supported = true;
+                            break;
+
                         default:
                             supported = true;
                             break;

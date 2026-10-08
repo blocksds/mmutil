@@ -526,6 +526,12 @@ GetNextChannelMarker:
                                 supported = true;
                                 break;
 
+                            case 15: // Unused effect. Maxmod uses it as "Event callback"
+                                VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
+                                        pattern_number, x, chan, param & 0xF);
+                                supported = true;
+                                break;
+
                             case 0: // Past Note Cut
                             case 1: // Past Note Off
                             case 2: // Past Note Fade
