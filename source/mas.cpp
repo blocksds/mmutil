@@ -758,14 +758,21 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
     file_seek_write(fpos_pointer, SEEK_SET);
     for (int x = 0; x < mod->inst_count; x++)
         write32(mod->instruments[x].parapointer);
+
+    VERBOSE("Samples:\n");
+    VERBOSE("┌────────────────────────────────┬─────────────┬────────────┬────────┐\n");
+    VERBOSE("│             NAME               │ PARAPOINTER │   OFFSET   │ LENGTH │\n");
+    VERBOSE("├────────────────────────────────┼─────────────┼────────────┼────────┤\n");
     for (int x = 0; x < mod->samp_count; x++)
     {
-        VERBOSE("sample %s is at %d/%d of %d\n", mod->samples[x].name,
+        VERBOSE("│%-32s│ %11d │ %10d │ %6d │\n", mod->samples[x].name,
                 mod->samples[x].parapointer, file_tell_write(),
                 mod->samples[x].sample_length);
 
         write32(mod->samples[x].parapointer);
     }
+    VERBOSE("└────────────────────────────────┴─────────────┴────────────┴────────┘\n");
+
     for (int x = 0; x < mod->patt_count; x++)
         write32(mod->patterns[x].parapointer);
 
