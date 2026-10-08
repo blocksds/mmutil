@@ -458,6 +458,30 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
         case 32: // Wxx unused
         case 34: // Yxx unused
         case 35: // Zxx unused
+        case 37: // Unused
+            WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%c%02X'\n",
+                    pattern, row, channel, wfx + 'A' - 10, wpm);
+            wfx = 0;
+            wpm = 0;
+            break;
+
+        case 36: // \xx Smooth MIDI Macro (ModPlug hack)
+            WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '\\%02X'\n",
+                    pattern, row, channel, wpm);
+            wfx = 0;
+            wpm = 0;
+            break;
+
+        case 38: // #xx Parameter extension
+            WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '#%02X'\n",
+                    pattern, row, channel, wpm);
+            wfx = 0;
+            wpm = 0;
+            break;
+
+        default:
+            WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%d %02X'\n",
+                    pattern, row, channel, wfx, wpm);
             wfx = 0;
             wpm = 0;
             break;

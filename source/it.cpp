@@ -490,10 +490,31 @@ GetNextChannelMarker:
             char letter = fx + 64;
 
             if ((letter == 'I') || (letter == 'P') || (letter == 'Y') ||
-                (letter == 'Z') || (letter == '\\'))
+                (letter == 'Z'))
             {
                 WARNING("Pattern %d, Row %d. Unsupported effect '%c%02X'\n",
                         pattern_number, x, letter, param);
+
+                fx = 0;
+                param = 0;
+            }
+            else if (letter > 'Z')
+            {
+                if (fx == 27)
+                {
+                    WARNING("Pattern %d, Row %d. Unsupported effect '#%02X'\n",
+                            pattern_number, x, param);
+                }
+                else if (fx == 28)
+                {
+                    WARNING("Pattern %d, Row %d. Unsupported effect '\\%02X'\n",
+                            pattern_number, x, param);
+                }
+                else
+                {
+                    WARNING("Pattern %d, Row %d. Unsupported effect '%d %02X'\n",
+                            pattern_number, x, fx, param);
+                }
 
                 fx = 0;
                 param = 0;
