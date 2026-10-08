@@ -160,9 +160,34 @@ int Load_WAV(Sample *samp, bool fix)
                 break;
             }
 
+            case ID4('c', 'u', 'e', ' '): // Some common chunks
+            case ID4('C', 'S', 'E', 'T'):
+            case ID4('i', 'd', '3', ' '):
+            case ID4('L', 'I', 'S', 'T'):
+            case ID4('x', 't', 'r', 'a'):
+            {
+                // TODO: Print some of the information in the chunks in verbose mode?
+
+                VERBOSE("Ignored chunk '%c%c%c%c'\n",
+                        (chunk_code >> 0) & 0xFF,
+                        (chunk_code >> 8) & 0xFF,
+                        (chunk_code >> 16) & 0xFF,
+                        (chunk_code >> 24) & 0xFF);
+
+                skip8(chunk_size);
+                break;
+            }
+
             default:
             {
+                WARNING("Unknown chunk '%c%c%c%c'\n",
+                        (chunk_code >> 0) & 0xFF,
+                        (chunk_code >> 8) & 0xFF,
+                        (chunk_code >> 16) & 0xFF,
+                        (chunk_code >> 24) & 0xFF);
+
                 skip8(chunk_size);
+                break;
             }
         }
     }
