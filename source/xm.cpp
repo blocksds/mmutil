@@ -145,7 +145,7 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
         u8 vibsweep = 32768 / (read8() + 1);
         u8 vibdepth = read8();
         u8 vibrate = read8();
-        inst->fadeout = read16()/32;            // apply scalar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        inst->fadeout = read16() / 32; // apply scalar!
         file_seek_read(inst_headstart+inst_size, SEEK_SET);
 
 /*
