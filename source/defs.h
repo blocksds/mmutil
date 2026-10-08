@@ -19,8 +19,4 @@
 #define MAX_CHANNELS    32
 extern int PANNING_SEP;
 
-// Define this to use less common characters when printing information on the
-// terminal.
-//#define SUPER_ASCII
-
 #endif // DEFS_H__

@@ -25,40 +25,6 @@
 #include "errors.h"
 #include "samplefix.h"
 
-#ifdef SUPER_ASCII
-#define vstr_it_div "────────────────────────────────────────────\n"
-
-#define vstr_it_instr_top    "┌─────┬──────┬─────┬─────┬───────────────────────────┐\n"
-#define vstr_it_instr_head   "│INDEX│VOLUME│ NNA │ ENV │            NAME           │\n"
-#define vstr_it_instr_slice  "├─────┼──────┼─────┼─────┼───────────────────────────┤\n"
-#define vstr_it_instr        "│%3i  │ %3i%% │ %3s │ %s%s%s │ %-26s│\n"
-#define vstr_it_instr_bottom "└─────┴──────┴─────┴─────┴───────────────────────────┘\n"
-
-#define vstr_it_samp_top    "┌─────┬──────┬───────┬──────┬─────────┬───────────────────────────┐\n"
-#define vstr_it_samp_head   "│INDEX│VOLUME│DVOLUME│ LOOP │  MID-C  │            NAME           │\n"
-#define vstr_it_samp_slice  "├─────┼──────┼───────┼──────┼─────────┼───────────────────────────┤\n"
-#define vstr_it_samp        "│%3i  │ %3i%% │ %3i%%  │ %4s │%6ihz │ %-26s│\n"
-#define vstr_it_samp_bottom "└─────┴──────┴───────┴──────┴─────────┴───────────────────────────┘\n"
-
-#define vstr_it_pattern " * %2i\n"
-#else
-#define vstr_it_div "--------------------------------------------\n"
-
-#define vstr_it_instr_top   vstr_it_div
-#define vstr_it_instr_head  " INDEX VOLUME  NNA   ENV   NAME\n"
-//#define vstr_it_instr_slice ""
-#define vstr_it_instr       " %-3i   %3i%%    %3s   %s%s%s   %-26s \n"
-#define vstr_it_instr_bottom vstr_it_div
-
-#define vstr_it_samp_top    vstr_it_div
-#define vstr_it_samp_head   " INDEX VOLUME DVOLUME LOOP   MID-C     NAME            \n"
-//#define vstr_it_samp_slice  ""
-#define vstr_it_samp        " %-3i   %3i%%   %3i%%    %4s  %6ihz   %-26s \n"
-#define vstr_it_samp_bottom vstr_it_div
-
-#define vstr_it_pattern " * %2i\n"
-#endif
-
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
 bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
@@ -200,7 +166,7 @@ int Load_IT_Instrument(Instrument *inst, int index)
     if (inst->envelope_pitch.env_enabled)
         inst->env_flags |= MAS_INSTR_FLAG_PITCH_ENV_EXISTS;
 
-    VERBOSE(vstr_it_instr,
+    VERBOSE("│%3i  │ %3i%% │ %3s │ %s%s%s │ %-26s│\n",
             index + 1,
             (inst->global_volume * 100) / 128,
             ((inst->nna == 0) ? "CUT" : ((inst->nna == 1) ? "CON" :
@@ -649,9 +615,9 @@ int Load_IT(MAS_Module *itm)
     itm->initial_speed = read8();
     itm->initial_tempo = read8();
 
-    VERBOSE(vstr_it_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading IT, \"%s\"\n", itm->title);
-    VERBOSE(vstr_it_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("#Orders......%i\n", itm->order_count);
     VERBOSE("#Instr.......%i\n", itm->inst_count);
     VERBOSE("#Samples.....%i\n", itm->samp_count);
@@ -663,7 +629,7 @@ int Load_IT(MAS_Module *itm)
     VERBOSE("Speed........%i\n", itm->initial_speed);
     VERBOSE("Tempo........%i\n", itm->initial_tempo);
     VERBOSE("Instruments..%s\n", instr_mode ? "Yes" : "Will be supplied");
-    VERBOSE(vstr_it_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     if (itm->old_effects)
         WARNING("IT 'Old Effects' flag is enabled, but Maxmod ignores it\n.");
@@ -705,31 +671,24 @@ int Load_IT(MAS_Module *itm)
         itm->instruments = (Instrument *)calloc(itm->inst_count, sizeof(Instrument));
 
         VERBOSE("Loading Instruments...\n");
-        VERBOSE(vstr_it_instr_top);
-        VERBOSE(vstr_it_instr_head);
-#ifdef vstr_it_instr_slice
-        VERBOSE(vstr_it_instr_slice);
-#endif
-        //VERBOSE("INDEX    VOLUME    NNA    ENV    NAME\n");
+        VERBOSE("┌─────┬──────┬─────┬─────┬───────────────────────────┐\n");
+        VERBOSE("│INDEX│VOLUME│ NNA │ ENV │            NAME           │\n");
+        VERBOSE("├─────┼──────┼─────┼─────┼───────────────────────────┤\n");
 
         // read instruments
         for (int x = 0; x < itm->inst_count; x++)
         {
-            //VERBOSE("%i    ", x + 1);
             file_seek_read(parap_inst[x], SEEK_SET);
             Load_IT_Instrument(&itm->instruments[x], x);
         }
 
-        VERBOSE(vstr_it_instr_bottom);
+        VERBOSE("└─────┴──────┴─────┴─────┴───────────────────────────┘\n");
     }
 
     VERBOSE("Loading Samples...\n");
-    VERBOSE(vstr_it_samp_top);
-    VERBOSE(vstr_it_samp_head);
-#ifdef vstr_it_samp_slice
-    VERBOSE(vstr_it_samp_slice);
-#endif
-    //VERBOSE("INDEX    VOLUME    DVOLUME    LOOP    MID-C    NAME\n");
+    VERBOSE("┌─────┬──────┬───────┬──────┬─────────┬───────────────────────────┐\n");
+    VERBOSE("│INDEX│VOLUME│DVOLUME│ LOOP │  MID-C  │            NAME           │\n");
+    VERBOSE("├─────┼──────┼───────┼──────┼─────────┼───────────────────────────┤\n");
 
     // read samples
     for (int x = 0; x < itm->samp_count; x++)
@@ -737,26 +696,20 @@ int Load_IT(MAS_Module *itm)
         file_seek_read(parap_samp[x], SEEK_SET);
         Load_IT_Sample(&itm->samples[x]);
 
-        VERBOSE(vstr_it_samp, x + 1, (itm->samples[x].global_volume * 100) / 64,
+        VERBOSE("│%3i  │ %3i%% │ %3i%%  │ %4s │%6ihz │ %-26s│\n",
+                x + 1, (itm->samples[x].global_volume * 100) / 64,
                 (itm->samples[x].default_volume * 100) / 64,
                 itm->samples[x].loop_type == 0 ?
                     "None" : (itm->samples[x].loop_type == 1 ? "Forw" : "BIDI"),
                 itm->samples[x].frequency, itm->samples[x].name);
-
-        //VERBOSE("%i    %i%%    %i%%    %s    %ihz    %s\n", x + 1,
-        //       (itm->samples[x].global_volume * 100) / 64,
-        //       (itm->samples[x].default_volume * 100) / 64,
-        //       itm->samples[x].loop_type == 0 ?
-        //           "None" : (itm->samples[x].loop_type == 1 ? "Yes" : "BIDI"),
-        //       itm->samples[x].frequency, itm->samples[x].name);
     }
 
-    VERBOSE(vstr_it_samp_bottom);
+    VERBOSE("└─────┴──────┴───────┴──────┴─────────┴───────────────────────────┘\n");
 
     if (!instr_mode)
     {
         VERBOSE("Adding Instrument Templates...\n");
-        VERBOSE(vstr_it_div);
+        VERBOSE("────────────────────────────────────────────\n");
 
         itm->inst_count = itm->samp_count;
         itm->instruments = (Instrument*)calloc(itm->inst_count, sizeof(Instrument));
@@ -780,11 +733,11 @@ int Load_IT(MAS_Module *itm)
 
         if (cc != 0)
             VERBOSE((((x + 1) % 15) == 0) ? "" : "\n");
-        VERBOSE(vstr_it_div);
+        VERBOSE("────────────────────────────────────────────\n");
     }
 
     VERBOSE("Reading Patterns...\n");
-    VERBOSE(vstr_it_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     // read patterns
     cc = 0;
@@ -794,7 +747,7 @@ int Load_IT(MAS_Module *itm)
 
         if (parap_patt[x] != 0)
         {
-            VERBOSE(vstr_it_pattern, x+1);
+            VERBOSE(" * %2i\n", x + 1);
             cc++;
             if (cc == 15)
             {
@@ -813,7 +766,7 @@ int Load_IT(MAS_Module *itm)
 
     if (cc != 0)
         VERBOSE("\n");
-    VERBOSE(vstr_it_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Sample Data...\n");
 
     // read sample data
@@ -823,7 +776,7 @@ int Load_IT(MAS_Module *itm)
         Load_IT_SampleData(&itm->samples[x], cmwt);
     }
 
-    VERBOSE(vstr_it_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     free(parap_inst);
     free(parap_samp);

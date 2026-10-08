@@ -26,28 +26,6 @@
 #include "errors.h"
 #include "samplefix.h"
 
-#ifdef SUPER_ASCII
-#define vstr_mod_div "────────────────────────────────────────────\n"
-
-#define vstr_mod_samp_top       "┌─────┬──────┬─────┬──────┬───────┬───────────────────────┐\n"
-#define vstr_mod_samp_header    "│INDEX│LENGTH│LOOP │VOLUME│ MID-C │ NAME                  │\n"
-#define vstr_mod_samp_slice     "├─────┼──────┼─────┼──────┼───────┼───────────────────────┤\n"
-#define vstr_mod_samp           "│ %2i  │%5i │ %3s │ %3i%% │ %ihz│ %-22s│\n"
-#define vstr_mod_samp_bottom    "└─────┴──────┴─────┴──────┴───────┴───────────────────────┘\n"
-
-#define vstr_mod_pattern " * %2i\n"
-#else
-#define vstr_mod_div "--------------------------------------------\n"
-
-#define vstr_mod_samp_top       vstr_mod_div
-#define vstr_mod_samp_header    " INDEX LENGTH LOOP  VOLUME  MID-C   NAME                   \n"
-//#define vstr_mod_samp_slice     ""
-#define vstr_mod_samp           " %-2i    %-5i  %-3s   %3i%%    %ihz  %-22s \n"
-#define vstr_mod_samp_bottom    vstr_mod_div
-
-#define vstr_mod_pattern " * %2i\n"
-#endif
-
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
 int Create_MOD_Instrument(Instrument *inst, u8 sample)
@@ -346,7 +324,8 @@ int Load_MOD_Sample(Sample *samp, int index)
 
     if (samp->sample_length != 0)
     {
-        VERBOSE(vstr_mod_samp, index + 1, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
+        VERBOSE("│ %2i  │%5i │ %3s │ %3i%% │ %ihz│ %-22s│\n",
+                index + 1, samp->sample_length, samp->loop_type != 0 ? "Yes" : "No",
                 (samp->default_volume * 100) / 64, samp->frequency, samp->name);
         /*
         VERBOSE("  Length......%i\n", samp->sample_length);
@@ -473,13 +452,11 @@ int Load_MOD(MAS_Module *mod)
     mod->xm_mode = true;
     mod->old_mode = true;
 
-    VERBOSE(vstr_mod_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Samples...\n");
-    VERBOSE(vstr_mod_samp_top);
-    VERBOSE(vstr_mod_samp_header);
-#ifdef vstr_mod_samp_slice
-    VERBOSE(vstr_mod_samp_slice);
-#endif
+    VERBOSE("┌─────┬──────┬─────┬──────┬───────┬───────────────────────┐\n");
+    VERBOSE("│INDEX│LENGTH│LOOP │VOLUME│ MID-C │ NAME                  │\n");
+    VERBOSE("├─────┼──────┼─────┼──────┼───────┼───────────────────────┤\n");
 
     // Load Sample Information
     for (int x = 0; x < 31; x++)
@@ -519,22 +496,22 @@ int Load_MOD(MAS_Module *mod)
     mod->patt_count = npatterns;
     mod->patterns = (Pattern *)calloc(mod->patt_count, sizeof(Pattern));
 
-    VERBOSE(vstr_mod_samp_bottom);
+    VERBOSE("└─────┴──────┴─────┴──────┴───────┴───────────────────────┘\n");
     VERBOSE("Sequence has %i entries.\n", mod->order_count);
     VERBOSE("Module has %i pattern%s.\n", mod->patt_count, mod->patt_count == 1 ? "" : "s");
-    VERBOSE(vstr_mod_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Patterns...\n");
-    VERBOSE(vstr_mod_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     // Load Patterns
     for (int x = 0; x < mod->patt_count; x++)
     {
-        VERBOSE(vstr_mod_pattern, x + 1);
+        VERBOSE(" * %2i\n", x + 1);
         Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count), x);
     }
 
     VERBOSE("\n");
-    VERBOSE(vstr_mod_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     // Load Sample Data
     VERBOSE("Loading Sample Data...\n");
@@ -545,7 +522,7 @@ int Load_MOD(MAS_Module *mod)
         Load_MOD_SampleData(&mod->samples[x]);
     }
 
-    VERBOSE(vstr_mod_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     Sanitize_Module(mod);
 

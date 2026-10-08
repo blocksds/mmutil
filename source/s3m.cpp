@@ -26,34 +26,6 @@
 
 #define S3M_NOTE(a) ((((a) & 15) + ((a) >> 4) * 12) + 12)
 
-#ifdef SUPER_ASCII
-#define vstr_s3m_samp  " %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n"
-#define vstr_s3m_sampe " ----- │ --- │ ---- │ ----- │ %-28s│\n"
-
-#define vstr_s3m_div "────────────────────────────────────────────\n"
-
-#define vstr_s3m_sampt_top      "┌─────┬───────┬─────┬──────┬───────┬─────────────────────────────┐\n"
-#define vstr_s3m_sampt_mid      "│INDEX│LENGTH │LOOP │VOLUME│ MID-C │             NAME            │\n"
-#define vstr_s3m_sampt_slice    "├─────┼───────┼─────┼──────┼───────┼─────────────────────────────┤\n"
-#define vstr_s3m_sampt_index    "│ %2i  │"
-#define vstr_s3m_sampt_bottom   "└─────┴───────┴─────┴──────┴───────┴─────────────────────────────┘\n"
-
-#define vstr_s3m_pattern " * %2i\n"
-#else
-#define vstr_s3m_samp  "%-5i   %-3s   %3i%%   %5ihz  %-28s \n"
-#define vstr_s3m_sampe "-----   ---   ----   -------  %-28s\n"
-
-#define vstr_s3m_div "--------------------------------------------\n"
-
-#define vstr_s3m_sampt_top      vstr_s3m_div
-#define vstr_s3m_sampt_mid      " INDEX LENGTH  LOOP  VOLUME  MID-C   NAME\n"
-//#define vstr_s3m_sampt_slice    ""
-#define vstr_s3m_sampt_index    " %-2i    "
-#define vstr_s3m_sampt_bottom   vstr_s3m_div
-
-#define vstr_s3m_pattern " * %2i\n"
-#endif
-
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
 int Load_S3M_SampleData(Sample *samp, u8 ffi)
@@ -120,7 +92,7 @@ int Load_S3M_Sample(Sample *samp)
 
     if (type == 0) // Empty instrument (message only)
     {
-        VERBOSE(vstr_s3m_sampe, samp->name);
+        VERBOSE(" ----- │ --- │ ---- │ ----- │ %-28s│\n", samp->name);
     }
     else if (type == 1) // 1 = PCM instrument
     {
@@ -159,7 +131,8 @@ int Load_S3M_Sample(Sample *samp)
         //VERBOSE("┌─────┬──────┬────┬──────┬─────┬─────────────────────────────┐\n");
         //VERBOSE("│LENGTH│LOOP│VOLUME│ MID-C │             NAME            │\n");
         //VERBOSE("┼──────┼────┼──────┼─────┼─────────────────────────────┤\n");
-        VERBOSE(vstr_s3m_samp, samp->sample_length, samp->loop_type ? "Yes" : "No",
+        VERBOSE(" %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n",
+                samp->sample_length, samp->loop_type ? "Yes" : "No",
                 (samp->default_volume * 100) / 64, samp->frequency, samp->name);
         /*
         VERBOSE("  Name......%s\n", samp->name);
@@ -362,7 +335,7 @@ int Load_S3M(MAS_Module *mod)
     if (read8() != 16)
         return ERR_INVALID_MODULE;
 
-    VERBOSE(vstr_s3m_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading S3M, \"%s\"\n", mod->title);
 
     skip8(2); // reserved space
@@ -490,19 +463,16 @@ int Load_S3M(MAS_Module *mod)
     mod->samples = (Sample *)calloc(mod->samp_count, sizeof(Sample));
     mod->patterns = (Pattern *)calloc(mod->patt_count, sizeof(Pattern));
 
-    VERBOSE(vstr_s3m_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Samples...\n");
-    VERBOSE(vstr_s3m_sampt_top);
-    VERBOSE(vstr_s3m_sampt_mid);
-#ifdef vstr_s3m_sampt_slice
-    VERBOSE(vstr_s3m_sampt_slice);
-#endif
+    VERBOSE("┌─────┬───────┬─────┬──────┬───────┬─────────────────────────────┐\n");
+    VERBOSE("│INDEX│LENGTH │LOOP │VOLUME│ MID-C │             NAME            │\n");
+    VERBOSE("├─────┼───────┼─────┼──────┼───────┼─────────────────────────────┤\n");
 
     // load instruments
     for (int x = 0; x < mod->inst_count; x++)
     {
-        VERBOSE(vstr_s3m_sampt_index, x + 1);
-        //VERBOSE("Sample %i\n", x + 1);
+        VERBOSE("│ %2i  │", x + 1);
 
         // load sample
         file_seek_read(parap_inst[x] * 16, SEEK_SET);
@@ -528,20 +498,20 @@ int Load_S3M(MAS_Module *mod)
     }
 
     // load patterns
-    VERBOSE(vstr_s3m_sampt_bottom);
+    VERBOSE("└─────┴───────┴─────┴──────┴───────┴─────────────────────────────┘\n");
     VERBOSE("Loading Patterns...\n");
-    VERBOSE(vstr_s3m_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     for (int x = 0; x < mod->patt_count; x++)
     {
-        VERBOSE(vstr_s3m_pattern, x + 1);
-        //VERBOSE("%i...", x+1);
+        VERBOSE(" * %2i\n", x + 1);
+
         file_seek_read(parap_patt[x] * 16, SEEK_SET);
         Load_S3M_Pattern(&mod->patterns[x], x);
     }
 
     VERBOSE("\n");
-    VERBOSE(vstr_s3m_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Sample Data...\n");
 
     for (int x = 0; x < mod->samp_count; x++)
@@ -550,7 +520,7 @@ int Load_S3M(MAS_Module *mod)
         Load_S3M_SampleData(&mod->samples[x], (u8)ffi);
     }
 
-    VERBOSE(vstr_s3m_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     Sanitize_Module(mod);
 

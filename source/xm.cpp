@@ -26,34 +26,6 @@
 #include "math.h"
 #include "samplefix.h"
 
-#ifdef SUPER_ASCII
-#define vstr_xm_samp    "  %2i   │   %s%s   │ %-22s │\n"
-#define vstr_xm_nosamp  "  --   │   --   │ %-22s │\n"
-
-#define vstr_xm_div "────────────────────────────────────────────\n"
-
-#define vstr_xm_patt " * %2i\n"
-
-#define vstr_xm_samp_top    "┌─────┬───────┬────────┬────────────────────────┐\n"
-#define vstr_xm_samp_header "│INDEX│SAMPLES│ENVELOPE│          NAME          │\n"
-#define vstr_xm_samp_prefix "│%3i  │"
-#define vstr_xm_samp_slice  "├─────┼───────┼────────┼────────────────────────┤\n"
-#define vstr_xm_samp_bottom "└─────┴───────┴────────┴────────────────────────┘\n"
-#else
-#define vstr_xm_samp   "  %2i   |   %s%s   | %-22s |\n"
-#define vstr_xm_nosamp "  --   |   --   | %-22s |\n"
-
-#define vstr_xm_div "--------------------------------------------\n"
-
-#define vstr_xm_patt " * %2i\n"
-
-#define vstr_xm_samp_top    ".-----------------------------------------------.\n"
-#define vstr_xm_samp_header "|INDEX|SAMPLES|ENVELOPE|          NAME          |\n"
-#define vstr_xm_samp_prefix "|%3i  |"
-#define vstr_xm_samp_slice  "|-----+-------+--------+------------------------|\n"
-#define vstr_xm_samp_bottom "`-----------------------------------------------'\n"
-#endif
-
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
 int Get_XM_Frequency(s8 relnote, s8 finetune)
@@ -255,7 +227,8 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
 
         *p_nextsample = ns + nsamples;
 
-        VERBOSE(vstr_xm_samp, nsamples, (volbits & 1) ? "V" : "-",
+        VERBOSE("  %2i   │   %s%s   │ %-22s │\n",
+                nsamples, (volbits & 1) ? "V" : "-",
                 (panbits & 1) ? "P" : "-", inst->name);
     }
     else
@@ -263,7 +236,7 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
         inst->is_valid = false;
 
         file_seek_read(inst_headstart + inst_size, SEEK_SET);
-        VERBOSE(vstr_xm_nosamp, inst->name);
+        VERBOSE("  --   │   --   │ %-22s │\n", inst->name);
     }
 
     return ERR_NONE;
@@ -699,7 +672,7 @@ int Load_XM(MAS_Module *mod)
     for (int x = 0; x < 20; x++)
         mod->title[x] = read8();
 
-    VERBOSE(vstr_xm_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading XM, \"%s\"\n", mod->title);
 
     if (read8() != 0x1a)
@@ -739,7 +712,7 @@ int Load_XM(MAS_Module *mod)
         mod->channel_panning[x] = 128;
     }
 
-    VERBOSE(vstr_xm_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Reading sequence...\n");
 
     int z;
@@ -758,14 +731,14 @@ int Load_XM(MAS_Module *mod)
 
     file_seek_read(60 + xm_headsize, SEEK_SET); // or maybe 60..
 
-    VERBOSE(vstr_xm_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading patterns...\n");
-    VERBOSE(vstr_xm_div);
+    VERBOSE("────────────────────────────────────────────\n");
 
     mod->patterns = (Pattern*)calloc(mod->patt_count, sizeof(Pattern));
     for (int x = 0; x < mod->patt_count; x++)
     {
-        VERBOSE(vstr_xm_patt, x);
+        VERBOSE(" * %2i\n", x);
 
         Load_XM_Pattern(&mod->patterns[x], xm_nchannels, x);
     }
@@ -775,21 +748,20 @@ int Load_XM(MAS_Module *mod)
 
     u8 next_sample = 0;
 
-    VERBOSE(vstr_xm_div);
+    VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading instruments...\n");
-    VERBOSE(vstr_xm_samp_top);
-    VERBOSE(vstr_xm_samp_header);
-    VERBOSE(vstr_xm_samp_slice);
+    VERBOSE("┌─────┬───────┬────────┬────────────────────────┐\n");
+    VERBOSE("│INDEX│SAMPLES│ENVELOPE│          NAME          │\n");
+    VERBOSE("├─────┼───────┼────────┼────────────────────────┤\n");
 
     for (int x = 0; x < mod->inst_count; x++)
     {
-        //VERBOSE("Reading Instrument %i...\n", x + 1);
-        VERBOSE(vstr_xm_samp_prefix, x + 1);
+        VERBOSE("│%3i  │", x + 1);
 
         Load_XM_Instrument(&mod->instruments[x], mod, &next_sample);
     }
 
-    VERBOSE(vstr_xm_samp_bottom);
+    VERBOSE("└─────┴───────┴────────┴────────────────────────┘\n");
 
     mod->samp_count = next_sample;
 
