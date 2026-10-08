@@ -448,11 +448,7 @@ int main(int argc, char *argv[])
 
         Delete_Module(&mod);
 
-#ifdef SUPER_ASCII
-        VERBOSE("Success! \x02\n");
-#else
         VERBOSE("Success! :)\n");
-#endif
     }
     else if (g_flag)
     {
