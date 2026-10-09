@@ -246,8 +246,6 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
 // effects, so this function converts from XM to MAS.
 static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
 {
-#define cho 64
-
     int wfx = *fx;
     int wpm = *param;
 
@@ -255,65 +253,70 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
     {
         case 0: // 0xy arpeggio
             if (wpm != 0)
-                wfx = 'J' - cho;
+            {
+                wfx = MAS_FX_ARPEGGIO;
+            }
             else
-                wfx = wpm = 0;
+            {
+                wfx = MAS_FX_NONE;
+                wpm = 0;
+            }
             break;
 
         case 1: // 1xx porta up
-            wfx = 'F' - cho;
+            wfx = MAS_FX_PORTAMENTO_UP;
             if (wpm >= 0xE0)
                 wpm = 0xDF;
             break;
 
         case 2: // 2xx porta down
-            wfx = 'E' - cho;
+            wfx = MAS_FX_PORTAMENTO_DOWN;
             if (wpm >= 0xE0)
                 wpm = 0xDF;
             break;
 
         case 3: // 3xx porta to note
-            wfx = 'G' - cho;
+            wfx = MAS_FX_GLISSANDO;
             break;
 
         case 4: // 4xy vibrato
-            wfx = 'H' - cho;
+            wfx = MAS_FX_VIBRATO;
             break;
 
         case 5: // 5xy volslide+glissando
-            wfx = 'L' - cho;
+            wfx = MAS_FX_PORTA_VOLUME;
             break;
 
         case 6: // 6xy volslide+vibrato
-            wfx = 'K' - cho;
+            wfx = MAS_FX_VIBRATO_VOLUME;
             break;
 
         case 7: // 7xy tremolo
-            wfx = 'R' - cho;
+            wfx = MAS_FX_TREMOLO;
             break;
 
         case 8: // 8xx set panning
-            wfx = 'X' - cho;
+            wfx = MAS_FX_SET_PANNING;
             break;
 
         case 9: // 9xx set offset
-            wfx = 'O' - cho;
+            wfx = MAS_FX_SAMPLE_OFFSET;
             break;
 
         case 0xA: // Axy volume slide
-            wfx = 'D' - cho;
+            wfx = MAS_FX_VOLUME_SLIDE;
             break;
 
         case 0xB: // Bxx position jump
-            wfx = 'B' - cho;
+            wfx = MAS_FX_POSITION_JUMP;
             break;
 
         case 0xC: // Cxx set volume
-            wfx = 27; // compatibility effect
+            wfx = MAS_FX_XM_SET_VOLUME; // Compatibility effect
             break;
 
         case 0xD: // Dxx pattern break
-            wfx = 'C' - cho;
+            wfx = MAS_FX_PATTERN_BREAK;
             wpm = (wpm & 0xF) + (wpm >> 4) * 10;
             break;
 
@@ -326,97 +329,97 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     // TODO: Unsupported
                     WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
                             pattern, row, channel, wpm);
-                    wfx = 0;
+                    wfx = MAS_FX_NONE;
                     wpm = 0;
                     break;
 
                 case 1: // fine porta up
-                    wfx = 'F' - cho;
+                    wfx = MAS_FX_PORTAMENTO_UP;
                     wpm = 0xF0 | (wpm & 0xF);
                     break;
 
                 case 2: // fine porta down
-                    wfx = 'E' - cho;
+                    wfx = MAS_FX_PORTAMENTO_DOWN;
                     wpm = 0xF0 | (wpm & 0xF);
                     break;
 
                 case 4: // vibrato control
                     WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
                             pattern, row, channel, wpm);
-                    wfx = 'S' - cho;
-                    wpm = 0x30 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (wpm & 0xF);
                     break;
 
                 case 6: // pattern loop
-                    wfx = 'S' - cho;
-                    wpm = 0xB0 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_PATTERN_LOOP << 4) | (wpm & 0xF);
                     break;
 
                 case 7: // tremolo control
                     WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
                             pattern, row, channel, wpm);
-                    wfx = 'S' - cho;
-                    wpm = 0x40 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (wpm & 0xF);
                     break;
 
                 case 8: // set panning
-                    wfx = 'X' - cho;
+                    wfx = MAS_FX_SET_PANNING;
                     wpm = (wpm & 0xF) * 16;
                     break;
 
                 case 9: // old retrig
-                    wfx = 'S' - cho;
-                    wpm = 0x20 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_OLD_RETRIGGER << 4) | (wpm & 0xF);
                     break;
 
                 case 10: // fine volslide up
-                    wfx = 'S' - cho;
-                    wpm = 0x00 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_FINE_VOL_SLIDE_UP << 4) | (wpm & 0xF);
                     break;
 
                 case 11: // fine volslide down
-                    wfx = 'S' - cho;
-                    wpm = 0x10 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_FINE_VOL_SLIDE_DOWN << 4) | (wpm & 0xF);
                     break;
 
                 case 12: // note cut
-                    wfx = 'S' - cho;
-                    wpm = 0xC0 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_NOTE_CUT << 4) | (wpm & 0xF);
                     break;
 
                 case 13: // note delay
-                    wfx = 'S' - cho;
-                    wpm = 0xD0 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_NOTE_DELAY << 4) | (wpm & 0xF);
                     break;
 
                 case 14: // pattern delay
-                    wfx = 'S' - cho;
-                    wpm = 0xE0 | (wpm & 0xF);
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_PATTERN_DELAY << 4) | (wpm & 0xF);
                     break;
 
                 case 15: // Unused. Maxmod uses it as "Event callback"
                     VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
                             pattern, row, channel, wpm & 0xF);
-                    wfx = 'S' - cho;
-                    wpm = wpm;
+                    wfx = MAS_FX_EXTENDED;
+                    wpm = (MAS_FX_EXT_SONG_MESSAGE << 4) | (wpm & 0xF);
                     break;
             }
             break;
 
         case 0xF: // Fxx set speed
             if (wpm >= 32)
-                wfx = 'T' - cho;
+                wfx = MAS_FX_SET_TEMPO;
             else
-                wfx = 'A' - cho;
+                wfx = MAS_FX_SET_SPEED;
             break;
 
         case 16: // Gxx set global volume
-            wfx = 'V' - cho;
+            wfx = MAS_FX_SET_GLOBAL_VOLUME;
             wpm = wpm;
             break;
 
         case 17: // Hxx global volume slide
-            wfx = 'W' - cho;
+            wfx = MAS_FX_GLOBAL_VOLUME_SLIDE;
             break;
 
         case 18: // Ixx unused
@@ -434,65 +437,69 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
         case 37: // Unused
             WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%c%02X'\n",
                     pattern, row, channel, wfx + 'A' - 10, wpm);
-            wfx = 0;
+            wfx = MAS_FX_NONE;
             wpm = 0;
             break;
 
         case 36: // \xx Smooth MIDI Macro (ModPlug hack)
             WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '\\%02X'\n",
                     pattern, row, channel, wpm);
-            wfx = 0;
+            wfx = MAS_FX_NONE;
             wpm = 0;
             break;
 
         case 38: // #xx Parameter extension
             WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '#%02X'\n",
                     pattern, row, channel, wpm);
-            wfx = 0;
+            wfx = MAS_FX_NONE;
             wpm = 0;
             break;
 
         default:
             WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%d %02X'\n",
                     pattern, row, channel, wfx, wpm);
-            wfx = 0;
+            wfx = MAS_FX_NONE;
             wpm = 0;
             break;
 
         case 20: // Kxx key off
-            wfx = 28;
+            wfx = MAS_FX_XM_KEY_OFF;
             break;
 
         case 21: // Lxx set envelope position
-            wfx = 29;
+            WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'L%02X'\n",
+                    pattern, row, channel, wpm);
+            // Note: Don't set this to 0 so that we remember what index 29
+            // corresponds to in Maxmod.
+            wfx = MAS_FX_XM_ENVELOPE_POS;
             break;
 
         case 25: // Pxx panning slide
-            wfx = 'P' - cho;
+            wfx = MAS_FX_PANNING_SLIDE;
             break;
 
         case 27: // Rxx retrigger note
-            wfx = 'Q' - cho;
+            wfx = MAS_FX_RETRIGGER;
             break;
 
         case 29: // Txx tremor
-            wfx = 30;
+            wfx = MAS_FX_XM_TREMOR;
             break;
 
         case 33: // Xxx extra fine slide
             if ((wpm >> 4) == 1)
             {
-                wfx = 'F' - cho;
+                wfx = MAS_FX_PORTAMENTO_UP;
                 wpm = 0xE0 | (wpm & 0xF);
             }
             else if ((wpm >> 4) == 2)
             {
-                wfx = 'E' - cho;
+                wfx = MAS_FX_PORTAMENTO_DOWN;
                 wpm = 0xE0 | (wpm & 0xF);
             }
             else
             {
-                wfx = 0;
+                wfx = MAS_FX_NONE;
                 wpm = 0;
             }
             break;
