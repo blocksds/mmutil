@@ -422,14 +422,40 @@ static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix
     }
 
     {
-        MSL_Name_Entry entry;
-        entry.id = id;
-        entry.name = std::string(filename + s);
+        MSL_Name_Entry new_entry;
+        new_entry.id = id;
+        new_entry.name = std::string(filename + s);
+
+        // Look for entries with the same name and show warnings. This isn't an
+        // error because it's still possible to go from sample/module ID to file
+        // name, but it isn't possible to go from file name to ID.
 
         if (strcmp(prefix, "SFX_") == 0)
-            msl_sample_names.push_back(entry);
+        {
+            for (auto old_entry : msl_sample_names)
+            {
+                if (old_entry.name == new_entry.name)
+                {
+                    WARNING("Multiple files with same name in dictionary: %s\n",
+                            old_entry.name.c_str());
+                }
+            }
+
+            msl_sample_names.push_back(new_entry);
+        }
         else if (strcmp(prefix, "MOD_") == 0)
-            msl_module_names.push_back(entry);
+        {
+            for (auto old_entry : msl_module_names)
+            {
+                if (old_entry.name == new_entry.name)
+                {
+                    WARNING("Multiple files with same name in dictionary: %s\n",
+                            old_entry.name.c_str());
+                }
+            }
+
+            msl_module_names.push_back(new_entry);
+        }
     }
 
     for (x = s; x < (int)strlen(filename); x++)
