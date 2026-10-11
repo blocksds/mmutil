@@ -333,14 +333,27 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     wpm = 0;
                     break;
 
+                // Fine Portamento is stored as '0xF0 | (value & 0xF)'.
+                // Extra Fine Portamento is stored as '0xE0 | (value & 0xF)'.
+                //
+                // A value that isn't exactly 0x00 is interpreted as a new
+                // value, not continue. We need to set the full param to 0 when
+                // we find E10 and E20.
+
                 case 1: // fine porta up
                     wfx = MAS_FX_PORTAMENTO_UP;
-                    wpm = 0xF0 | (wpm & 0xF);
+                    if ((wpm & 0xF) == 0)
+                        wpm = 0; // Continue
+                    else
+                        wpm = 0xF0 | (wpm & 0xF); // New
                     break;
 
                 case 2: // fine porta down
                     wfx = MAS_FX_PORTAMENTO_DOWN;
-                    wpm = 0xF0 | (wpm & 0xF);
+                    if ((wpm & 0xF) == 0)
+                        wpm = 0; // Continue
+                    else
+                        wpm = 0xF0 | (wpm & 0xF); // New
                     break;
 
                 case 4: // vibrato control
@@ -486,18 +499,30 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
             wfx = MAS_FX_XM_TREMOR;
             break;
 
-        case 33: // Xxx extra fine slide
-            if ((wpm >> 4) == 1)
+        case 33: // Xxx Extended effects
+
+            // Extra Fine Portamento is stored as '0xE0 | (value & 0xF)'.
+            // A value that isn't exactly 0x00 is interpreted as a new
+            // value, not continue. We need to set the full param to 0 when we
+            // find X10 and X20.
+
+            if ((wpm >> 4) == 1) // X1x extra fine portamento up
             {
                 wfx = MAS_FX_PORTAMENTO_UP;
-                wpm = 0xE0 | (wpm & 0xF);
+                if ((wpm & 0xF) == 0)
+                    wpm = 0; // Continue
+                else
+                    wpm = 0xE0 | (wpm & 0xF); // New
             }
-            else if ((wpm >> 4) == 2)
+            else if ((wpm >> 4) == 2) // X2x extra fine portamento down
             {
                 wfx = MAS_FX_PORTAMENTO_DOWN;
-                wpm = 0xE0 | (wpm & 0xF);
+                if ((wpm & 0xF) == 0)
+                    wpm = 0; // Continue
+                else
+                    wpm = 0xE0 | (wpm & 0xF); // New
             }
-            else
+            else // Other effects
             {
                 wfx = MAS_FX_NONE;
                 wpm = 0;
