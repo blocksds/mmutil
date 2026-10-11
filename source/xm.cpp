@@ -317,7 +317,14 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
 
         case 0xD: // Dxx pattern break
             wfx = MAS_FX_PATTERN_BREAK;
+            // This is stored as BCD. The top nibble can go up to 0xF, the
+            // bottom nibble can go up to 0x9
             wpm = (wpm & 0xF) + (wpm >> 4) * 10;
+            if (wpm > 63)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Jump to row %d > 63 not compatible with FT2\n",
+                        pattern, row, channel, wpm);
+            }
             break;
 
         case 0xE: // Exy extended

@@ -131,7 +131,18 @@ static void conv_mod_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel
 
         case 0xD: // Dxx pattern break
             wfx = MAS_FX_PATTERN_BREAK;
+            // This is stored as BCD. The top nibble can go up to 0xF, the
+            // bottom nibble can go up to 0x9
             wpm = (wpm & 0xF) + (wpm >> 4) * 10;
+            if (wpm > 63)
+            {
+                // This isn't strictly needed because Maxmod can handle this
+                // situation, but it's good to warn the user that they have an
+                // invalid MOD effect.
+                WARNING("Pattern %d, Row %d, Channel %d. Jump to row %d > 63 converted to jump to 0.\n",
+                        pattern, row, channel, wpm);
+                wpm = 0;
+            }
             break;
 
         case 0xE: // Exy extended
