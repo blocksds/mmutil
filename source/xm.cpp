@@ -508,6 +508,88 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
     *param = wpm;
 }
 
+static void Sanitize_XM_VolumeCommand(u8 *cmd, int pattern, int row, int channel)
+{
+    u8 volcmd = *cmd;
+
+    if (volcmd < 0x10) // None
+    {
+        volcmd = 0;
+    }
+    else if (volcmd <= 0x50) // Set volume
+    {
+        //u32 param = volcmd - 0x10;
+    }
+    else if (volcmd < 0x60) // Undefined
+    {
+        volcmd = 0;
+    }
+    else if (volcmd < 0x70) // Volume slide down
+    {
+        //u32 param = volcmd - 0x60;
+    }
+    else if (volcmd < 0x80) // Volume slide up
+    {
+        //u32 param = volcmd - 0x70;
+    }
+    else if (volcmd < 0x90) // Fine volume slide down
+    {
+        //u32 param = volcmd - 0x80;
+    }
+    else if (volcmd < 0xA0) // Fine volume slide up
+    {
+        //u32 param = volcmd - 0x90;
+    }
+    else if (volcmd < 0xB0) // Set vibrato speed
+    {
+        //u32 param = (volcmd - 0xA0) << 2;
+    }
+    else if (volcmd < 0xC0) // Set vibrato depth
+    {
+        //u32 param = (volcmd - 0xB0) << 3;
+    }
+    else if (volcmd < 0xD0) // Panning
+    {
+        //u32 param = (volcmd - 0xC0) << 4;
+    }
+    else if (volcmd < 0xE0) // Panning slide left
+    {
+        u32 param = volcmd - 0xD0;
+
+        if (param == 0)
+        {
+            // FT2 Compatibility: Pan slide left with zero parameter causes
+            // panning to be set to full left on every non-row tick.
+            //
+            // https://github.com/OpenMPT/openmpt/blob/dc49d5638db37e157003cd606dc85165551eb9da/soundlib/Snd_fx.cpp#L3287-L3294
+
+            WARNING("Pattern %d, row %d, channel %d. Converted l0%d to p00 to emulate FT2 bug.\n",
+                    pattern, row, channel, param);
+            volcmd = 0xC0;
+        }
+    }
+    else  if (volcmd < 0xF0) // Panning slide right
+    {
+        u32 param = volcmd - 0xE0;
+
+        if (param == 0)
+        {
+            // This effect doesn't seem to have memory. If the parameter is
+            // zero, it is ignored, so simply clear the effect.
+
+            WARNING("Pattern %d, row %d, channel %d. r00 ignores memory. Removed.\n",
+                    pattern, row, channel);
+            volcmd = 0;
+        }
+    }
+    else // Tone portamento / Glissando
+    {
+        //u32 param = (volcmd - 0xF0) << 4;
+    }
+
+    *cmd = volcmd;
+}
+
 int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 {
     u32 headstart = file_tell_read();
@@ -573,7 +655,9 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 
                 if (b & 4) // 2 set: Volume column byte follows
                 {
-                    patt->data[e].vol = read8(); // (byte) Volume column byte
+                    u8 volcmd = read8(); // (byte) Volume column byte
+                    Sanitize_XM_VolumeCommand(&volcmd, pattern, row, col);
+                    patt->data[e].vol = volcmd;
                     total_data_read++;
                 }
 
@@ -618,7 +702,10 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
                     patt->data[e].note += 12 - 1;
 
                 patt->data[e].inst = read8(); // (byte) Instrument (1-128)
-                patt->data[e].vol = read8();  // (byte) Volume column byte (see below)
+
+                u8 volcmd = read8();          // (byte) Volume column byte (see below)
+                Sanitize_XM_VolumeCommand(&volcmd, pattern, row, col);
+                patt->data[e].vol = volcmd;
 
                 u8 fx = read8();              // (byte) Effect type
                 u8 param = read8();           // (byte) Effect parameter
