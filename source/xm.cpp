@@ -524,6 +524,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
             }
             else // Other effects
             {
+                WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'X%02X'\n",
+                        pattern, row, channel, wpm);
                 wfx = MAS_FX_NONE;
                 wpm = 0;
             }
