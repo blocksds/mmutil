@@ -120,27 +120,27 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
         inst->fadeout = read16() / 32; // apply scalar!
         file_seek_read(inst_headstart+inst_size, SEEK_SET);
 
-/*
         if (volbits & 1)
-            VERBOSE("  Has Volume Envelope\n");
+            EXTRA("  Has Volume Envelope\n");
         if (panbits & 1)
-            VERBOSE("  Has Panning Envelope\n");
+            EXTRA("  Has Panning Envelope\n");
         if (nsamples != 1)
-            VERBOSE("  Contains %i samples...\n", nsamples);
+            EXTRA("  Contains %i samples...\n", nsamples);
         else
-            VERBOSE("  Loading sample\n");
-*/
+            EXTRA("  Loading sample\n");
+
         // read sample headers
         for (int x = 0; x < nsamples; x++)
         {
-            if (ns+x >= 256)
+            if (ns + x >= 256)
                 return ERR_TOOMANYSAMPLES;
             int samp_headstart = file_tell_read();
 
             Sample *samp = &mas->samples[ns + x];
 
-//            if (nsamples != 1)
-//                VERBOSE("  Loading sample %i...\n", x+1);
+            if (nsamples != 1)
+                EXTRA("  Loading sample %i...\n", x+1);
+
             memset(samp, 0, sizeof(Sample));
             samp->msl_index = 0xFFFF;
             samp->sample_length = read32();
@@ -180,20 +180,18 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
             samp->loop_type = loopbits & 3;
             file_seek_read(samp_headstart + samp_headsize, SEEK_SET);
 
-            /*
-            VERBOSE("    Length........%i\n", samp->sample_length);
+            EXTRA("    Length........%i\n", samp->sample_length);
             if (samp->loop_type == 0)
-                VERBOSE("    Loop..........Disabled\n");
+                EXTRA("    Loop..........Disabled\n");
             else if (samp->loop_type == 1)
-                VERBOSE("    Loop..........Forward %i->%i\n", samp->loop_start, samp->loop_end);
+                EXTRA("    Loop..........Forward %i->%i\n", samp->loop_start, samp->loop_end);
             else if (samp->loop_type == 2)
-                VERBOSE("    Loop..........BIDI %i->%i\n", samp->loop_start, samp->loop_end);
-            VERBOSE("    Volume........%i\n", samp->default_volume);
-            VERBOSE("    Panning.......%i\n", samp->default_panning & 127);
-            VERBOSE("    Middle C......%ihz\n", samp->frequency);
-            VERBOSE("    16 bit........%s\n",
-                    (samp->format & SAMPF_16BIT) ? "yes (will be converted)" : "no");
-            */
+                EXTRA("    Loop..........BIDI %i->%i\n", samp->loop_start, samp->loop_end);
+            EXTRA("    Volume........%i\n", samp->default_volume);
+            EXTRA("    Panning.......%i\n", samp->default_panning & 127);
+            EXTRA("    Middle C......%ihz\n", samp->frequency);
+            EXTRA("    16 bit........%s\n",
+                  (samp->format & SAMPF_16BIT) ? "yes (will be converted)" : "no");
         }
 
         // read sample

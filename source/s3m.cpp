@@ -129,18 +129,17 @@ int Load_S3M_Sample(Sample *samp)
         VERBOSE(" %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n",
                 samp->sample_length, samp->loop_type ? "Yes" : "No",
                 (samp->default_volume * 100) / 64, samp->frequency, samp->name);
-        /*
-        VERBOSE("  Name......%s\n", samp->name);
-        VERBOSE("  Length....%i\n", samp->sample_length);
+
+        EXTRA("  Name......%s\n", samp->name);
+        EXTRA("  Length....%i\n", samp->sample_length);
         if (samp->loop_type)
-            VERBOSE("     Loop......%i->%i\n", samp->loop_start, samp->loop_end);
+            EXTRA("     Loop......%i->%i\n", samp->loop_start, samp->loop_end);
         else
-            VERBOSE("  Loop......Disabled\n");
-        VERBOSE("  Volume....%i\n", samp->default_volume);
-        VERBOSE("  Middle C..%ihz\n", samp->frequency);
-        if (samp->bit16)
-            VERBOSE("  16 bit....yes\n");
-        */
+            EXTRA("  Loop......Disabled\n");
+        EXTRA("  Volume....%i\n", samp->default_volume);
+        EXTRA("  Middle C..%ihz\n", samp->frequency);
+        //if (samp->bit16)
+        //    EXTRA("  16 bit....yes\n");
     }
     else
     {
