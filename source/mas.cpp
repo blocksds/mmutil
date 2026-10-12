@@ -83,6 +83,8 @@ void Sanitize_Module(MAS_Module *mod)
     {
         Pattern *patt = &mod->patterns[p];
 
+        bool has_loop_start = false;
+
         for (int r = 0; r < patt->nrows; r++)
         {
             for (int c = 0; c < MAX_CHANNELS; c++)
@@ -101,6 +103,32 @@ void Sanitize_Module(MAS_Module *mod)
                         WARNING("Invalid instrument %u at pattern %d row %u chan %u\n",
                                 pe->inst, p, r, c + 1);
                         pe->inst = 0;
+                    }
+                }
+
+                // Pattern Loop commands need a Pattern Loop Start command at a
+                // previous point in the same pattern. Not having a starting
+                // point behaves differently in different formats. Maxmod
+                // emulates the behaviour of S3M. MOD is different, and XM is
+                // very buggy. It's better to just warn the user.
+                if ((pe->fx == MAS_FX_EXTENDED) &&
+                    (((pe->param >> 4) == MAS_FX_EXT_PATTERN_LOOP)))
+                {
+                    if ((pe->param & 0xF) == 0)
+                    {
+                        has_loop_start = true;
+                        VERBOSE("Pattern %d, row %d, ch %d. "
+                                "Pattern Loop Start found.\n",
+                                p, r, c);
+                    }
+                    else
+                    {
+                        if (!has_loop_start)
+                        {
+                            WARNING("Pattern %d, row %d, ch %d. "
+                                    "Pattern Loop without Pattern Loop Start.\n",
+                                    p, r, c);
+                        }
                     }
                 }
             }
