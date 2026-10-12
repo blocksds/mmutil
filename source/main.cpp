@@ -64,6 +64,7 @@ void print_usage(void)
         "| -v         | Enable verbose output.                             |\n"
         "| -p         | Set initial panning separation for MOD/S3M.        |\n"
         "| -z         | Export raw WAV data (8-bit format)                 |\n"
+        "| -y         | Assume 'yes' in confirmation prompts.              |\n"
         "| -V         | Print version string and exit.                     |\n"
         "`-----------------------------------------------------------------'\n"
         "\n"
@@ -136,7 +137,7 @@ void print_error(int err)
     }
 }
 
-int GetYesNo(void)
+static int GetYesNo(void)
 {
     char c = tolower(getchar());
 
@@ -149,6 +150,28 @@ int GetYesNo(void)
         while (getchar() != '\n');
     }
     return c == 'y' ? 1 : 0;
+}
+
+static void ConfirmDeletePreexistingFile(const char *path, bool autoconfirm)
+{
+    if (file_exists(path))
+    {
+        if (autoconfirm)
+        {
+            INFO("Deleting pre-existing output file...\n");
+        }
+        else
+        {
+            INFO("Output file exists! Overwrite? (y/n) ");
+            if (!GetYesNo())
+            {
+                ERROR("Operation Canceled!\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        file_delete(path);
+    }
 }
 
 int main(int argc, char *argv[])
@@ -164,6 +187,7 @@ int main(int argc, char *argv[])
     bool m_flag = false;
     bool z_flag = false;
 
+    bool autoconfirm_overwrite = false;
     bool msl_export_dictionary = false;
 
     int output_size;
@@ -202,6 +226,8 @@ int main(int argc, char *argv[])
                 m_flag = true;
             else if (argv[a][1] == 'z')
                 z_flag = true;
+            else if (argv[a][1] == 'y')
+                autoconfirm_overwrite = true;
             else if (argv[a][1] == 'D')
                 msl_export_dictionary = true;
         }
@@ -421,17 +447,7 @@ int main(int argc, char *argv[])
 
         file_close_read();
 
-        if (file_exists(str_output))
-        {
-            INFO("Output file exists! Overwrite? (y/n) ");
-            if (!GetYesNo())
-            {
-                ERROR("Operation Canceled!\n");
-                return -1;
-            }
-
-            file_delete(str_output);
-        }
+        ConfirmDeletePreexistingFile(str_output, autoconfirm_overwrite);
 
         if (file_open_write(str_output))
         {
@@ -452,17 +468,7 @@ int main(int argc, char *argv[])
     }
     else if (g_flag)
     {
-        if (file_exists(str_output))
-        {
-            INFO("Output file exists! Overwrite? (y/n) ");
-            if (!GetYesNo())
-            {
-                ERROR("Operation Canceled!\n");
-                return -1;
-            }
-
-            file_delete(str_output);
-        }
+        ConfirmDeletePreexistingFile(str_output, autoconfirm_overwrite);
 
         if (target_system == SYSTEM_GBA)
         {

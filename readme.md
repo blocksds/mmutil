@@ -26,6 +26,7 @@ Option       | Description
 `-v`         | Enable verbose output.
 `-p`         | Set initial panning separation for MOD/S3M.
 `-z`         | Export raw WAV data (8-bit format).
+`-y`         | Assume 'yes' in confirmation prompts.
 `-V`         | Print version string and exit.
 
 ## Sample flags
