@@ -266,13 +266,23 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
         case 1: // 1xx porta up
             wfx = MAS_FX_PORTAMENTO_UP;
             if (wpm >= 0xE0)
+            {
+                // 0xEx and 0xFx are used for fine and extra fine portamento
+                WARNING("Pattern %d, Row %d, Channel %d. Clamped '1%02X' to '1DF'.\n",
+                        pattern, row, channel, wpm);
                 wpm = 0xDF;
+            }
             break;
 
         case 2: // 2xx porta down
             wfx = MAS_FX_PORTAMENTO_DOWN;
             if (wpm >= 0xE0)
+            {
+                // 0xEx and 0xFx are used for fine and extra fine portamento
+                WARNING("Pattern %d, Row %d, Channel %d. Clamped '2%02X' to '2DF'.\n",
+                        pattern, row, channel, wpm);
                 wpm = 0xDF;
+            }
             break;
 
         case 3: // 3xx porta to note
