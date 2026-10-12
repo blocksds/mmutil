@@ -253,6 +253,20 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                             supported = false;
                             break;
 
+                        case 13: // Note Delay
+                            supported = true;
+                            if ((param & 0xF) == 0)
+                            {
+                                // In S3M, a note delay with parameter 0 doesn't
+                                // sound. In MOD/XM/IT, it does.
+                                WARNING("Pattern %d, Row %d, Channel %d. "
+                                        "Effect 'S%02X' replaced by 'v00'.\n",
+                                        pattern_number, row, col, param);
+                                patt->data[z].fx = MAS_FX_XM_SET_VOLUME;
+                                patt->data[z].param = 0;
+                            }
+                            break;
+
                         case 15: // Unused effect. Maxmod uses it as "Event callback"
                             VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
                                     pattern_number, row, col, param & 0xF);
