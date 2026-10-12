@@ -126,11 +126,6 @@ int Load_S3M_Sample(Sample *samp)
         if (read32() != ID4('S', 'C', 'R', 'S'))
             return ERR_UNKNOWNSAMPLE;
 
-        //VERBOSE("────────────────────────────────────────────\n");
-        //VERBOSE("Loading Samples...\n");
-        //VERBOSE("┌─────┬──────┬────┬──────┬─────┬─────────────────────────────┐\n");
-        //VERBOSE("│LENGTH│LOOP│VOLUME│ MID-C │             NAME            │\n");
-        //VERBOSE("┼──────┼────┼──────┼─────┼─────────────────────────────┤\n");
         VERBOSE(" %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n",
                 samp->sample_length, samp->loop_type ? "Yes" : "No",
                 (samp->default_volume * 100) / 64, samp->frequency, samp->name);
@@ -493,7 +488,6 @@ int Load_S3M(MAS_Module *mod)
             for (int y = 0; y < 120; y++)
                 mod->instruments[x].notemap[y] = y | ((x + 1) << 8);
         }
-
     }
 
     // load patterns

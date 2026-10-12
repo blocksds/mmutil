@@ -176,43 +176,6 @@ int Load_IT_Instrument(Instrument *inst, int index)
             (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) ? "T" : "-",
             inst->name);
 
-/*
-    VERBOSE("%i%%    ", (inst->global_volume * 100) / 128);
-    switch (inst->nna)
-    {
-        case 0:
-            VERBOSE("%s    ", "CUT");
-            break;
-        case 1:
-            VERBOSE("%s    ", "OFF");
-            break;
-        case 2:
-            VERBOSE("%s    ", "CONT");
-            break;
-        case 3:
-            VERBOSE("%s    ", "FADE");
-            break;
-    }
-
-    if ((!(inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)) &&
-        (!(inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)) &&
-        (!(inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)))
-    {
-        VERBOSE("-    ");
-    }
-    else
-    {
-        if (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED)
-            VERBOSE("V");
-        if (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS)
-            VERBOSE("P");
-        if (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS)
-            VERBOSE("S");
-        VERBOSE("    ");
-    }
-    VERBOSE("%s\n", inst->name);
-*/
-
     skip8(7);
     return 0;
 }
