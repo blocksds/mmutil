@@ -657,6 +657,8 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
         return ERR_NONE;
     }
 
+    bool loop_start_bug_active = false;
+
     // Keep track of the start of the data to ensure that we read all of it
     u32 total_data_read = 0;
 
@@ -745,12 +747,50 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
                 u8 param = read8();           // (byte) Effect parameter
 
                 conv_xm_to_mas(&fx, &param, pattern, row, col); // convert effect
+
                 patt->data[e].fx = fx;
                 patt->data[e].param = param;
 
                 total_data_read += 4;
             }
+
+            // https://wiki.openmpt.org/Manual:_Effect_Reference#XM_Effect_Commands
+            //
+            // > When E60 is used on pattern row x, the following pattern also
+            // > starts from row x instead of row 0. This can be circumvented by
+            // > using a D00 command on the last row of the same pattern.
+            //
+            // Check if the pattern has a Dxx after any E60.
+            {
+                u8 fx = patt->data[e].fx;
+                u8 param = patt->data[e].param;
+
+                if ((fx == MAS_FX_EXTENDED) && (((param >> 4) == MAS_FX_EXT_PATTERN_LOOP)))
+                {
+                    if ((param & 0xF) == 0)
+                    {
+                        loop_start_bug_active = true;
+                        VERBOSE("Pattern %d, row %d, ch %d. Buggy 'E60' found.\n",
+                                pattern, row, col);
+                    }
+                }
+
+                if (fx == MAS_FX_PATTERN_BREAK)
+                {
+                    if (loop_start_bug_active)
+                    {
+                        VERBOSE("Pattern %d, row %d, ch %d. 'D%02X' fixes 'E60' bug.\n",
+                                pattern, row, col, param);
+                        loop_start_bug_active = false;
+                    }
+                }
+            }
         }
+    }
+
+    if (loop_start_bug_active)
+    {
+        WARNING("Pattern %d has a buggy 'E60' not followed by a 'Dxx'\n", pattern);
     }
 
     // If we have read more than expected, the module is corrupt
