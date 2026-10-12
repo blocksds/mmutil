@@ -61,7 +61,7 @@ void print_usage(void)
         "| -d         | Use for NDS projects.                              |\n"
         "| -b         | Create test ROM. (use -d for .nds, otherwise .gba) |\n"
         "| -i         | Ignore sample name flags (NDS mode only).          |\n"
-        "| -v         | Enable verbose output.                             |\n"
+        "| -v         | Enable verbose output (-v -v for extra verbose).   |\n"
         "| -p         | Set initial panning separation for MOD/S3M.        |\n"
         "| -z         | Export raw WAV data (8-bit format)                 |\n"
         "| -y         | Assume 'yes' in confirmation prompts.              |\n"
@@ -211,7 +211,12 @@ int main(int argc, char *argv[])
             else if (argv[a][1] == 'b')
                 g_flag = true;
             else if (argv[a][1] == 'v')
-                set_log_level(LOG_VERBOSE);
+            {
+                if (get_log_level() == LOG_VERBOSE)
+                    set_log_level(LOG_EXTRA);
+                else
+                    set_log_level(LOG_VERBOSE);
+            }
             else if (argv[a][1] == 'd')
                 target_system = SYSTEM_NDS;
             else if (argv[a][1] == 'i')

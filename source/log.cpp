@@ -15,6 +15,7 @@
 #define RED     "\033[91m"
 #define YELLOW  "\033[93m"
 #define CYAN    "\033[96m"
+#define MAGENTA "\033[95m"
 #define BOLD    "\033[1m"
 
 static log_level curr_log_level = LOG_INFO;
@@ -24,6 +25,11 @@ static bool log_color_enabled = false;
 void set_log_level(log_level level)
 {
     curr_log_level = level;
+}
+
+log_level get_log_level(void)
+{
+    return curr_log_level;
 }
 
 void print_log(log_level level, const char *msg, ...)
@@ -72,6 +78,11 @@ void print_log(log_level level, const char *msg, ...)
     {
         if (log_color_enabled)
             printf(CYAN);
+    }
+    else if (level == LOG_EXTRA)
+    {
+        if (log_color_enabled)
+            printf(MAGENTA);
     }
 
     va_list args;

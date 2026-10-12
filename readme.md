@@ -23,7 +23,7 @@ Option       | Description
 `-d`         | Use for NDS projects.
 `-b`         | Create test ROM. (use -d for .nds, otherwise .gba)
 `-i`         | Ignore sample name flags (NDS mode only).
-`-v`         | Enable verbose output.
+`-v`         | Enable verbose output (`-v -v` for extra verbose).
 `-p`         | Set initial panning separation for MOD/S3M.
 `-z`         | Export raw WAV data (8-bit format).
 `-y`         | Assume 'yes' in confirmation prompts.
