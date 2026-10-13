@@ -38,7 +38,7 @@ u32 readbits(u8 *buffer, unsigned int pos, unsigned int size)
     return result;
 }
 
-int get_ext(const char *filename)
+InputTypes get_ext(const char *filename)
 {
     int strl = strlen(filename);
 

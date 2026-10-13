@@ -19,14 +19,18 @@
 #define MAX_CHANNELS    32
 extern int PANNING_SEP;
 
-#define INPUT_TYPE_MOD  0
-#define INPUT_TYPE_S3M  1
-#define INPUT_TYPE_XM   2
-#define INPUT_TYPE_IT   3
-#define INPUT_TYPE_WAV  4
-#define INPUT_TYPE_TXT  5
-#define INPUT_TYPE_UNK  6
-#define INPUT_TYPE_H    7
-#define INPUT_TYPE_MSL  8
+typedef enum
+{
+    INPUT_TYPE_MOD  = 0,
+    INPUT_TYPE_S3M  = 1,
+    INPUT_TYPE_XM   = 2,
+    INPUT_TYPE_IT   = 3,
+    INPUT_TYPE_WAV  = 4,
+    INPUT_TYPE_TXT  = 5,
+    INPUT_TYPE_UNK  = 6,
+    INPUT_TYPE_H    = 7,
+    INPUT_TYPE_MSL  = 8
+}
+InputTypes;
 
 #endif // DEFS_H__

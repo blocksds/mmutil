@@ -13,7 +13,9 @@
 #ifndef SIMPLE_H__
 #define SIMPLE_H__
 
-int get_ext(const char *filename);
+#include "defs.h"
+
+InputTypes get_ext(const char *filename);
 u32 calc_samplooplen(Sample *s);
 u32 calc_samplen(Sample *s);
 u32 calc_samplen_ex2(Sample *s);

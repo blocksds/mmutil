@@ -433,7 +433,7 @@ static void FixSample_NDS(Sample *samp)
 //
 // - S3M/XM/IT: The sample is played from START to LOOP_END. Then, it jumps to
 //   loop_start until loop_end, and back to loop_start.
-void FixSample(Sample *samp, int input_file_format)
+void FixSample(Sample *samp, InputTypes input_file_format)
 {
     if (samp->sample_length == 0)
     {

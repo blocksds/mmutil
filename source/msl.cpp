@@ -496,7 +496,7 @@ void MSL_LoadFile(char *filename)
         return;
     }
 
-    int f_ext = get_ext(filename);
+    InputTypes f_ext = get_ext(filename);
     switch (f_ext)
     {
         case INPUT_TYPE_MOD:

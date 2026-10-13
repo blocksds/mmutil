@@ -381,7 +381,7 @@ int main(int argc, char *argv[])
             return -1;
         }
 
-        int input_type = get_ext(str_input);
+        InputTypes input_type = get_ext(str_input);
 
         switch (input_type)
         {
@@ -447,6 +447,12 @@ int main(int argc, char *argv[])
                 memcpy(mod.samples, &samp, sizeof(Sample));
 
                 break;
+            }
+
+            default:
+            {
+                ERROR("Invalid file type: %s\n", str_input);
+                return -1;
             }
         }
 
