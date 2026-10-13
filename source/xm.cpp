@@ -372,10 +372,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     break;
 
                 case 4: // vibrato control
-                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
-                            pattern, row, channel, wpm);
                     wfx = MAS_FX_EXTENDED;
-                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (wpm & 0xF);
+                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (wpm & 7);
                     break;
 
                 case 6: // pattern loop
@@ -384,10 +382,8 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                     break;
 
                 case 7: // tremolo control
-                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'E%02X'\n",
-                            pattern, row, channel, wpm);
                     wfx = MAS_FX_EXTENDED;
-                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (wpm & 0xF);
+                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (wpm & 7);
                     break;
 
                 case 8: // set panning

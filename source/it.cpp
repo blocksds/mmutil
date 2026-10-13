@@ -456,12 +456,22 @@ GetNextChannelMarker:
                 {
                     case 1: // Glissando Control
                     case 2: // Set Finetune
-                    case 3: // Set Vibrato Waveform
-                    case 4: // Set Tremolo Waveform
                     case 5: // Set Panbrello Waveform
                     case 9: // Sound Control
                     case 10: // High Offset
                         supported = false;
+
+                    case 3: // Set Vibrato Waveform
+                        fx = MAS_FX_EXTENDED;
+                        param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (param & 3);
+                        supported = true;
+                        break;
+
+                    case 4: // Set Tremolo Waveform
+                        fx = MAS_FX_EXTENDED;
+                        param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (param & 3);
+                        supported = true;
+                        break;
 
                     case 7:
                     {

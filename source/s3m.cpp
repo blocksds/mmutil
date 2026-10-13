@@ -245,12 +245,22 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     {
                         case 1: // Glissando Control
                         case 2: // Set Finetune
-                        case 3: // Set Vibrato Waveform
-                        case 4: // Set Tremolo Waveform
                         case 5: // Set Panbrello Waveform
                         case 9: // Sound Control
                         case 10: // High Offset
                             supported = false;
+                            break;
+
+                        case 3: // Set Vibrato Waveform
+                            patt->data[z].fx = MAS_FX_EXTENDED;
+                            patt->data[z].param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (param & 3);
+                            supported = true;
+                            break;
+
+                        case 4: // Set Tremolo Waveform
+                            patt->data[z].fx = MAS_FX_EXTENDED;
+                            patt->data[z].param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (param & 3);
+                            supported = true;
                             break;
 
                         case 13: // Note Delay
