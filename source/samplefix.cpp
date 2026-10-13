@@ -28,7 +28,7 @@
 
 extern int ignore_sflags;
 
-void Sample_PadEnd(Sample *samp, u32 count)
+static void Sample_PadEnd(Sample *samp, u32 count)
 {
     // Pad end of sample with loop data (or zero) and shift loops forward
 
@@ -81,14 +81,14 @@ void Sample_PadEnd(Sample *samp, u32 count)
     samp->sample_length = length + count;
 }
 
-void Unroll_Sample_Loop(Sample *samp, u32 count)
+static void Unroll_Sample_Loop(Sample *samp, u32 count)
 {
     u32 addition = count*(samp->loop_end - samp->loop_start);
     Sample_PadEnd(samp, addition);
     samp->loop_start -= addition;
 }
 
-void Unroll_BIDI_Sample(Sample* samp)
+static void Unroll_BIDI_Sample(Sample* samp)
 {
     // sample MUST have loop type 2 (BIDI)
 
@@ -128,7 +128,7 @@ thanks reduz!
 NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
 */
 
-void Resample(Sample *samp, u32 oldrate, u32 newrate)
+static void Resample(Sample *samp, u32 oldrate, u32 newrate)
 {
     // output pointers
     u8 *dst8 = 0;
@@ -243,7 +243,7 @@ void Resample(Sample *samp, u32 oldrate, u32 newrate)
     samp->frequency = (int)((double)samp->frequency / tscale);
 }
 
-void Sample_8bit(Sample *samp)
+static void Sample_8bit(Sample *samp)
 {
     if (samp->format & SAMPF_16BIT)
     {
@@ -259,7 +259,7 @@ void Sample_8bit(Sample *samp)
     }
 }
 
-void Sample_Sign(Sample *samp)
+static void Sample_Sign(Sample *samp)
 {
     // sample must be unsigned
     if (samp->format & SAMPF_16BIT)
