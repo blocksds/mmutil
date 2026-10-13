@@ -13,16 +13,6 @@
 #ifndef SIMPLE_H__
 #define SIMPLE_H__
 
-#define INPUT_TYPE_MOD  0
-#define INPUT_TYPE_S3M  1
-#define INPUT_TYPE_XM   2
-#define INPUT_TYPE_IT   3
-#define INPUT_TYPE_WAV  4
-#define INPUT_TYPE_TXT  5
-#define INPUT_TYPE_UNK  6
-#define INPUT_TYPE_H    7
-#define INPUT_TYPE_MSL  8
-
 int get_ext(const char *filename);
 u32 calc_samplooplen(Sample *s);
 u32 calc_samplen(Sample *s);
