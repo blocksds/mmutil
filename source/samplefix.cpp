@@ -288,14 +288,10 @@ static void Sample_Sign(Sample *samp)
     samp->format |= SAMPF_SIGNED;
 }
 
-void FixSample_GBA(Sample *samp)
+static void FixSample_GBA(Sample *samp)
 {
     // convert to 8-bit if neccesary
     Sample_8bit(samp);
-
-    // delete data after loop_end if loop exists
-    if (samp->loop_type != 0)
-        samp->sample_length = samp->loop_end;
 
     // unroll BIDI loop
     if (samp->loop_type == 2)
@@ -305,31 +301,15 @@ void FixSample_GBA(Sample *samp)
     {
         int loop_length = samp->loop_end - samp->loop_start;
 
-        // if loop exists and is empty, there is no actual loop
-        if (loop_length <= 0)
+        if (loop_length < GBA_MIN_LOOP_SIZE)
         {
-            samp->loop_type = 0;
-        }
-        else if (loop_length < GBA_MIN_LOOP_SIZE)
-        {
-            Unroll_Sample_Loop(samp, (GBA_MIN_LOOP_SIZE / (samp->loop_end-samp->loop_start)) + 1);
+            Unroll_Sample_Loop(samp, (GBA_MIN_LOOP_SIZE / (samp->loop_end - samp->loop_start)) + 1);
         }
     }
 }
 
-void FixSample_NDS(Sample *samp)
+static void FixSample_NDS(Sample *samp)
 {
-    if (samp->sample_length == 0)
-    {
-        // sample has no data
-        samp->loop_end=samp->loop_start=0;
-        return;
-    }
-
-    // delete data after loop_end if loop exists
-    if (samp->loop_type != 0)
-        samp->sample_length = samp->loop_end;
-
     // unroll BIDI loop
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);
@@ -410,11 +390,33 @@ void FixSample_NDS(Sample *samp)
 
 void FixSample(Sample *samp)
 {
-    // Clamp loop_start and loop_end (f.e. FR_TOWER.MOD)
-    if (samp->loop_start > samp->sample_length)
-        samp->loop_start = samp->sample_length;
-    if (samp->loop_end > samp->sample_length)
-        samp->loop_end = samp->sample_length;
+    if (samp->sample_length == 0)
+    {
+        // sample has no data
+        samp->loop_end = 0;
+        samp->loop_start = 0;
+        return;
+    }
+
+    if (samp->loop_type)
+    {
+        // Clamp loop_start and loop_end (f.e. FR_TOWER.MOD)
+        if (samp->loop_start > samp->sample_length)
+            samp->loop_start = samp->sample_length;
+
+        if (samp->loop_end > samp->sample_length)
+            samp->loop_end = samp->sample_length;
+
+        int loop_length = samp->loop_end - samp->loop_start;
+
+        // if loop exists and is empty, there is no actual loop
+        if (loop_length <= 0)
+            samp->loop_type = 0;
+    }
+
+    // Delete data after loop_end if loop exists
+    if (samp->loop_type)
+        samp->sample_length = samp->loop_end;
 
     if (target_system == SYSTEM_GBA)
         FixSample_GBA(samp);
