@@ -52,7 +52,7 @@ int Load_MOD_SampleData(Sample *samp)
         for (u32 t = 0; t < samp->sample_length; t++)
             ((u8*)samp->data)[t] = read8() + 128; // unsign data
     }
-    FixSample(samp);
+    FixSample(samp, INPUT_TYPE_MOD);
     return ERR_NONE;
 }
 

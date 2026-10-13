@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
         s.name[1] = 'c';
         s.name[2] = 0;
 
-        FixSample(&s);
+        FixSample(&s, INPUT_TYPE_WAV);
 
         file_close_read();
         file_open_write(str_output);

@@ -23,6 +23,7 @@
 #include "defs.h"
 #include "mas.h"
 #include "errors.h"
+#include "log.h"
 #include "systems.h"
 #include "adpcm.h"
 
@@ -79,6 +80,43 @@ static void Sample_PadEnd(Sample *samp, u32 count)
         samp->loop_end   += count;
     }
     samp->sample_length = length + count;
+}
+
+// This function copies the loop of the sample to the end of the sample. Then,
+// it adjust the total sample size to the sum of both lengths and it adjusts the
+// loop start and end to the new appended loop.
+static void Sample_AppendLoopToEnd(Sample *samp)
+{
+    if (samp->loop_type == 0)
+        return;
+
+    u32 loop_start = samp->loop_start;
+    u32 loop_length = samp->loop_end - samp->loop_start;
+    u32 sample_length = samp->sample_length;
+    u32 new_sample_length = sample_length + loop_length;
+
+    if (samp->format & SAMPF_16BIT)
+    {
+        u16 *newdata16 = (u16*)realloc(samp->data, new_sample_length * 2);
+
+        for (u32 x = 0; x < loop_length; x++)
+            newdata16[sample_length + x] = newdata16[loop_start + x];
+
+        samp->data = (void *)newdata16;
+    }
+    else
+    {
+        u8 *newdata8 = (u8*)realloc(samp->data, new_sample_length);
+
+        for (u32 x = 0; x < loop_length; x++)
+            newdata8[sample_length + x] = newdata8[loop_start + x];
+
+        samp->data = (void *)newdata8;
+    }
+
+    samp->sample_length = new_sample_length;
+    samp->loop_start = sample_length;
+    samp->loop_end = new_sample_length;
 }
 
 static void Unroll_Sample_Loop(Sample *samp, u32 count)
@@ -388,7 +426,14 @@ static void FixSample_NDS(Sample *samp)
     }
 }
 
-void FixSample(Sample *samp)
+// Looping samples playback works differently in different file formats.
+//
+// - MOD: The sample is played from START to END. Then, it jumps to loop_start
+//   until loop_end, and back to loop_start.
+//
+// - S3M/XM/IT: The sample is played from START to LOOP_END. Then, it jumps to
+//   loop_start until loop_end, and back to loop_start.
+void FixSample(Sample *samp, int input_file_format)
 {
     if (samp->sample_length == 0)
     {
@@ -414,9 +459,42 @@ void FixSample(Sample *samp)
             samp->loop_type = 0;
     }
 
-    // Delete data after loop_end if loop exists
-    if (samp->loop_type)
-        samp->sample_length = samp->loop_end;
+    // Looping samples in MOD are always played until the end first. In other
+    // formats we can delete any data after the loop if there's a loop:
+    //
+    //                  S   E
+    // - Before   |.....LLLLL.....|
+    //
+    //                            S    E
+    // - After    |.....LLLLL.....LLLLL|
+    //
+    //
+    // This is only needed in MOD files. S3M/XM/IT files start looping right
+    // after reaching the loop end, so we can do this:
+    //
+    //                 S   E
+    // - Before  |.....LLLLL.....|
+    //
+    //                 S   E
+    // - After   |.....LLLLL|
+    //
+    // The result is that both samples can be played back with the same mixer
+    // code instead of needing additional checks.
+
+    if ((samp->loop_type != 0) && (samp->loop_end != samp->sample_length))
+    {
+        if (input_file_format == INPUT_TYPE_MOD)
+        {
+            VERBOSE("Appending loop after sample to fix MOD loop playback.\n");
+            Sample_AppendLoopToEnd(samp);
+        }
+        else
+        {
+            // Delete data after loop_end
+            VERBOSE("Trimming unused sample end after loop end to save memory.\n");
+            samp->sample_length = samp->loop_end;
+        }
+    }
 
     if (target_system == SYSTEM_GBA)
         FixSample_GBA(samp);

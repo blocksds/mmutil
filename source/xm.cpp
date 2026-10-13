@@ -220,7 +220,7 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
                     ((u8 *)samp->data)[t] = sample_old + 128;
                 }
             }
-            FixSample(samp);
+            FixSample(samp, INPUT_TYPE_XM);
         }
 
         *p_nextsample = ns + nsamples;

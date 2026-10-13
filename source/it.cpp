@@ -321,7 +321,7 @@ int Load_IT_SampleData(Sample *samp, u16 cwmt)
                            (bool)(samp->format & SAMPF_16BIT));
     }
 
-    FixSample(samp);
+    FixSample(samp, INPUT_TYPE_IT);
     return 0;
 }
 

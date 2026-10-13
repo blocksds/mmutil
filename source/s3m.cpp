@@ -79,7 +79,7 @@ int Load_S3M_SampleData(Sample *samp, u8 ffi)
         return ERR_UNKNOWNSAMPLE;
     }
 
-    FixSample(samp);
+    FixSample(samp, INPUT_TYPE_S3M);
     return ERR_NONE;
 }
 

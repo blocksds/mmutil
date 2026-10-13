@@ -13,6 +13,6 @@
 #ifndef SAMPLEFIX_H__
 #define SAMPLEFIX_H__
 
-void FixSample(Sample *samp);
+void FixSample(Sample *samp, int input_file_format);
 
 #endif // SAMPLEFIX_H__

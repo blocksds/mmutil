@@ -250,7 +250,7 @@ int Load_WAV(Sample *samp, bool fix)
     if (hasformat && hasdata)
     {
         if (fix)
-            FixSample(samp);
+            FixSample(samp, INPUT_TYPE_WAV);
         return LOADWAV_OK;
     }
     else
