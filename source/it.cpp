@@ -21,6 +21,7 @@
 #include "it.h"
 #include "files.h"
 #include "log.h"
+#include "mas.h"
 #include "simple.h"
 #include "errors.h"
 #include "samplefix.h"
@@ -339,6 +340,19 @@ int Empty_IT_Pattern(Pattern *patt)
     return ERR_NONE;
 }
 
+static int IT_Waveform_To_MAS(int type)
+{
+    const int result[8] =
+    {
+        [0] = MAS_WAVE_SINE_CONTINUE,
+        [1] = MAS_WAVE_DOWN_RAMP_NORMAL_CONTINUE,
+        [2] = MAS_WAVE_SQUARE_HALF_CONTINUE,
+        [3] = MAS_WAVE_RANDOM,
+    };
+
+    return result[type & 3];
+}
+
 int Load_IT_Pattern(Pattern *patt, int pattern_number)
 {
     u8 old_maskvar[MAX_CHANNELS];
@@ -463,13 +477,13 @@ GetNextChannelMarker:
 
                     case 3: // Set Vibrato Waveform
                         fx = MAS_FX_EXTENDED;
-                        param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (param & 3);
+                        param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | IT_Waveform_To_MAS(param);
                         supported = true;
                         break;
 
                     case 4: // Set Tremolo Waveform
                         fx = MAS_FX_EXTENDED;
-                        param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (param & 3);
+                        param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | IT_Waveform_To_MAS(param);
                         supported = true;
                         break;
 

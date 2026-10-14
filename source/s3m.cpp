@@ -19,6 +19,7 @@
 #include "mas.h"
 #include "s3m.h"
 #include "log.h"
+#include "mas.h"
 #include "files.h"
 #include "simple.h"
 #include "errors.h"
@@ -161,6 +162,19 @@ int Load_S3M_Sample(Sample *samp)
     return ERR_NONE;
 }
 
+static int S3M_Waveform_To_MAS(int type)
+{
+    const int result[8] =
+    {
+        [0] = MAS_WAVE_SINE,
+        [1] = MAS_WAVE_DOWN_RAMP_OFFSET,
+        [2] = MAS_WAVE_SQUARE_FULL,
+        [3] = MAS_WAVE_RANDOM,
+    };
+
+    return result[type & 3];
+}
+
 int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 {
     int clength = read16();
@@ -250,13 +264,13 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
                         case 3: // Set Vibrato Waveform
                             fx = MAS_FX_EXTENDED;
-                            param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (param & 3);
+                            param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | S3M_Waveform_To_MAS(param);
                             supported = true;
                             break;
 
                         case 4: // Set Tremolo Waveform
                             fx = MAS_FX_EXTENDED;
-                            param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (param & 3);
+                            param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | S3M_Waveform_To_MAS(param);
                             supported = true;
                             break;
 

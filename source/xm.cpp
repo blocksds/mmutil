@@ -240,6 +240,24 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
     return ERR_NONE;
 }
 
+static int XM_Waveform_To_MAS(int type)
+{
+    const int result[8] =
+    {
+        [0] = MAS_WAVE_SINE,
+        [1] = MAS_WAVE_DOWN_RAMP_BROKEN,
+        [2] = MAS_WAVE_SQUARE_FULL,
+        [3] = MAS_WAVE_RANDOM,
+
+        [4] = MAS_WAVE_SINE_CONTINUE,
+        [5] = MAS_WAVE_DOWN_RAMP_BROKEN_CONTINUE,
+        [6] = MAS_WAVE_SQUARE_FULL_CONTINUE,
+        [7] = MAS_WAVE_RANDOM,
+    };
+
+    return result[type & 7];
+}
+
 // XM effects are an extension of MOD effects. The MAS format expects S3M/IT
 // effects, so this function converts from XM to MAS.
 static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
@@ -373,7 +391,7 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
 
                 case 4: // vibrato control
                     wfx = MAS_FX_EXTENDED;
-                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (wpm & 7);
+                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | XM_Waveform_To_MAS(wpm);
                     break;
 
                 case 6: // pattern loop
@@ -383,7 +401,7 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
 
                 case 7: // tremolo control
                     wfx = MAS_FX_EXTENDED;
-                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (wpm & 7);
+                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | XM_Waveform_To_MAS(wpm);
                     break;
 
                 case 8: // set panning

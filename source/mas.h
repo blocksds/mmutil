@@ -232,6 +232,33 @@ typedef enum
 }
 MAS_PatternEffectExtended;
 
+#define MAS_WAVE_CONTINUE 8
+
+typedef enum
+{
+    MAS_WAVE_SINE                       = 0, // MOD, XM, S3M
+    MAS_WAVE_DOWN_RAMP_BROKEN           = 1, // MOD, XM
+    MAS_WAVE_DOWN_RAMP_OFFSET           = 2, // S3M
+    MAS_WAVE_DOWN_RAMP_NORMAL           = 3,
+    MAS_WAVE_SQUARE_FULL                = 4, // MOD, XM, S3M
+    MAS_WAVE_SQUARE_HALF                = 5,
+    MAS_WAVE_RANDOM                     = 6, // MOD, XM, S3M, IT
+    // 7
+
+    // Continue
+    // --------
+
+    MAS_WAVE_SINE_CONTINUE              = 0 | MAS_WAVE_CONTINUE, // MOD, XM, IT
+    MAS_WAVE_DOWN_RAMP_BROKEN_CONTINUE  = 1 | MAS_WAVE_CONTINUE, // MOD, XM
+    MAS_WAVE_DOWN_RAMP_OFFSET_CONTINUE  = 2 | MAS_WAVE_CONTINUE,
+    MAS_WAVE_DOWN_RAMP_NORMAL_CONTINUE  = 3 | MAS_WAVE_CONTINUE, // IT
+    MAS_WAVE_SQUARE_FULL_CONTINUE       = 4 | MAS_WAVE_CONTINUE, // MOD, XM
+    MAS_WAVE_SQUARE_HALF_CONTINUE       = 5 | MAS_WAVE_CONTINUE, // IT
+    MAS_WAVE_RANDOM_CONTINUE            = 6 | MAS_WAVE_CONTINUE,
+    // 7 | MAS_WAVE_CONTINUE,
+}
+MAS_WaveformType;
+
 void Write_Instrument_Envelope(Instrument_Envelope *env);
 void Write_Instrument(Instrument *inst);
 void Write_SampleData(Sample *samp);
