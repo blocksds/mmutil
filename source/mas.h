@@ -232,6 +232,10 @@ typedef enum
 }
 MAS_PatternEffectExtended;
 
+// For details about the waveforms, check this:
+//
+// https://github.com/OpenMPT/openmpt/blob/dc49d5638db37e157003cd606dc85165551eb9da/soundlib/Sndmix.cpp#L826-L870
+
 #define MAS_WAVE_CONTINUE 8
 
 typedef enum
