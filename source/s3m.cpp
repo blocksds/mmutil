@@ -142,7 +142,7 @@ int Load_S3M_Sample(Sample *samp)
         //if (samp->bit16)
         //    EXTRA("  16 bit....yes\n");
     }
-    else
+    else if (type < 8)
     {
         const char *instr_type_str[8] =
         {
@@ -157,6 +157,10 @@ int Load_S3M_Sample(Sample *samp)
         };
 
         ERROR("Unsupported instrument type: %s\n", instr_type_str[type]);
+    }
+    else
+    {
+        ERROR("Unknown instrument type: 0x%02X\n", type);
     }
 
     return ERR_NONE;
