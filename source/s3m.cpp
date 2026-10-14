@@ -211,34 +211,31 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
             if (what & 128) // & 128 = follows; BYTE:command, BYTE:info
             {
-                patt->data[z].fx = read8();
-                patt->data[z].param = read8();
+                u32 fx = read8();
+                u32 param = read8();
 
-                char letter = patt->data[z].fx + 64;
+                char letter = fx + 64;
 
                 if (letter == 'C') // Pattern break
                 {
                     // The row is stored in the file as BCD
-                    u32 new_row = (patt->data[z].param & 0xF)
-                                + (patt->data[z].param >> 4) * 10;
+                    u32 new_row = (param & 0xF) + (param >> 4) * 10;
 
                     // The valid range is 0 to 63. Higher values are ignored.
                     if (new_row < 64)
                     {
-                        patt->data[z].param = new_row;
+                        param = new_row;
                     }
                     else
                     {
                         WARNING("Pattern %d, row %d. Ignored 'C%02X'.\n",
                                 pattern_number, row, new_row);
-                        patt->data[z].fx = 0;
-                        patt->data[z].param = 0;
+                        fx = 0;
+                        param = 0;
                     }
                 }
                 else if (letter == 'S') // Extended effects
                 {
-                    u8 param = patt->data[z].param;
-
                     bool supported = true;
 
                     switch (param >> 4)
@@ -252,14 +249,14 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                             break;
 
                         case 3: // Set Vibrato Waveform
-                            patt->data[z].fx = MAS_FX_EXTENDED;
-                            patt->data[z].param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (param & 3);
+                            fx = MAS_FX_EXTENDED;
+                            param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | (param & 3);
                             supported = true;
                             break;
 
                         case 4: // Set Tremolo Waveform
-                            patt->data[z].fx = MAS_FX_EXTENDED;
-                            patt->data[z].param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (param & 3);
+                            fx = MAS_FX_EXTENDED;
+                            param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | (param & 3);
                             supported = true;
                             break;
 
@@ -272,8 +269,8 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                                 WARNING("Pattern %d, Row %d, Channel %d. "
                                         "Effect 'S%02X' replaced by 'v00'.\n",
                                         pattern_number, row, col, param);
-                                patt->data[z].fx = MAS_FX_XM_SET_VOLUME;
-                                patt->data[z].param = 0;
+                                fx = MAS_FX_XM_SET_VOLUME;
+                                param = 0;
                             }
                             break;
 
@@ -292,40 +289,43 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                     {
                         WARNING("Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
                                 pattern_number, row, patt->data[z].param);
-                        patt->data[z].fx = 0;
-                        patt->data[z].param = 0;
+                        fx = 0;
+                        param = 0;
                     }
                 }
                 else if (letter == 'X') // Set panning
                 {
                     //  00h (left) to 80h (right)
-                    u32 value = patt->data[z].param * 2;
+                    u32 value = param * 2;
                     if (value > 255)
                         value = 255;
-                    patt->data[z].param = value;
+                    param = value;
                 }
                 else if (letter == 'V')
                 {
-                    u32 vol = patt->data[z].param;
+                    u32 vol = param;
                     if (vol <= 64)
                     {
-                        patt->data[z].param = vol * 2; // multiply volume scale by 2
+                        param = vol * 2; // multiply volume scale by 2
                     }
                     else
                     {
                         WARNING("Pattern %d, Row %d. Ignored 'V%2X' (max is 'V40')\n",
                                 pattern_number, row, vol);
-                        patt->data[z].fx = 0;
-                        patt->data[z].param = 0;
+                        fx = 0;
+                        param = 0;
                     }
                 }
                 else if ((letter == 'P') || (letter == 'Y') || (letter == 'Z'))
                 {
                     WARNING("Pattern %d, Row %d. Unsupported effect '%c'\n",
                             pattern_number, row, letter);
-                    patt->data[z].fx = 0;
-                    patt->data[z].param = 0;
+                    fx = 0;
+                    param = 0;
                 }
+
+                patt->data[z].fx = fx;
+                patt->data[z].param = param;
             }
 
             if (patt->data[z].fx == 255)
