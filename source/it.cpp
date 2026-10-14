@@ -435,8 +435,8 @@ GetNextChannelMarker:
             if ((letter == 'I') || (letter == 'P') || (letter == 'Y') ||
                 (letter == 'Z'))
             {
-                WARNING("Pattern %d, Row %d. Unsupported effect '%c%02X'\n",
-                        pattern_number, x, letter, param);
+                WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%c%02X'\n",
+                        pattern_number, x, chan, letter, param);
 
                 fx = 0;
                 param = 0;

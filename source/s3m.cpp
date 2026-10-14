@@ -305,8 +305,8 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
                     if (!supported)
                     {
-                        WARNING("Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
-                                pattern_number, row, patt->data[z].param);
+                        WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'S%02X'\n",
+                                pattern_number, row, col, param);
                         fx = 0;
                         param = 0;
                     }
