@@ -459,18 +459,25 @@ void FixSample(Sample *samp, InputTypes input_file_format)
             samp->loop_type = 0;
     }
 
-    // Looping samples in MOD are always played until the end first. In other
-    // formats we can delete any data after the loop if there's a loop:
+    // When the loop start of a MOD sample is zero, looping samples are always
+    // played until the end first. When the loop start isn't zero we can delete
+    // any data after the loop:
     //
     //                  S   E
     // - Before   |.....LLLLL.....|
     //
-    //                            S    E
-    // - After    |.....LLLLL.....LLLLL|
+    //                  S    E
+    // - After    |.....LLLLL|
+    //
+    //            S        E
+    // - Before   |LLLLLLLLL.....|
+    //
+    //                           S        E
+    // - After    |LLLLLLLLL.....LLLLLLLLL|
     //
     //
-    // This is only needed in MOD files. S3M/XM/IT files start looping right
-    // after reaching the loop end, so we can do this:
+    // S3M/XM/IT files start looping right after reaching the loop end,
+    // regardless of the loop start, so we can do this:
     //
     //                 S   E
     // - Before  |.....LLLLL.....|
@@ -478,15 +485,30 @@ void FixSample(Sample *samp, InputTypes input_file_format)
     //                 S   E
     // - After   |.....LLLLL|
     //
-    // The result is that both samples can be played back with the same mixer
+    //            S        E
+    // - Before   |LLLLLLLLL.....|
+    //
+    //            S         E
+    // - After    |LLLLLLLLL|
+    //
+    // The result is that all samples can be played back with the same mixer
     // code instead of needing additional checks.
 
     if ((samp->loop_type != 0) && (samp->loop_end != samp->sample_length))
     {
         if (input_file_format == INPUT_TYPE_MOD)
         {
-            VERBOSE("Appending loop after sample to fix MOD loop playback.\n");
-            Sample_AppendLoopToEnd(samp);
+            if (samp->loop_start == 0)
+            {
+                VERBOSE("Appending loop after sample to fix MOD loop playback.\n");
+                Sample_AppendLoopToEnd(samp);
+            }
+            else
+            {
+                // Delete data after loop_end
+                VERBOSE("Trimming unused sample end after loop end to save memory.\n");
+                samp->sample_length = samp->loop_end;
+            }
         }
         else
         {
