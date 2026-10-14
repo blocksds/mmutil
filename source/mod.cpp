@@ -256,11 +256,30 @@ static void conv_mod_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel
             break;
 
         case 0xF: // Fxx set speed
-            if (wpm >= 32)
+        {
+            if (wpm == 0)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Removed invalid effect 'F00'\n",
+                        pattern, row, channel);
+                wfx = 0;
+                wpm = 0;
+            }
+            else if (wpm == 0x20)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Ambiguous effect 'F20' handled as tempo.\n",
+                        pattern, row, channel);
                 wfx = MAS_FX_SET_TEMPO;
+            }
+            else if (wpm > 0x20)
+            {
+                wfx = MAS_FX_SET_TEMPO;
+            }
             else
+            {
                 wfx = MAS_FX_SET_SPEED;
+            }
             break;
+        }
 
         default:
             wfx = MAS_FX_NONE;

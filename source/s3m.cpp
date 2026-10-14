@@ -319,6 +319,19 @@ int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                         value = 255;
                     param = value;
                 }
+                else if (letter == 'A')
+                {
+                    if (param == 0)
+                    {
+                        WARNING("Pattern %d, Row %d, Channel %d. Removed invalid effect 'A00'\n",
+                            pattern_number, row, col);
+                        fx = 0;
+                    }
+                    else
+                    {
+                        fx = MAS_FX_SET_SPEED;
+                    }
+                }
                 else if (letter == 'V')
                 {
                     u32 vol = param;

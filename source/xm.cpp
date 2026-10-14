@@ -449,11 +449,24 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
             break;
 
         case 0xF: // Fxx set speed
-            if (wpm >= 32)
+        {
+            if (wpm == 0)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Removed invalid effect 'F00'\n",
+                        pattern, row, channel);
+                wfx = 0;
+                wpm = 0;
+            }
+            else if (wpm >= 0x20)
+            {
                 wfx = MAS_FX_SET_TEMPO;
+            }
             else
+            {
                 wfx = MAS_FX_SET_SPEED;
+            }
             break;
+        }
 
         case 16: // Gxx set global volume
             wfx = MAS_FX_SET_GLOBAL_VOLUME;

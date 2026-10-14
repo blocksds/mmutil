@@ -441,6 +441,19 @@ GetNextChannelMarker:
                 fx = 0;
                 param = 0;
             }
+            else if (letter == 'A')
+            {
+                if (param == 0)
+                {
+                    WARNING("Pattern %d, Row %d, Channel %d. Removed invalid effect 'A00'\n",
+                            pattern_number, x, chan);
+                    fx = 0;
+                }
+                else
+                {
+                    fx = MAS_FX_SET_SPEED;
+                }
+            }
             else if (letter > 'Z')
             {
                 if (fx == 27)
