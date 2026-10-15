@@ -568,6 +568,11 @@ static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
                 else
                     wpm = 0xE0 | (wpm & 0xF); // New
             }
+            else if ((wpm >> 4) == 6) // X6x Fine Pattern Delay
+            {
+                wfx = MAS_FX_EXTENDED;
+                wpm = (MAS_FX_EXT_FINE_PATTERN_DELAY << 4) | (wpm & 0xF);
+            }
             else // Other effects
             {
                 WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'X%02X'\n",
