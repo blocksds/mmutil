@@ -104,6 +104,12 @@ typedef struct tSample
     u32     frequency;
     void   *data;
 
+    // This stores the original data from the sample. Fields sample_length,
+    // loop_start and loop_end can be modified by FixSample().
+    u32     original_sample_length;
+    u32     original_loop_start;
+    u32     original_loop_end;
+
     u8      vibtype;
     u8      vibdepth;
     u8      vibspeed;

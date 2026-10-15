@@ -116,6 +116,10 @@ int Load_S3M_Sample(Sample *samp)
         if (flags & 2)
             return ERR_UNKNOWNSAMPLE;
 
+        samp->original_sample_length = samp->sample_length;
+        samp->original_loop_start = samp->loop_start;
+        samp->original_loop_end = samp->loop_end;
+
         //samp->bit16 = flags & 4 ? true : false;
         samp->format = flags & 4 ? SAMP_FORMAT_U16 : SAMP_FORMAT_U8;
         samp->frequency = read32();

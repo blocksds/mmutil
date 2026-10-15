@@ -379,6 +379,10 @@ int Load_MOD_Sample(Sample *samp, int index)
         samp->loop_type = 1;
     }
 
+    samp->original_sample_length = samp->sample_length;
+    samp->original_loop_start = samp->loop_start;
+    samp->original_loop_end = samp->loop_end;
+
     if (samp->sample_length != 0)
     {
         VERBOSE("│ %2i  │%5i │ %3s │ %3i%% │ %ihz│ %-22s│\n",

@@ -145,9 +145,13 @@ int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
             samp->msl_index = 0xFFFF;
             samp->sample_length = read32();
             samp->loop_start = read32();
-            samp->loop_end = read32()+samp->loop_start;
+            samp->loop_end = read32() + samp->loop_start;
             samp->default_volume = read8();
             samp->global_volume = 64;
+
+            samp->original_sample_length = samp->sample_length;
+            samp->original_loop_start = samp->loop_start;
+            samp->original_loop_end = samp->loop_end;
 
             samp->vibtype = vibtype;
             samp->vibdepth = vibdepth;

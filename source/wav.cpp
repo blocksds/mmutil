@@ -241,6 +241,10 @@ int Load_WAV(Sample *samp, bool fix)
                     samp->loop_end = 0;
                 }
 
+                samp->original_sample_length = samp->sample_length;
+                samp->original_loop_start = samp->loop_start;
+                samp->original_loop_end = samp->loop_end;
+
                 // ignore fractional
                 // ignore play count
             }

@@ -239,6 +239,10 @@ int Load_IT_Sample(Sample *samp)
     samp->loop_start = loop_start;
     samp->loop_end = loop_end;
 
+    samp->original_sample_length = samp_length;
+    samp->original_loop_start = loop_start;
+    samp->original_loop_end = loop_end;
+
     skip8(8); // Susloop start/end
 
     u32 data_address = read32();
@@ -254,9 +258,6 @@ int Load_IT_Sample(Sample *samp)
             samp->loop_type = 2;
         else
             samp->loop_type = 1;
-
-        samp->loop_start = loop_start;
-        samp->loop_end = loop_end;
     }
     else
     {
