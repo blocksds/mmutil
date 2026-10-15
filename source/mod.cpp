@@ -409,6 +409,47 @@ int Load_MOD_Sample(Sample *samp, int index)
     return ERR_NONE;
 }
 
+static void MOD_SanitizePatterns(MAS_Module *itm)
+{
+    VERBOSE("Sanitizing patterns...\n");
+    VERBOSE("────────────────────────────────────────────\n");
+
+    for (int p = 0; p < itm->patt_count; p++)
+    {
+        VERBOSE("Fixing pattern %d...\n", p + 1);
+
+        Pattern *patt = &itm->patterns[p];
+
+        for (int r = 0; r < patt->nrows; r++)
+        {
+            for (int c = 0; c < MAX_CHANNELS; c++)
+            {
+                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+
+                if (fx == MAS_FX_SAMPLE_OFFSET)
+                {
+                    if (inst == 0)
+                    {
+                        // Sample Offset is ineffective if there is no note in
+                        // the same pattern cell.
+
+                        WARNING("Pattern %d, Row %d, Channel %d. "
+                                "Removed ineffective '9%02X' without instrument.\n",
+                                p, r, c, param);
+
+                        patt->data[r * MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    VERBOSE("────────────────────────────────────────────\n");
+}
+
 int Load_MOD(MAS_Module *mod)
 {
     VERBOSE("Loading MOD, ");
@@ -584,6 +625,7 @@ int Load_MOD(MAS_Module *mod)
 
     VERBOSE("────────────────────────────────────────────\n");
 
+    MOD_SanitizePatterns(mod);
     Sanitize_Module(mod);
 
     return ERR_NONE;

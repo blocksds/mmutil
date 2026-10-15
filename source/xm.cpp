@@ -858,6 +858,81 @@ int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
     return ERR_NONE;
 }
 
+static void XM_SanitizePatterns(MAS_Module *itm)
+{
+    VERBOSE("Sanitizing patterns...\n");
+    VERBOSE("────────────────────────────────────────────\n");
+
+    for (int p = 0; p < itm->patt_count; p++)
+    {
+        VERBOSE("Fixing pattern %d...\n", p + 1);
+
+        Pattern *patt = &itm->patterns[p];
+
+        for (int r = 0; r < patt->nrows; r++)
+        {
+            for (int c = 0; c < MAX_CHANNELS; c++)
+            {
+                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+
+                if (fx == MAS_FX_SAMPLE_OFFSET)
+                {
+                    if (inst == 0)
+                    {
+                        // Sample Offset is ineffective if there is no note in
+                        // the same pattern cell.
+
+                        WARNING("Pattern %d, Row %d, Channel %d. "
+                                "Removed ineffective '9%02X' without instrument.\n",
+                                p, r, c, param);
+
+                        patt->data[r * MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                    }
+                    else
+                    {
+                        // Jumps after the loop end or sample end turn the note
+                        // off. However, it may be better to set the volume to 0
+                        // instead, in case the volume is set to non-zero later.
+
+                        Sample *samp = &itm->samples[inst - 1];
+
+                        u32 offset = param * 256;
+
+                        const char *point_name;
+                        u32 end_point;
+
+                        if (samp->original_loop_end != 0)
+                        {
+                            end_point = samp->original_loop_end;
+                            point_name = "loop in sample";
+                        }
+                        else
+                        {
+                            end_point = samp->original_sample_length;
+                            point_name = "sample";
+                        }
+
+                        if (offset >= end_point)
+                        {
+                            WARNING("Pattern %d, Row %d, Channel %d. "
+                                    "'9%02X' jump after end of %s %u replaced by 'C00'. (%u > %u)\n",
+                                    p, r, c, param, point_name, inst, offset, end_point);
+
+                            patt->data[r * MAX_CHANNELS + c].fx = MAS_FX_XM_SET_VOLUME;
+                            patt->data[r * MAX_CHANNELS + c].param = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    VERBOSE("────────────────────────────────────────────\n");
+}
+
 int Load_XM(MAS_Module *mod)
 {
     memset(mod, 0, sizeof(MAS_Module));
@@ -972,6 +1047,7 @@ int Load_XM(MAS_Module *mod)
 
     mod->samp_count = next_sample;
 
+    XM_SanitizePatterns(mod);
     Sanitize_Module(mod);
 
     return ERR_NONE;

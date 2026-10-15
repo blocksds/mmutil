@@ -579,6 +579,82 @@ GetNextChannelMarker:
     return ERR_NONE;
 }
 
+static void IT_SanitizePatterns(MAS_Module *itm)
+{
+    VERBOSE("Sanitizing patterns...\n");
+    VERBOSE("────────────────────────────────────────────\n");
+
+    for (int p = 0; p < itm->patt_count; p++)
+    {
+        VERBOSE("Fixing pattern %d...\n", p + 1);
+
+        Pattern *patt = &itm->patterns[p];
+
+        for (int r = 0; r < patt->nrows; r++)
+        {
+            for (int c = 0; c < MAX_CHANNELS; c++)
+            {
+                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+
+                if (fx == MAS_FX_SAMPLE_OFFSET)
+                {
+                    if (inst == 0)
+                    {
+                        // Sample Offset is ineffective if there is no note in
+                        // the same pattern cell.
+
+                        WARNING("Pattern %d, Row %d, Channel %d. "
+                                "Removed ineffective 'O%02X' without instrument.\n",
+                                p, r, c, param);
+
+                        patt->data[r * MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                    }
+                    else
+                    {
+                        // Jumps after the loop end or sample end are ignored
+                        // and treated as jumps to offset 0. However, O00 is
+                        // treated as "repeat the last 0xx", so the fix is to
+                        // remove the effect.
+
+                        Sample *samp = &itm->samples[inst - 1];
+
+                        u32 offset = param * 256;
+
+                        const char *point_name;
+                        u32 end_point;
+
+                        if (samp->original_loop_end != 0)
+                        {
+                            end_point = samp->original_loop_end;
+                            point_name = "loop in sample";
+                        }
+                        else
+                        {
+                            end_point = samp->original_sample_length;
+                            point_name = "sample";
+                        }
+
+                        if (offset >= end_point)
+                        {
+                            WARNING("Pattern %d, Row %d, Channel %d. "
+                                    "'O%02X' jump after end of %s %u removed. (%u > %u)\n",
+                                    p, r, c, param, point_name, inst, offset, end_point);
+
+                            patt->data[r * MAX_CHANNELS + c].fx = 0;
+                            patt->data[r * MAX_CHANNELS + c].param = 0;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    VERBOSE("────────────────────────────────────────────\n");
+}
+
 int Load_IT(MAS_Module *itm)
 {
     int cc;
@@ -783,6 +859,7 @@ int Load_IT(MAS_Module *itm)
     free(parap_samp);
     free(parap_patt);
 
+    IT_SanitizePatterns(itm);
     Sanitize_Module(itm);
 
     return ERR_NONE;
