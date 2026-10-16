@@ -365,7 +365,7 @@ void Write_SampleData(Sample *samp)
 static void Write_Sample(Sample *samp)
 {
     align32(); // align data by 32 bits
-    samp->parapointer = file_tell_write()-MAS_OFFSET;
+    samp->parapointer = file_tell_write() - MAS_OFFSET;
 
     write8(samp->default_volume);
     write8(samp->default_panning);

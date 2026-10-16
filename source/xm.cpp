@@ -114,11 +114,11 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
             inst->envelope_pan.loop_start=inst->envelope_pan.loop_end = 255;
 
         u8 vibtype = read8();
-        u8 vibsweep = 32768 / (read8() + 1);
+        u16 vibsweep = 32768 / (read8() + 1);
         u8 vibdepth = read8();
         u8 vibrate = read8();
         inst->fadeout = read16() / 32; // apply scalar!
-        file_seek_read(inst_headstart+inst_size, SEEK_SET);
+        file_seek_read(inst_headstart + inst_size, SEEK_SET);
 
         if (volbits & 1)
             EXTRA("  Has Volume Envelope\n");
@@ -160,7 +160,7 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
 
             s8 finetune = (s8)read8();
             u8 loopbits = read8();
-            samp->default_panning = (read8()>>1) | 128;
+            samp->default_panning = (read8() >> 1) | 128;
             s8 relnote = (s8)read8();
             read8(); // reserved
 
