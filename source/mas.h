@@ -113,7 +113,7 @@ typedef struct tSample
     u8      vibtype;
     u8      vibdepth;
     u8      vibspeed;
-    u8      vibrate;
+    u16     vibrate;
     u16     msl_index;
     u8      rsamp_index;
 

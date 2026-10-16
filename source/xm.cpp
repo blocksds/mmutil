@@ -196,6 +196,11 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
             EXTRA("    Middle C......%ihz\n", samp->frequency);
             EXTRA("    16 bit........%s\n",
                   (samp->format & SAMPF_16BIT) ? "yes (will be converted)" : "no");
+            EXTRA("    Vibrato\n");
+            EXTRA("      Type........%d\n", vibtype);
+            EXTRA("      Depth.......%d\n", vibdepth);
+            EXTRA("      Rate........%d\n", vibrate);
+            EXTRA("      Sweep.......%d\n", vibsweep);
         }
 
         // read sample

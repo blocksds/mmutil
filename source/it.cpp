@@ -252,6 +252,22 @@ static int Load_IT_Sample(Sample *samp)
     samp->vibtype = read8();
     samp->datapointer = data_address;
 
+    EXTRA("    Length........%i\n", samp->sample_length);
+    if (samp->loop_type == 0)
+        EXTRA("    Loop..........Disabled\n");
+    else if (samp->loop_type == 1)
+        EXTRA("    Loop..........Forward %i->%i\n", samp->loop_start, samp->loop_end);
+    else if (samp->loop_type == 2)
+        EXTRA("    Loop..........BIDI %i->%i\n", samp->loop_start, samp->loop_end);
+    EXTRA("    Volume........%i\n", samp->default_volume);
+    EXTRA("    Panning.......%i\n", samp->default_panning & 127);
+    EXTRA("    Middle C......%ihz\n", samp->frequency);
+    EXTRA("    Vibrato\n");
+    EXTRA("      Type........%d\n", samp->vibtype);
+    EXTRA("      Depth.......%d\n", samp->vibdepth);
+    EXTRA("      Rate........%d\n", samp->vibrate);
+    EXTRA("      Speed.......%d\n", samp->vibspeed);
+
     if (hasloop)
     {
         if (pingpong)
