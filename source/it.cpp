@@ -193,7 +193,7 @@ static void Create_IT_Instrument(Instrument *inst, int sample)
         inst->notemap[x] = x + sample * 256;
 }
 
-static int Load_IT_Sample(Sample *samp)
+static int Load_IT_Sample(Sample *samp, int sample_num)
 {
     u8 a;
 
@@ -243,7 +243,13 @@ static int Load_IT_Sample(Sample *samp)
     samp->original_loop_start = loop_start;
     samp->original_loop_end = loop_end;
 
-    skip8(8); // Susloop start/end
+    u32 susloop_begin = read32();
+    u32 susloop_end = read32();
+    if ((susloop_begin != 0) || (susloop_end != 0))
+    {
+        WARNING("Sample %d has a sustain loop, which isn't supported.\n",
+                sample_num + 1);
+    }
 
     u32 data_address = read32();
     samp->vibspeed = read8();
@@ -787,7 +793,7 @@ int Load_IT(MAS_Module *itm)
     for (int x = 0; x < itm->samp_count; x++)
     {
         file_seek_read(parap_samp[x], SEEK_SET);
-        Load_IT_Sample(&itm->samples[x]);
+        Load_IT_Sample(&itm->samples[x], x);
 
         VERBOSE("│%3i  │ %3i%% │ %3i%%  │ %4s │%6ihz │ %-26s│\n",
                 x + 1, (itm->samples[x].global_volume * 100) / 64,
