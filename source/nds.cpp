@@ -24,11 +24,11 @@
 #define PATH_MAX 2048
 #endif
 
-const u8 nds_arm7_elf[] = {
+static const u8 nds_arm7_elf[] = {
 #embed "nds_arm7.elf"
 };
 
-const u8 nds_arm9_elf[] = {
+static const u8 nds_arm9_elf[] = {
 #embed "nds_arm9.elf"
 };
 

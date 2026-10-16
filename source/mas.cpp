@@ -173,7 +173,7 @@ void Sanitize_Module(MAS_Module *mod)
     }
 }
 
-void Write_Instrument_Envelope(Instrument_Envelope *env)
+static void Write_Instrument_Envelope(Instrument_Envelope *env)
 {
     write8((u8)(env->node_count * 4 + 8)); // maximum is 6+75
     write8(env->loop_start);
@@ -222,7 +222,7 @@ void Write_Instrument_Envelope(Instrument_Envelope *env)
     }
 }
 
-void Write_Instrument(Instrument *inst)
+static void Write_Instrument(Instrument *inst)
 {
     align32();
     inst->parapointer = file_tell_write() - MAS_OFFSET;
@@ -362,7 +362,7 @@ void Write_SampleData(Sample *samp)
     }
 }
 
-void Write_Sample(Sample *samp)
+static void Write_Sample(Sample *samp)
 {
     align32(); // align data by 32 bits
     samp->parapointer = file_tell_write()-MAS_OFFSET;
@@ -394,7 +394,7 @@ void Write_Sample(Sample *samp)
 #define MF_HASVCMD          (4 << 4)
 #define MF_HASFX            (8 << 4)
 
-void Write_Pattern(Pattern *patt, bool xm_vol)
+static void Write_Pattern(Pattern *patt, bool xm_vol)
 {
     u16 last_mask[MAX_CHANNELS];
     u16 last_note[MAX_CHANNELS];
@@ -536,7 +536,7 @@ void Write_Pattern(Pattern *patt, bool xm_vol)
     }
 }
 
-void Mark_Pattern_Row(MAS_Module *mod, int order, int row)
+static void Mark_Pattern_Row(MAS_Module *mod, int order, int row)
 {
     if (row >= 256)
         return;
@@ -556,7 +556,7 @@ void Mark_Pattern_Row(MAS_Module *mod, int order, int row)
     p->cmarks[row] = true;
 }
 
-void Mark_Patterns(MAS_Module *mod)
+static void Mark_Patterns(MAS_Module *mod)
 {
     for (int o = 0; o < mod->order_count; o++)
     {

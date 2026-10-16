@@ -29,7 +29,7 @@
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
-int Load_S3M_SampleData(Sample *samp, u8 ffi)
+static int Load_S3M_SampleData(Sample *samp, u8 ffi)
 {
     if (samp->sample_length == 0)
         return ERR_NONE;
@@ -84,7 +84,7 @@ int Load_S3M_SampleData(Sample *samp, u8 ffi)
     return ERR_NONE;
 }
 
-int Load_S3M_Sample(Sample *samp)
+static int Load_S3M_Sample(Sample *samp)
 {
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
@@ -183,7 +183,7 @@ static int S3M_Waveform_To_MAS(int type)
     return result[type & 3];
 }
 
-int Load_S3M_Pattern(Pattern *patt, int pattern_number)
+static int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 {
     int clength = read16();
     // unpack s3m data

@@ -69,7 +69,7 @@ static void MSL_PrintDefinition(const char *filename, u16 id, const char *prefix
 
 #define SAMPLE_HEADER_SIZE (12 + ((target_system == SYSTEM_NDS) ? 4 : 0))
 
-void MSL_Erase(void)
+static void MSL_Erase(void)
 {
     MSL_NSAMPS = 0;
     MSL_NSONGS = 0;
@@ -80,7 +80,7 @@ void MSL_Erase(void)
     msl_module_names = {};
 }
 
-u16 MSL_AddSample(Sample *samp)
+static u16 MSL_AddSample(Sample *samp)
 {
     file_open_write_end(TMP_SAMP);
 
@@ -102,7 +102,7 @@ u16 MSL_AddSample(Sample *samp)
     return MSL_NSAMPS - 1;
 }
 
-u16 MSL_AddSampleC(Sample *samp)
+static u16 MSL_AddSampleC(Sample *samp)
 {
     int fsize = file_size(TMP_SAMP);
     if (fsize == 0)
@@ -187,7 +187,7 @@ u16 MSL_AddSampleC(Sample *samp)
     return MSL_AddSample(samp);
 }
 
-u16 MSL_AddModule(MAS_Module *mod)
+static u16 MSL_AddModule(MAS_Module *mod)
 {
     // ADD SAMPLES
     for (int x = 0; x < mod->samp_count; x++)
@@ -485,7 +485,7 @@ static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix
     }
 }
 
-void MSL_LoadFile(char *filename)
+static void MSL_LoadFile(char *filename)
 {
     Sample wav;
     MAS_Module mod;
@@ -538,7 +538,7 @@ void MSL_LoadFile(char *filename)
     file_close_read();
 }
 
-int MSL_CreateTemporaryFiles(void)
+static int MSL_CreateTemporaryFiles(void)
 {
     int fd_samp = mkstemp(TMP_SAMP);
     if (fd_samp == -1)

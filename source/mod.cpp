@@ -28,7 +28,7 @@
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
-int Create_MOD_Instrument(Instrument *inst, u8 sample)
+static int Create_MOD_Instrument(Instrument *inst, u8 sample)
 {
     memset(inst, 0, sizeof(Instrument));
 
@@ -43,7 +43,7 @@ int Create_MOD_Instrument(Instrument *inst, u8 sample)
     return ERR_NONE;
 }
 
-int Load_MOD_SampleData(Sample *samp)
+static int Load_MOD_SampleData(Sample *samp)
 {
     if (samp->sample_length > 0)
     {
@@ -290,7 +290,7 @@ static void conv_mod_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel
     *param = wpm;
 }
 
-int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pattern)
+static int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pattern)
 {
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64; // MODs have fixed 64 rows per pattern
@@ -345,7 +345,7 @@ int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pattern)
     return ERR_NONE;
 }
 
-int Load_MOD_Sample(Sample *samp, int index)
+static int Load_MOD_Sample(Sample *samp, int index)
 {
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;

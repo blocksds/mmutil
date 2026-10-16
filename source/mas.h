@@ -269,11 +269,11 @@ typedef enum
 }
 MAS_WaveformType;
 
-void Write_Instrument_Envelope(Instrument_Envelope *env);
-void Write_Instrument(Instrument *inst);
+//void Write_Instrument_Envelope(Instrument_Envelope *env);
+//void Write_Instrument(Instrument *inst);
 void Write_SampleData(Sample *samp);
-void Write_Sample(Sample *samp);
-void Write_Pattern(Pattern *patt, bool xm_vol);
+//void Write_Sample(Sample *samp);
+//void Write_Pattern(Pattern *patt, bool xm_vol);
 int Write_MAS(MAS_Module *mod, bool msl_dep);
 void Delete_Module(MAS_Module *mod);
 

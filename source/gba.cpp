@@ -16,7 +16,7 @@
 #include "files.h"
 #include "mas.h"
 
-const u8 GBA_ROM[] = {
+static const u8 GBA_ROM[] = {
 #embed "maxmod_demo.gba"
 };
 

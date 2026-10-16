@@ -28,7 +28,7 @@
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
-int Get_XM_Frequency(s8 relnote, s8 finetune)
+static int Get_XM_Frequency(s8 relnote, s8 finetune)
 {
     double rn = relnote;
     double ft = finetune;
@@ -37,7 +37,7 @@ int Get_XM_Frequency(s8 relnote, s8 finetune)
     return (int)freq;
 }
 
-int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
+static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
 {
     int ns = *p_nextsample;
 
@@ -668,7 +668,7 @@ static void Sanitize_XM_VolumeCommand(u8 *cmd, int pattern, int row, int channel
     *cmd = volcmd;
 }
 
-int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
+static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 {
     u32 headstart = file_tell_read();
     u32 headsize = read32();

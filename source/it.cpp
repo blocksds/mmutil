@@ -28,7 +28,7 @@
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
-bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
+static bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
 {
     // Read envelopes
 
@@ -112,7 +112,7 @@ bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
     return env_enabled;
 }
 
-int Load_IT_Instrument(Instrument *inst, int index)
+static int Load_IT_Instrument(Instrument *inst, int index)
 {
     u16 a;
 
@@ -181,7 +181,7 @@ int Load_IT_Instrument(Instrument *inst, int index)
     return 0;
 }
 
-void Create_IT_Instrument(Instrument *inst, int sample)
+static void Create_IT_Instrument(Instrument *inst, int sample)
 {
     memset(inst, 0, sizeof(Instrument));
 
@@ -193,7 +193,7 @@ void Create_IT_Instrument(Instrument *inst, int sample)
         inst->notemap[x] = x + sample * 256;
 }
 
-int Load_IT_Sample(Sample *samp)
+static int Load_IT_Sample(Sample *samp)
 {
     u8 a;
 
@@ -271,9 +271,9 @@ int Load_IT_Sample(Sample *samp)
     return 0;
 }
 
-int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16);
+static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16);
 
-int Load_IT_SampleData(Sample *samp, u16 cwmt)
+static int Load_IT_SampleData(Sample *samp, u16 cwmt)
 {
     if (samp->sample_length == 0)
         return 0;
@@ -327,7 +327,7 @@ int Load_IT_SampleData(Sample *samp, u16 cwmt)
     return 0;
 }
 
-int Empty_IT_Pattern(Pattern *patt)
+static int Empty_IT_Pattern(Pattern *patt)
 {
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64;
@@ -354,7 +354,7 @@ static int IT_Waveform_To_MAS(int type)
     return result[type & 3];
 }
 
-int Load_IT_Pattern(Pattern *patt, int pattern_number)
+static int Load_IT_Pattern(Pattern *patt, int pattern_number)
 {
     u8 old_maskvar[MAX_CHANNELS];
     u8 old_note[MAX_CHANNELS];
@@ -875,7 +875,7 @@ The following sample decompression code is based on CHIBITRACKER's code
 NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE
 */
 
-int Load_IT_CompressedSampleBlock(u8 **buffer)
+static int Load_IT_CompressedSampleBlock(u8 **buffer)
 {
     u32 size = read16();
 
@@ -891,7 +891,7 @@ int Load_IT_CompressedSampleBlock(u8 **buffer)
     return ERR_NONE;
 }
 
-int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16)
+static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16)
 {
     u8 *c_buffer = NULL;
 

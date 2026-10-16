@@ -38,7 +38,7 @@ int target_system;
 bool ignore_sflags;
 int PANNING_SEP;
 
-void print_usage(void)
+static void print_usage(void)
 {
     INFO(
         "\n"
@@ -109,13 +109,13 @@ void print_usage(void)
     );
 }
 
-void print_version_and_exit(void)
+static void print_version_and_exit(void)
 {
     INFO("mmutil " VERSION_STRING "\n");
     exit(EXIT_SUCCESS);
 }
 
-void print_error(int err)
+static void print_error(int err)
 {
     switch (err)
     {
