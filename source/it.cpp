@@ -114,34 +114,51 @@ static bool Load_IT_Envelope(Instrument_Envelope *env, bool unsign)
 
 static int Load_IT_Instrument(Instrument *inst, int index)
 {
-    u16 a;
-
     memset(inst, 0, sizeof(Instrument));
 
     inst->is_valid = true;
 
-    skip8(17);
+    skip8(17); // Magic, filename, 0x00
 
     inst->nna = read8();
     inst->dct = read8();
     inst->dca = read8();
 
-    a = read16();
-    if (a > 255)
-        a = 255;
-    inst->fadeout = (u8)a;
+    u16 fadeout = read16();
+    if (fadeout > 255)
+    {
+        fadeout = 255;
+        WARNING("Fadeout value over MAS limit: %u > 255\n", fadeout);
+    }
+    inst->fadeout = fadeout;
 
-    skip8(2);
+    s8 pps = read8(); // PPS: Pitch-Pan separation, range -32 -> +32
+    u8 ppc = read8(); // PPC: Pitch-Pan center: C-0 to B-9 represented as 0->119
+    if ((pps != 0) || (ppc != 60)) // C-5
+    {
+        WARNING("PPS/PPC are unsupported: %u/%u\n", pps, ppc);
+    }
 
     inst->global_volume = read8();
 
-    a = read8();
-    a = (a & 128) | ((a & 127) * 2 > 127 ? 127 : (a & 127) * 2);
-    inst->setpan = a ^ 128;
+    u8 pan = read8();
+    pan = (pan & 128) | ((pan & 127) * 2 > 127 ? 127 : (pan & 127) * 2);
+    inst->setpan = pan ^ 128;
 
     inst->random_volume = read8();
+    u8 random_panning = read8();
+    if (random_panning > 0)
+    {
+        WARNING("Random panning ignored: %u\n", random_panning);
+    }
 
-    skip8(5);
+    u16 tracker_version = read16();
+    VERBOSE("Tracker version: 0x%04X\n", tracker_version);
+
+    u8 number_of_samples = read8();
+    VERBOSE("Number of samples: %d\n", number_of_samples);
+
+    skip8(1); // Padding
 
     for (int x = 0; x < 26; x++)
         inst->name[x] = read8();
