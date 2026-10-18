@@ -91,6 +91,20 @@ void Sanitize_Module(MAS_Module *mod)
             {
                 PatternEntry *pe = &(patt->data[r * MAX_CHANNELS + c]);
 
+                // Warn if "note fade" (~~) are found in the note column.
+                // 254 = note cut | 255 = note off
+                // 250 = mmutil's "no note" (it's never saved to a MAS file)
+                if (pe->note >= 120)
+                {
+                    if ((pe->note != 254) && (pe->note != 255) && (pe->note != 250))
+                    {
+                        WARNING("Pattern %d, Row %d, Channel %d. "
+                                "Unsupported note %u replaced by note cut.\n",
+                                p, r, c + 1, pe->note);
+                        pe->note = 254;
+                    }
+                }
+
                 // If the instrument entry isn't empty, make sure that the
                 // sample is valid. Maxmod will crash in some cases if it tries
                 // to play an empty sample.
