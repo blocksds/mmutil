@@ -44,6 +44,16 @@ static int CalcInstrumentSize(Instrument *instr)
 
 void Sanitize_Module(MAS_Module *mod)
 {
+    // Make sure that the song isn't empty
+    if (mod->order_count == 0)
+        WARNING("The file doesn't have any pattern order.\n");
+    if (mod->inst_count == 0)
+        WARNING("The file doesn't have any instrument.\n");
+    if (mod->samp_count == 0)
+        WARNING("The file doesn't have any sample.\n");
+    if (mod->patt_count == 0)
+        WARNING("The file doesn't have any pattern.\n");
+
     // Sanitize instruments
     for (int i = 0; i < mod->inst_count; i++)
     {
