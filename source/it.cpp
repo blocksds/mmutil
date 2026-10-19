@@ -153,10 +153,10 @@ static int Load_IT_Instrument(Instrument *inst, int index)
     }
 
     u16 tracker_version = read16();
-    VERBOSE("Tracker version: 0x%04X\n", tracker_version);
+    EXTRA("Tracker version: 0x%04X\n", tracker_version);
 
     u8 number_of_samples = read8();
-    VERBOSE("Number of samples: %d\n", number_of_samples);
+    EXTRA("Number of samples: %d\n", number_of_samples);
 
     skip8(1); // Padding
 
