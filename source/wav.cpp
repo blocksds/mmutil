@@ -54,11 +54,20 @@ int Load_WAV(Sample *samp, bool fix)
         unsigned int chunk_code = read32();
         unsigned int chunk_size = read32();
 
+        unsigned int next_chunk_start = file_tell_read() + chunk_size;
+        next_chunk_start = (next_chunk_start + 1) & ~1; // Align to 16 bit
+
         // parse chunk code
         switch (chunk_code)
         {
             case ID4('f', 'm', 't', ' '): // format chunk
             {
+                if (chunk_size < 0x10)
+                {
+                    ERROR("'fmt ' chunk is too small.\n");
+                    return LOADWAV_UNKNOWN_COMP;
+                }
+
                 // Check format code (1 = PCM, 2 = ADPCM)
                 u16 format = read16();
 
@@ -101,7 +110,7 @@ int Load_WAV(Sample *samp, bool fix)
 
                 // skip the rest of the chunk (if any)
                 if ((chunk_size - 0x10) > 0)
-                    skip8((chunk_size - 0x10));
+                    VERBOSE("Unexpected data after 'fmt ' chunk\n");
 
                 hasformat = 1;
                 break;
@@ -126,6 +135,8 @@ int Load_WAV(Sample *samp, bool fix)
                 samp->sample_length = chunk_size / (bit_depth / 8) / num_channels;
                 samp->data = malloc(chunk_size);
 
+                size_t total_size_read = 0;
+
                 // read sample data
                 for (t = 0; t < samp->sample_length; t++)
                 {
@@ -134,7 +145,16 @@ int Load_WAV(Sample *samp, bool fix)
                     // for multi-channel samples, get average value
                     for (c = 0; c < num_channels; c++)
                     {
-                        dat += bit_depth == 8 ? ((int)read8()) - 128 : ((short)read16());
+                        if (bit_depth == 8)
+                        {
+                            dat += (int)read8() - 128;
+                            total_size_read += 1;
+                        }
+                        else
+                        {
+                            dat += (short)read16();
+                            total_size_read += 2;
+                        }
                     }
                     dat /= num_channels;
 
@@ -146,6 +166,13 @@ int Load_WAV(Sample *samp, bool fix)
                     {
                         ((u16*)samp->data)[t] = dat + 32768;
                     }
+
+                }
+
+                if (total_size_read != chunk_size)
+                {
+                    VERBOSE("Data chunk size mismatch: Read %u (expected %u)\n",
+                            total_size_read, chunk_size);
                 }
 
                 hasdata = 1;
@@ -156,7 +183,6 @@ int Load_WAV(Sample *samp, bool fix)
             case ID4('s', 'm', 'p', 'l'): // sampler chunk
             {
                 smpl_chunk_pos = file_tell_read();
-                skip8(chunk_size);
                 break;
             }
 
@@ -173,8 +199,6 @@ int Load_WAV(Sample *samp, bool fix)
                         (chunk_code >> 8) & 0xFF,
                         (chunk_code >> 16) & 0xFF,
                         (chunk_code >> 24) & 0xFF);
-
-                skip8(chunk_size);
                 break;
             }
 
@@ -185,11 +209,12 @@ int Load_WAV(Sample *samp, bool fix)
                         (chunk_code >> 8) & 0xFF,
                         (chunk_code >> 16) & 0xFF,
                         (chunk_code >> 24) & 0xFF);
-
-                skip8(chunk_size);
                 break;
             }
         }
+
+        // Jump to the start of next chunk regardless of what the parser has done
+        file_seek_read(next_chunk_start, SEEK_SET);
     }
 
     // sampler chunk is processed last because it depends on the sample length being known.
