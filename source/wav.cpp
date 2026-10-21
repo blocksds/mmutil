@@ -46,9 +46,24 @@ int Load_WAV(Sample *samp, bool fix)
 
     while (1)
     {
-        // break on end of file
-        if (file_tell_read() >= file_size)
+        // Stop if there aren't enough bytes for a new chunk
+        ssize_t remaining_bytes = file_size - file_tell_read();
+        if (remaining_bytes < 0)
+        {
+            VERBOSE("File cursor went over the limit by %d bytes\n",
+                    -remaining_bytes);
             break;
+        }
+        else if (remaining_bytes == 0)
+        {
+            // Normal exit
+            break;
+        }
+        else if (remaining_bytes < 8)
+        {
+            VERBOSE("File has %d padding bytes\n", remaining_bytes);
+            break;
+        }
 
         // read chunk code and length
         unsigned int chunk_code = read32();
