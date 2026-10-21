@@ -192,23 +192,24 @@ int Load_WAV(Sample *samp, bool fix)
             case ID4('L', 'I', 'S', 'T'):
             case ID4('x', 't', 'r', 'a'):
             {
-                // TODO: Print some of the information in the chunks in verbose mode?
-
-                VERBOSE("Ignored chunk '%c%c%c%c'\n",
+                // TODO: Print some of the information like author/tool in verbose mode?
+                VERBOSE("Ignored chunk '%c%c%c%c' (0x%08X)\n",
                         (chunk_code >> 0) & 0xFF,
                         (chunk_code >> 8) & 0xFF,
                         (chunk_code >> 16) & 0xFF,
-                        (chunk_code >> 24) & 0xFF);
+                        (chunk_code >> 24) & 0xFF,
+                        chunk_code);
                 break;
             }
 
             default:
             {
-                WARNING("Unknown chunk '%c%c%c%c'\n",
+                WARNING("Unknown chunk '%c%c%c%c' (0x%08X)\n",
                         (chunk_code >> 0) & 0xFF,
                         (chunk_code >> 8) & 0xFF,
                         (chunk_code >> 16) & 0xFF,
-                        (chunk_code >> 24) & 0xFF);
+                        (chunk_code >> 24) & 0xFF,
+                        chunk_code);
                 break;
             }
         }
@@ -272,6 +273,20 @@ int Load_WAV(Sample *samp, bool fix)
 
                 // ignore fractional
                 // ignore play count
+
+                const char *loop_type_str = "Unknown";
+                if (samp->loop_type == 0)
+                    loop_type_str = "normal";
+                else if (samp->loop_type == 1)
+                    loop_type_str = "ping-pong";
+
+                VERBOSE("Loop information found: Type %s (%u -> %d)\n",
+                        loop_type_str, samp->loop_start, samp->loop_end);
+            }
+            else
+            {
+                // TODO: Support type 2 (backward loop)
+                ERROR("Loop information found: Unsupported type: %u\n", loop_type);
             }
         }
     }
