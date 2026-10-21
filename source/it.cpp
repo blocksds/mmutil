@@ -170,29 +170,54 @@ static int Load_IT_Instrument(Instrument *inst, int index)
 
     inst->env_flags = 0;
 
+    const char *volenv = "-";
     Load_IT_Envelope(&inst->envelope_volume, false);
     if (inst->envelope_volume.env_valid)
+    {
+        volenv = "v";
         inst->env_flags |= MAS_INSTR_FLAG_VOL_ENV_EXISTS;
+    }
     if (inst->envelope_volume.env_enabled)
+    {
+        volenv = "V";
         inst->env_flags |= MAS_INSTR_FLAG_VOL_ENV_ENABLED;
+    }
 
+    const char *panenv = "-";
     Load_IT_Envelope(&inst->envelope_pan, true);
-    if (inst->envelope_pan.env_enabled)
+    if (inst->envelope_pan.env_valid)
+    {
+        panenv = "p";
         inst->env_flags |= MAS_INSTR_FLAG_PAN_ENV_EXISTS;
+    }
+    if (inst->envelope_pan.env_enabled)
+    {
+        panenv = "P";
+        inst->env_flags |= MAS_INSTR_FLAG_PAN_ENV_ENABLED;
+    }
 
+    const char *pitchenv = "-";
     Load_IT_Envelope(&inst->envelope_pitch, true);
-    if (inst->envelope_pitch.env_enabled)
+    if (inst->envelope_pitch.env_valid)
+    {
+        pitchenv = "t";
         inst->env_flags |= MAS_INSTR_FLAG_PITCH_ENV_EXISTS;
+    }
+    if (inst->envelope_pitch.env_enabled)
+    {
+        pitchenv = "T";
+        inst->env_flags |= MAS_INSTR_FLAG_PITCH_ENV_ENABLED;
+    }
+
+    const char *nna_modes[4] = {
+        "CUT", "CON", "OFF", "FAD"
+    };
 
     VERBOSE("│%3i  │ %3i%% │ %3s │ %s%s%s │ %-26s│\n",
             index + 1,
             (inst->global_volume * 100) / 128,
-            ((inst->nna == 0) ? "CUT" : ((inst->nna == 1) ? "CON" :
-                ((inst->nna == 2) ? "OFF" : ((inst->nna == 3) ? "FAD" : "???")))),
-            (inst->env_flags & MAS_INSTR_FLAG_VOL_ENV_ENABLED) ? "V" : "-",
-            (inst->env_flags & MAS_INSTR_FLAG_PAN_ENV_EXISTS) ? "P" : "-",
-            (inst->env_flags & MAS_INSTR_FLAG_PITCH_ENV_EXISTS) ? "T" : "-",
-            inst->name);
+            (inst->nna > 3) ? "???" : nna_modes[inst->nna],
+            volenv, panenv, pitchenv, inst->name);
 
     skip8(7);
     return 0;
@@ -550,6 +575,10 @@ GetNextChannelMarker:
                             case 6: // NNA Note Fade
                             case 7: // Volume Envelope Off
                             case 8: // Volume Envelope On
+                            case 9: // Panning Envelope Off
+                            case 10: // Panning Envelope On
+                            case 11: // Pitch Envelope Off
+                            case 12: // Pitch Envelope On
                                 supported = true;
                                 break;
 
@@ -562,10 +591,6 @@ GetNextChannelMarker:
                             case 0: // Past Note Cut
                             case 1: // Past Note Off
                             case 2: // Past Note Fade
-                            case 9: // Panning Envelope Off
-                            case 10: // Panning Envelope On
-                            case 11: // Pitch Envelope Off
-                            case 12: // Pitch Envelope On
                             default:
                                 supported = false;
                                 break;
