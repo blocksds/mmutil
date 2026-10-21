@@ -237,8 +237,6 @@ static void Create_IT_Instrument(Instrument *inst, int sample)
 
 static int Load_IT_Sample(Sample *samp, int sample_num)
 {
-    u8 a;
-
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
 
@@ -252,24 +250,33 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
         return ERR_UNKNOWNSAMPLE;
 
     samp->global_volume = read8();
-    a = read8();
-    samp->it_compression = a & 8 ? 1 : 0;
+    u8 flg = read8();
+    samp->it_compression = flg & 8 ? 1 : 0;
 
-    bool bit16 = a & 2;
-    bool hasloop = a & 16;
-    bool pingpong = a & 64;
+    bool bit16 = flg & 2;
+    bool hasloop = flg & 16;
+    bool pingpong = flg & 64;
 
     samp->default_volume = read8();
     for (int x = 0; x < 26; x++)
         samp->name[x] = read8();
 
     bool samp_unsigned = false;
-    a = read8();
+    u8 cvt = read8();
     samp->default_panning = read8();
     samp->default_panning = (((samp->default_panning & 127) == 64) ?
                 127 : (samp->default_panning << 1)) | (samp->default_panning & 128);
-    if (!(a & 1))
+    if (!(cvt & 1))
         samp_unsigned = true;
+
+    samp->it_compression = 0;
+    if (flg & (1 << 3)) // Compressed samples
+    {
+        if (cvt & (1 << 2))
+            samp->it_compression = 0x0215;
+        else
+            samp->it_compression = 0x0214;
+    }
 
     u32 samp_length = read32();
     u32 loop_start = read32();
@@ -335,19 +342,30 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
     return 0;
 }
 
-static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16);
+static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, bool it215, bool bit16);
 
-static int Load_IT_SampleData(Sample *samp, u16 cwmt)
+static int Load_IT_SampleData(Sample *samp, int index)
 {
     if (samp->sample_length == 0)
         return 0;
+
+    const char *compression = "Unknown";
+    if (samp->it_compression == 0)
+        compression = "Disabled";
+    else if (samp->it_compression == 0x214)
+        compression = "IT214";
+    else if (samp->it_compression == 0x215)
+        compression = "IT215";
+
+    VERBOSE("%2d: Format: %s | Compression: %s\n", index,
+            samp->format & SAMPF_16BIT ? "16 bits" : " 8 bits", compression);
 
     if (samp->format & SAMPF_16BIT)
         samp->data = (u16 *)malloc(((u32)samp->sample_length) * 2);
     else
         samp->data = (u8 *)malloc(samp->sample_length);
 
-    if (!samp->it_compression)
+    if (samp->it_compression == 0)
     {
         for (u32 x = 0; x < samp->sample_length; x++)
         {
@@ -383,7 +401,8 @@ static int Load_IT_SampleData(Sample *samp, u16 cwmt)
     }
     else
     {
-        Load_IT_Sample_CMP((u8*)samp->data, samp->sample_length, cwmt,
+        Load_IT_Sample_CMP((u8*)samp->data, samp->sample_length,
+                           samp->it_compression == 0x0215,
                            (bool)(samp->format & SAMPF_16BIT));
     }
 
@@ -736,10 +755,8 @@ int Load_IT(MAS_Module *itm)
     itm->samp_count  = read16();
     itm->patt_count  = read16();
 
-    u16 cwt = read16();
-    (void)cwt; // Unused
+    u16 cwt = read16();  // created with tracker
     u16 cmwt = read16(); // upward compatible
-    //skip8(4);          // created with tracker / upward compatible
 
     // Flags
     u16 w = read16();
@@ -759,6 +776,8 @@ int Load_IT(MAS_Module *itm)
     VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading IT, \"%s\"\n", itm->title);
     VERBOSE("────────────────────────────────────────────\n");
+    VERBOSE("Created with 0x%04X\n", cwt);
+    VERBOSE("cmwt.........0x%04X\n", cmwt);
     VERBOSE("#Orders......%i\n", itm->order_count);
     VERBOSE("#Instr.......%i\n", itm->inst_count);
     VERBOSE("#Samples.....%i\n", itm->samp_count);
@@ -914,7 +933,7 @@ int Load_IT(MAS_Module *itm)
     for (int x = 0; x < itm->samp_count; x++)
     {
         file_seek_read(itm->samples[x].datapointer, SEEK_SET);
-        Load_IT_SampleData(&itm->samples[x], cmwt);
+        Load_IT_SampleData(&itm->samples[x], x);
     }
 
     VERBOSE("────────────────────────────────────────────\n");
@@ -955,7 +974,7 @@ static int Load_IT_CompressedSampleBlock(u8 **buffer)
     return ERR_NONE;
 }
 
-static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bit16)
+static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, bool it215, bool bit16)
 {
     u8 *c_buffer = NULL;
 
@@ -967,8 +986,6 @@ static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, u16 cmwt, bool bi
 
     for (int i = 0; i < samp_len; i++)
         p_dest_buffer[i] = 128;
-
-    bool it215 = (cmwt == 0x215); // Is this an it215 module?
 
     // Now unpack data till the dest buffer is full
 

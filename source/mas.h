@@ -131,7 +131,7 @@ typedef struct tSample
     u32     datapointer;
 //    bool    bit16;
 //    bool    samp_unsigned;
-    u8      it_compression;
+    u16     it_compression;
     char    name[32];
     char    filename[12];
 }
