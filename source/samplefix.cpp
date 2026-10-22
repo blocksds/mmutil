@@ -354,10 +354,10 @@ static void FixSample_NDS(Sample *samp)
 
     // %o option.
     //
-    // Used to support the `9xx` command when using the DS hardware channels for
-    // playback. In MOD/XM (maybe others) you can use a sample offset command to
-    // start playing beyond the loop start, and then when the sample hits the
-    // loop end it'll still correctly loop back to the start.
+    // NDS hardware mixer mode only. Used to support the `Sample Offset` effects
+    // when using the DS hardware channels for playback. You can use a sample
+    // offset command to start playing beyond the loop start, and then when the
+    // sample hits the loop end it'll still correctly loop back to the start.
     if (samp->loop_type)
     {
         if (!ignore_sflags)
@@ -372,8 +372,7 @@ static void FixSample_NDS(Sample *samp)
 
     // %c option
     //
-    // Compress the sample using IMA-ADPCM. This only works on NDS in hardware
-    // mixer mode.
+    // NDS hardware mixer mode only. Compress the sample using IMA-ADPCM.
     if (!ignore_sflags)
     {
         if (strstr(samp->name, "%c") != NULL)
