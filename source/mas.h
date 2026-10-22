@@ -66,7 +66,7 @@ typedef struct tInstrument
 
     bool    is_valid;
     u8      global_volume;
-    u8      setpan;
+    u8      setpan; // If bit 7 is 0, use this value. Value = 0..127
     u16     fadeout;
     u8      random_volume;
     u8      nna;
@@ -103,7 +103,7 @@ typedef struct tSample
 
     u8      global_volume;
     u8      default_volume;
-    u8      default_panning;
+    u8      default_panning; // If bit 7 is 0, use this value. Value = 0..127
     u32     sample_length;
     u32     loop_start;
     u32     loop_end;

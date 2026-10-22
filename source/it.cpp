@@ -141,9 +141,26 @@ static int Load_IT_Instrument(Instrument *inst, int index)
 
     inst->global_volume = read8();
 
+    // If bit 7 is set in the IT, IGNORE the panning value. However, the MAS
+    // format works the other way around. We need to set bit 7 to 0.
     u8 pan = read8();
-    pan = (pan & 128) | ((pan & 127) * 2 > 127 ? 127 : (pan & 127) * 2);
-    inst->setpan = pan ^ 128;
+    if (pan & (1 << 7))
+    {
+        inst->setpan = 0;
+    }
+    else
+    {
+        // The original value goes from 0 to 64 (not 63)
+        pan = (pan & 127) * 2;
+        if (pan > 127)
+            pan = 127;
+
+        inst->setpan = pan | (1 << 7);
+    }
+
+    EXTRA("    Volume........%i\n", inst->global_volume);
+    EXTRA("    Panning.......%i (%s)\n", inst->setpan & 127,
+          (inst->setpan & (1 << 7)) ? "set" : "not set");
 
     inst->random_volume = read8();
     u8 random_panning = read8();
@@ -153,10 +170,10 @@ static int Load_IT_Instrument(Instrument *inst, int index)
     }
 
     u16 tracker_version = read16();
-    EXTRA("Tracker version: 0x%04X\n", tracker_version);
+    EXTRA("    Tracker ver...0x%04X\n", tracker_version);
 
     u8 number_of_samples = read8();
-    EXTRA("Number of samples: %d\n", number_of_samples);
+    EXTRA("    Num. samples..%d\n", number_of_samples);
 
     skip8(1); // Padding
 
@@ -266,9 +283,24 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
 
     bool samp_unsigned = false;
     u8 cvt = read8();
-    samp->default_panning = read8();
-    samp->default_panning = (((samp->default_panning & 127) == 64) ?
-                127 : (samp->default_panning << 1)) | (samp->default_panning & 128);
+
+    // If bit 7 is set in the IT, USE the panning value. The MAS format also
+    // expects bit 7 to mean that.
+    u8 pan = read8();
+    if (pan & (1 << 7))
+    {
+        // The original value goes from 0 to 64 (not 63)
+        pan = (pan & 127) * 2;
+        if (pan > 127)
+            pan = 127;
+
+        samp->default_panning = pan | (1 << 7);
+    }
+    else
+    {
+        samp->default_panning = 0;
+    }
+
     if (!(cvt & 1))
         samp_unsigned = true;
 
@@ -333,7 +365,8 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
     else if (samp->loop_type == 2)
         EXTRA("    Loop..........BIDI %i->%i\n", samp->loop_start, samp->loop_end);
     EXTRA("    Volume........%i\n", samp->default_volume);
-    EXTRA("    Panning.......%i\n", samp->default_panning & 127);
+    EXTRA("    Panning.......%i (%s)\n", samp->default_panning & 127,
+          (samp->default_panning & (1 << 7)) ? "set" : "not set");
     EXTRA("    Middle C......%ihz\n", samp->frequency);
     EXTRA("    Vibrato\n");
     EXTRA("      Type........%d\n", samp->vibtype);
