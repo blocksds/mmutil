@@ -247,7 +247,10 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
         samp->filename[x] = read8();
 
     if (read8() != 0)
+    {
+        ERROR("Expected zero in sample data.\n");
         return ERR_UNKNOWNSAMPLE;
+    }
 
     samp->global_volume = read8();
     u8 flg = read8();
@@ -276,6 +279,21 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
             samp->it_compression = 0x0215;
         else
             samp->it_compression = 0x0214;
+    }
+
+    if (samp->it_compression == 0)
+    {
+        if (!bit16 && (cvt == 0xFF))
+        {
+            ERROR("Samples compressed as ADPCM are not supported.\n");
+            return ERR_UNKNOWNSAMPLE;
+        }
+
+        if (cvt & (1 << 1))
+        {
+            ERROR("Sample stored as big endian are not supported.\n");
+            return ERR_UNKNOWNSAMPLE;
+        }
     }
 
     u32 samp_length = read32();
