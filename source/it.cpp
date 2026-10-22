@@ -127,8 +127,8 @@ static int Load_IT_Instrument(Instrument *inst, int index)
     u16 fadeout = read16();
     if (fadeout > 255)
     {
-        fadeout = 255;
         WARNING("Fadeout value over MAS limit: %u > 255\n", fadeout);
+        fadeout = 255;
     }
     inst->fadeout = fadeout;
 
