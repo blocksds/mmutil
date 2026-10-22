@@ -16,7 +16,7 @@
 #include "deftypes.h"
 
 #define BYTESMASHER     0xBA
-#define MAX_CHANNELS    32
+
 #define MAX_ROWS        1024 // This is the max supported by XM/IT files
 
 extern int PANNING_SEP;

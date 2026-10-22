@@ -193,7 +193,7 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number)
     patt->clength = clength;
     patt->nrows = 64;
 
-    for (int row = 0; row < 64 * MAX_CHANNELS; row++)
+    for (int row = 0; row < 64 * MAS_MAX_CHANNELS; row++)
     {
         patt->data[row].note = 250;
         patt->data[row].vol = 255;
@@ -207,7 +207,7 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number)
         {
             int col = what & 31; // & 31 = channel
 
-            int z = row * MAX_CHANNELS + col;
+            int z = row * MAS_MAX_CHANNELS + col;
 
             if (what & 32) // & 32 = follows;  BYTE:note, BYTE:instrument
             {
@@ -387,11 +387,11 @@ static void S3M_SanitizePatterns(MAS_Module *itm)
 
         for (int r = 0; r < patt->nrows; r++)
         {
-            for (int c = 0; c < MAX_CHANNELS; c++)
+            for (int c = 0; c < MAS_MAX_CHANNELS; c++)
             {
-                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
-                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
-                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+                u32 inst = patt->data[r * MAS_MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAS_MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAS_MAX_CHANNELS + c].param;
 
                 if (fx == MAS_FX_SAMPLE_OFFSET)
                 {
@@ -404,8 +404,8 @@ static void S3M_SanitizePatterns(MAS_Module *itm)
                                 "Removed ineffective 'O%02X' without instrument.\n",
                                 p, r, c, param);
 
-                        patt->data[r * MAX_CHANNELS + c].fx = 0;
-                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].param = 0;
                     }
                 }
             }

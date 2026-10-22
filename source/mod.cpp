@@ -295,7 +295,7 @@ static int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pa
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64; // MODs have fixed 64 rows per pattern
 
-    for (u32 row = 0; row < 64 * MAX_CHANNELS; row++)
+    for (u32 row = 0; row < 64 * MAS_MAX_CHANNELS; row++)
     {
         patt->data[row].note = 250;
     }
@@ -324,7 +324,7 @@ static int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pa
                         param &= 0xF0;
             }
 
-            PatternEntry* p = &patt->data[row * MAX_CHANNELS + col]; // copy data to pattern entry
+            PatternEntry* p = &patt->data[row * MAS_MAX_CHANNELS + col]; // copy data to pattern entry
 
             p->inst = inst;
             conv_mod_to_mas(&effect, &param, pattern, row, col);
@@ -422,11 +422,11 @@ static void MOD_SanitizePatterns(MAS_Module *itm)
 
         for (int r = 0; r < patt->nrows; r++)
         {
-            for (int c = 0; c < MAX_CHANNELS; c++)
+            for (int c = 0; c < MAS_MAX_CHANNELS; c++)
             {
-                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
-                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
-                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+                u32 inst = patt->data[r * MAS_MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAS_MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAS_MAX_CHANNELS + c].param;
 
                 if (fx == MAS_FX_SAMPLE_OFFSET)
                 {
@@ -439,8 +439,8 @@ static void MOD_SanitizePatterns(MAS_Module *itm)
                                 "Removed ineffective '9%02X' without instrument.\n",
                                 p, r, c, param);
 
-                        patt->data[r * MAX_CHANNELS + c].fx = 0;
-                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].param = 0;
                     }
                 }
             }
@@ -510,7 +510,7 @@ int Load_MOD(MAS_Module *mod)
                 chn_number[1] = (char)((sig >> 8) & 0xFF);
                 chn_number[2] = 0;
                 mod_channels = atoi(chn_number);
-                if (mod_channels > MAX_CHANNELS)
+                if (mod_channels > MAS_MAX_CHANNELS)
                     return ERR_MANYCHANNELS;
             }
             else
@@ -527,7 +527,7 @@ int Load_MOD(MAS_Module *mod)
     VERBOSE("\"%s\"\n", mod->title);
     VERBOSE("%i channels (%s)\n", mod_channels, sigs);
 
-    for (int x = 0; x < MAX_CHANNELS; x++)
+    for (int x = 0; x < MAS_MAX_CHANNELS; x++)
     {
         if ((x & 3) != 1 && (x & 3) != 2)
             mod->channel_panning[x] = clamp_u8(128 - (PANNING_SEP / 2));

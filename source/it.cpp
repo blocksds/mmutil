@@ -466,7 +466,7 @@ static int Empty_IT_Pattern(Pattern *patt)
     memset(patt, 0, sizeof(Pattern));
     patt->nrows = 64;
 
-    for (int x = 0; x < patt->nrows * MAX_CHANNELS; x++)
+    for (int x = 0; x < patt->nrows * MAS_MAX_CHANNELS; x++)
     {
         patt->data[x].note = 250; // Special clears for vol and note
         patt->data[x].vol = 255;
@@ -490,12 +490,12 @@ static int IT_Waveform_To_MAS(int type)
 
 static int Load_IT_Pattern(Pattern *patt, int pattern_number)
 {
-    u8 old_maskvar[MAX_CHANNELS];
-    u8 old_note[MAX_CHANNELS];
-    u8 old_inst[MAX_CHANNELS];
-    u8 old_vol[MAX_CHANNELS];
-    u8 old_fx[MAX_CHANNELS];
-    u8 old_param[MAX_CHANNELS];
+    u8 old_maskvar[MAS_MAX_CHANNELS];
+    u8 old_note[MAS_MAX_CHANNELS];
+    u8 old_inst[MAS_MAX_CHANNELS];
+    u8 old_vol[MAS_MAX_CHANNELS];
+    u8 old_fx[MAS_MAX_CHANNELS];
+    u8 old_param[MAS_MAX_CHANNELS];
 
     memset(patt, 0, sizeof(Pattern));
 
@@ -513,7 +513,7 @@ static int Load_IT_Pattern(Pattern *patt, int pattern_number)
 
     patt->clength = clength;
 
-    for (int x = 0; x < patt->nrows*MAX_CHANNELS; x++)
+    for (int x = 0; x < patt->nrows * MAS_MAX_CHANNELS; x++)
     {
         patt->data[x].note = 250; // special clears for vol&note
         patt->data[x].vol = 255;
@@ -537,7 +537,7 @@ GetNextChannelMarker:
 
         // Channel = (channelvariable-1) & 63
         chan = (chanvar - 1) & 63;
-        if (chan >= MAX_CHANNELS)
+        if (chan >= MAS_MAX_CHANNELS)
             return ERR_MANYCHANNELS;
 
         // if (channelvariable & 128) then read byte into maskvariable
@@ -550,21 +550,21 @@ GetNextChannelMarker:
         if (maskvar & 1)
         {
             old_note[chan] = read8();
-            patt->data[x * MAX_CHANNELS + chan].note = old_note[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].note = old_note[chan];
         }
 
         // if (maskvariable & 2), then read instrument (byte value)
         if (maskvar & 2)
         {
             old_inst[chan] = read8();
-            patt->data[x * MAX_CHANNELS + chan].inst = old_inst[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].inst = old_inst[chan];
         }
 
         // if (maskvariable & 4), then read volume/panning (byte value)
         if (maskvar & 4)
         {
             old_vol[chan] = read8();
-            patt->data[x * MAX_CHANNELS + chan].vol = old_vol[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].vol = old_vol[chan];
         }
 
         // if (maskvariable & 8), then read command (byte value) and commandvalue
@@ -691,30 +691,31 @@ GetNextChannelMarker:
 
             old_fx[chan] = fx;
             old_param[chan] = param;
-            patt->data[x * MAX_CHANNELS + chan].fx = fx;
-            patt->data[x * MAX_CHANNELS + chan].param = param;
+            patt->data[x * MAS_MAX_CHANNELS + chan].fx = fx;
+            patt->data[x * MAS_MAX_CHANNELS + chan].param = param;
         }
 
         // if (maskvariable & 16), then note = lastnote for channel
         if (maskvar & 16)
-            patt->data[x * MAX_CHANNELS + chan].note = old_note[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].note = old_note[chan];
 
         // if (maskvariable & 32), then instrument = lastinstrument for channel
         if (maskvar & 32)
-            patt->data[x * MAX_CHANNELS + chan].inst = old_inst[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].inst = old_inst[chan];
 
         // if (maskvariable & 64), then volume/pan = lastvolume/pan for channel
         if (maskvar & 64)
-            patt->data[x * MAX_CHANNELS + chan].vol = old_vol[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].vol = old_vol[chan];
 
         // if (maskvariable & 128), then {
         if (maskvar & 128)
         {
             // command = lastcommand for channel and
-            patt->data[x * MAX_CHANNELS + chan].fx = old_fx[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].fx = old_fx[chan];
             // commandvalue = lastcommandvalue for channel
-            patt->data[x * MAX_CHANNELS + chan].param = old_param[chan];
+            patt->data[x * MAS_MAX_CHANNELS + chan].param = old_param[chan];
         }
+
         goto GetNextChannelMarker;
     }
 
@@ -734,11 +735,11 @@ static void IT_SanitizePatterns(MAS_Module *itm)
 
         for (int r = 0; r < patt->nrows; r++)
         {
-            for (int c = 0; c < MAX_CHANNELS; c++)
+            for (int c = 0; c < MAS_MAX_CHANNELS; c++)
             {
-                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
-                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
-                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+                u32 inst = patt->data[r * MAS_MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAS_MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAS_MAX_CHANNELS + c].param;
 
                 if (fx == MAS_FX_SAMPLE_OFFSET)
                 {
@@ -751,8 +752,8 @@ static void IT_SanitizePatterns(MAS_Module *itm)
                                 "Removed ineffective 'O%02X' without instrument.\n",
                                 p, r, c, param);
 
-                        patt->data[r * MAX_CHANNELS + c].fx = 0;
-                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].param = 0;
                     }
                     else
                     {
@@ -785,8 +786,8 @@ static void IT_SanitizePatterns(MAS_Module *itm)
                                     "'O%02X' jump after end of %s %u removed. (%u > %u)\n",
                                     p, r, c, param, point_name, inst, offset, end_point);
 
-                            patt->data[r * MAX_CHANNELS + c].fx = 0;
-                            patt->data[r * MAX_CHANNELS + c].param = 0;
+                            patt->data[r * MAS_MAX_CHANNELS + c].fx = 0;
+                            patt->data[r * MAS_MAX_CHANNELS + c].param = 0;
                         }
                     }
                 }
@@ -857,14 +858,14 @@ int Load_IT(MAS_Module *itm)
     for (int x = 0; x < 64; x++)
     {
         u8 b = read8();
-        if (x < MAX_CHANNELS)
+        if (x < MAS_MAX_CHANNELS)
             itm->channel_panning[x] = b * 4 > 255 ? 255 : b * 4; // map 0->64 to 0->255
     }
 
     for (int x = 0; x < 64; x++)
     {
         u8 b = read8();
-        if (x < MAX_CHANNELS)
+        if (x < MAS_MAX_CHANNELS)
             itm->channel_volume[x] = b;
     }
 

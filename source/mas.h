@@ -14,6 +14,8 @@
 #ifndef MAS_H__
 #define MAS_H__
 
+#define MAS_MAX_CHANNELS    32   // Max number of channels in MAS files
+
 // Flags used to determine the characteristics of samples in an input module
 // file. Not all combinations are supported in a MAS sample.
 
@@ -152,7 +154,7 @@ typedef struct tPattern
     u32             parapointer;
     u16             nrows;
     int             clength;
-    PatternEntry    data[MAX_CHANNELS * MAX_ROWS];
+    PatternEntry    data[MAS_MAX_CHANNELS * MAX_ROWS];
     bool            cmarks[MAX_ROWS];
 }
 Pattern;
@@ -175,8 +177,8 @@ typedef struct tMAS_Module
     u8      global_volume;
     u16     initial_speed;
     u16     initial_tempo;
-    u8      channel_volume[MAX_CHANNELS];
-    u8      channel_panning[MAX_CHANNELS];
+    u8      channel_volume[MAS_MAX_CHANNELS];
+    u8      channel_panning[MAS_MAX_CHANNELS];
     u8      orders[256];
     Instrument  *instruments;
     Sample      *samples;

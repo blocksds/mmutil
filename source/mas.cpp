@@ -97,9 +97,9 @@ void Sanitize_Module(MAS_Module *mod)
 
         for (int r = 0; r < patt->nrows; r++)
         {
-            for (int c = 0; c < MAX_CHANNELS; c++)
+            for (int c = 0; c < MAS_MAX_CHANNELS; c++)
             {
-                PatternEntry *pe = &(patt->data[r * MAX_CHANNELS + c]);
+                PatternEntry *pe = &(patt->data[r * MAS_MAX_CHANNELS + c]);
 
                 // Warn if "note fade" (~~) are found in the note column.
                 // 254 = note cut | 255 = note off
@@ -420,12 +420,12 @@ static void Write_Sample(Sample *samp)
 
 static void Write_Pattern(Pattern *patt, bool xm_vol)
 {
-    u16 last_mask[MAX_CHANNELS];
-    u16 last_note[MAX_CHANNELS];
-    u16 last_inst[MAX_CHANNELS];
-    u16 last_vol[MAX_CHANNELS];
-    u16 last_fx[MAX_CHANNELS];
-    u16 last_param[MAX_CHANNELS];
+    u16 last_mask[MAS_MAX_CHANNELS];
+    u16 last_note[MAS_MAX_CHANNELS];
+    u16 last_inst[MAS_MAX_CHANNELS];
+    u16 last_vol[MAS_MAX_CHANNELS];
+    u16 last_fx[MAS_MAX_CHANNELS];
+    u16 last_param[MAS_MAX_CHANNELS];
 
     patt->parapointer = file_tell_write() - MAS_OFFSET;
     write8((u8)(patt->nrows - 1));
@@ -439,7 +439,7 @@ static void Write_Pattern(Pattern *patt, bool xm_vol)
     {
         if (patt->cmarks[row])
         {
-            for (int col=0; col < MAX_CHANNELS; col++)
+            for (int col=0; col < MAS_MAX_CHANNELS; col++)
             {
                 last_mask[col] = 256; // row is marked, clear previous data
                 last_note[col] = 256;
@@ -450,9 +450,9 @@ static void Write_Pattern(Pattern *patt, bool xm_vol)
             }
         }
 
-        for (int col = 0; col < MAX_CHANNELS; col++)
+        for (int col = 0; col < MAS_MAX_CHANNELS; col++)
         {
-            PatternEntry *pe = &patt->data[row * MAX_CHANNELS + col];
+            PatternEntry *pe = &patt->data[row * MAS_MAX_CHANNELS + col];
 
             if (((pe->note != 250) || (pe->inst != 0) || (pe->vol != emptyvol) ||
                  (pe->fx != 0) || (pe->param != 0)))
@@ -597,9 +597,9 @@ static void Mark_Patterns(MAS_Module *mod)
 
         for (int row = 0; row < mod->patterns[p].nrows; row++)
         {
-            for (int col = 0; col < MAX_CHANNELS; col++)
+            for (int col = 0; col < MAS_MAX_CHANNELS; col++)
             {
-                PatternEntry* pe = &(mod->patterns[p].data[row * MAX_CHANNELS + col]);
+                PatternEntry* pe = &(mod->patterns[p].data[row * MAS_MAX_CHANNELS + col]);
 
                 if (pe->fx == 3) // PATTERN BREAK
                 {
@@ -737,9 +737,9 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
     write8(BYTESMASHER);
 #endif
 
-    for (int x = 0; x < MAX_CHANNELS; x++)
+    for (int x = 0; x < MAS_MAX_CHANNELS; x++)
         write8(mod->channel_volume[x]);
-    for (int x = 0; x < MAX_CHANNELS; x++)
+    for (int x = 0; x < MAS_MAX_CHANNELS; x++)
         write8(mod->channel_panning[x]);
 
     int z;

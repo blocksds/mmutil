@@ -698,7 +698,7 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 
     VERBOSE("- %i rows, %.2f KB\n", patt->nrows, (float)(clength) / 1000);
 
-    for (u32 row = 0; row < patt->nrows * MAX_CHANNELS; row++)
+    for (u32 row = 0; row < patt->nrows * MAS_MAX_CHANNELS; row++)
     {
         patt->data[row].note = 250;
         patt->data[row].vol = 0;
@@ -722,7 +722,7 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
     {
         for (u32 col = 0; col < nchannels; col++)
         {
-            u32 e = row * MAX_CHANNELS + col;
+            u32 e = row * MAS_MAX_CHANNELS + col;
             u8 b = read8();
             total_data_read++;
 
@@ -887,11 +887,11 @@ static void XM_SanitizePatterns(MAS_Module *itm)
 
         for (int r = 0; r < patt->nrows; r++)
         {
-            for (int c = 0; c < MAX_CHANNELS; c++)
+            for (int c = 0; c < MAS_MAX_CHANNELS; c++)
             {
-                u32 inst = patt->data[r * MAX_CHANNELS + c].inst;
-                u32 fx = patt->data[r * MAX_CHANNELS + c].fx;
-                u32 param = patt->data[r * MAX_CHANNELS + c].param;
+                u32 inst = patt->data[r * MAS_MAX_CHANNELS + c].inst;
+                u32 fx = patt->data[r * MAS_MAX_CHANNELS + c].fx;
+                u32 param = patt->data[r * MAS_MAX_CHANNELS + c].param;
 
                 if (fx == MAS_FX_SAMPLE_OFFSET)
                 {
@@ -904,8 +904,8 @@ static void XM_SanitizePatterns(MAS_Module *itm)
                                 "Removed ineffective '9%02X' without instrument.\n",
                                 p, r, c, param);
 
-                        patt->data[r * MAX_CHANNELS + c].fx = 0;
-                        patt->data[r * MAX_CHANNELS + c].param = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].fx = 0;
+                        patt->data[r * MAS_MAX_CHANNELS + c].param = 0;
                     }
                     else
                     {
@@ -937,8 +937,8 @@ static void XM_SanitizePatterns(MAS_Module *itm)
                                     "'9%02X' jump after end of %s %u replaced by 'C00'. (%u > %u)\n",
                                     p, r, c, param, point_name, inst, offset, end_point);
 
-                            patt->data[r * MAX_CHANNELS + c].fx = MAS_FX_XM_SET_VOLUME;
-                            patt->data[r * MAX_CHANNELS + c].param = 0;
+                            patt->data[r * MAS_MAX_CHANNELS + c].fx = MAS_FX_XM_SET_VOLUME;
+                            patt->data[r * MAS_MAX_CHANNELS + c].param = 0;
                         }
                     }
                 }
