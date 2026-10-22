@@ -136,7 +136,7 @@ static int Load_IT_Instrument(Instrument *inst, int index)
     u8 ppc = read8(); // PPC: Pitch-Pan center: C-0 to B-9 represented as 0->119
     if ((pps != 0) || (ppc != 60)) // C-5
     {
-        WARNING("PPS/PPC are unsupported: %u/%u\n", pps, ppc);
+        WARNING("PPS/PPC are unsupported: %d/%u\n", pps, ppc);
     }
 
     inst->global_volume = read8();
