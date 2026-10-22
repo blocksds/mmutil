@@ -11,6 +11,7 @@
  *                                                                          *
  ****************************************************************************/
 
+#include <assert.h>
 #include <stdlib.h>
 #include "defs.h"
 #include "files.h"
@@ -157,43 +158,6 @@ void Sanitize_Module(MAS_Module *mod)
                 }
             }
         }
-    }
-
-    // Sanitize pattern orders
-    if (mod->order_count > 200)
-    {
-        // The MAS format has a hardcoded limit of 200 pattern orders. Some
-        // songs go over this limit, but they only have "255" as pattern order,
-        // which isn't valid, and it means they don't actually use that pattern
-        // order entry.
-        //
-        // We need to check if all pattern orders over 200 are empty. If not,
-        // clamp the song to 200 pattern orders and print a warning.
-
-        bool clamped = false;
-
-        for (int i = 200; i < mod->order_count; i++)
-        {
-            // 254 means "invalid" and Maxmod will just skip it. 255 means
-            // "unused". Both of them are valid here. Any other value is
-            // invalid.
-            if (mod->orders[i] < 254)
-            {
-                clamped = true;
-                WARNING("Too many pattern orders (%u > 200)\n", mod->order_count);
-                break;
-            }
-        }
-
-        if (!clamped)
-        {
-            // If all the extra pattern orders are empty we should only print
-            // some information in verbose mode.
-            VERBOSE("Too many pattern orders (%u > 200), but they are empty\n",
-                    mod->order_count);
-        }
-
-        mod->order_count = 200;
     }
 }
 
@@ -633,11 +597,8 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
     MAS_OFFSET = file_tell_write();
 
 #ifdef MM_MMUTIL_DEVKITPRO_COMPAT
-    if (mod->order_count > 255)
-    {
-        ERROR("Order count higher than 255: %u\n", mod->order_count);
-        return ERR_INVALID_MODULE;
-    }
+    // The maximum value after loading a module should be MAS_MAX_PATTERN_ORDERS
+    assert(MAS_MAX_PATTERN_ORDERS < 256);
     write8(mod->order_count);
 
     if (mod->inst_count > 255)
@@ -742,6 +703,10 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
     for (int x = 0; x < MAS_MAX_CHANNELS; x++)
         write8(mod->channel_panning[x]);
 
+    // Make sure that there's always space for an extra entry that has an end
+    // marker. File loaders should have already done this check.
+    assert(mod->order_count < MAS_MAX_PATTERN_ORDERS);
+
     int z;
     for (z = 0; z < mod->order_count; z++)
     {
@@ -761,7 +726,7 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
         }
     }
     // When Maxmod finds a 255 it considers it the end of the song.
-    for ( ; z < 200; z++)
+    for ( ; z < MAS_MAX_PATTERN_ORDERS; z++)
         write8(255);
 
     // reserve space for offsets

@@ -982,7 +982,21 @@ int Load_XM(MAS_Module *mod)
     u32 xm_headsize = read32();
 
     mod->order_count = read16();
+    if (mod->order_count >= MAS_MAX_PATTERN_ORDERS)
+    {
+        ERROR("The file has too many pattern orders, it has been clamped. %u >= %u\n",
+              mod->order_count, MAS_MAX_PATTERN_ORDERS);
+        mod->order_count = MAS_MAX_PATTERN_ORDERS - 1;
+    }
+
     mod->restart_pos = read16();
+    if (mod->restart_pos >= mod->order_count)
+    {
+        WARNING("Restart position is after the end of the song. "
+                "It has been set to 0. %u >= %u\n",
+                mod->restart_pos, mod->order_count);
+        mod->restart_pos = 0;
+    }
 
     u16 xm_nchannels = read16();
     if (xm_nchannels > MAS_MAX_CHANNELS)

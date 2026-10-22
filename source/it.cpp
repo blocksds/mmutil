@@ -815,6 +815,13 @@ int Load_IT(MAS_Module *itm)
         itm->title[x] = read8();
 
     itm->order_count = read16();
+    if (itm->order_count >= MAS_MAX_PATTERN_ORDERS)
+    {
+        ERROR("The song has too many pattern orders, it has been clamped. %u >= %u.\n",
+              itm->order_count, MAS_MAX_PATTERN_ORDERS);
+        itm->order_count = MAS_MAX_PATTERN_ORDERS - 1;
+    }
+
     itm->inst_count  = read16();
     itm->samp_count  = read16();
     itm->patt_count  = read16();

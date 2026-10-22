@@ -438,6 +438,13 @@ int Load_S3M(MAS_Module *mod)
 
     skip8(2); // reserved space
     mod->order_count = read16();
+    if (mod->order_count >= MAS_MAX_PATTERN_ORDERS)
+    {
+        ERROR("The file has too many pattern orders, it has been clamped. %u >= %u\n",
+              mod->order_count, MAS_MAX_PATTERN_ORDERS);
+        mod->order_count = MAS_MAX_PATTERN_ORDERS - 1;
+    }
+
     mod->inst_count = read16();
     mod->samp_count = mod->inst_count;
     mod->patt_count = read16();

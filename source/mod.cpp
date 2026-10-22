@@ -581,12 +581,27 @@ int Load_MOD(MAS_Module *mod)
 
     // read a byte, store as SONG_LENGTH (this is the number of orders in a song)
     mod->order_count = read8();
+    if (mod->order_count >= MAS_MAX_PATTERN_ORDERS)
+    {
+        ERROR("The file has too many pattern orders, it has been clamped. %u >= %u\n",
+              mod->order_count, MAS_MAX_PATTERN_ORDERS);
+        mod->order_count = MAS_MAX_PATTERN_ORDERS - 1;
+    }
+
     // read a byte, discard it (this is the UNUSED byte - used to be used in PT
     // as the restart position, but not now since jump to pattern was
     // introduced)
     mod->restart_pos = read8();
     if (mod->restart_pos >= 127)
         mod->restart_pos = 0;
+
+    if (mod->restart_pos >= mod->order_count)
+    {
+        WARNING("Restart position is after the end of the song. "
+                "It has been set to 0. %u >= %u\n",
+                mod->restart_pos, mod->order_count);
+        mod->restart_pos = 0;
+    }
 
     int npatterns = 0; // set NUMBER_OF_PATTERNS to equal 0......... or -1 :)
     for (int x = 0; x < 128; x++) // from this point, loop 128 times
@@ -595,7 +610,7 @@ int Load_MOD(MAS_Module *mod)
         mod->orders[x] = read8();
         // if this value was bigger than NUMBER_OF_PATTERNS then set it to that value.
         if (mod->orders[x] >= npatterns)
-            npatterns=mod->orders[x] + 1;
+            npatterns = mod->orders[x] + 1;
     }
 
     // read 4 bytes, discard them (we are at position 1080 again, this is M.K. etc!)

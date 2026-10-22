@@ -14,7 +14,11 @@
 #ifndef MAS_H__
 #define MAS_H__
 
-#define MAS_MAX_CHANNELS    32   // Max number of channels in MAS files
+// Max number of pattern orders in MAS files. The last value must be '255'.
+#define MAS_MAX_PATTERN_ORDERS  200
+
+// Max number of channels in MAS files
+#define MAS_MAX_CHANNELS        32
 
 // Flags used to determine the characteristics of samples in an input module
 // file. Not all combinations are supported in a MAS sample.
@@ -179,7 +183,7 @@ typedef struct tMAS_Module
     u16     initial_tempo;
     u8      channel_volume[MAS_MAX_CHANNELS];
     u8      channel_panning[MAS_MAX_CHANNELS];
-    u8      orders[256];
+    u8      orders[MAS_MAX_PATTERN_ORDERS];
     Instrument  *instruments;
     Sample      *samples;
     Pattern     *patterns;
