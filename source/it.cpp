@@ -500,7 +500,15 @@ static int Load_IT_Pattern(Pattern *patt, int pattern_number)
     memset(patt, 0, sizeof(Pattern));
 
     int clength = read16();
+
     patt->nrows = read16();
+    if (patt->nrows > MAX_ROWS)
+    {
+        ERROR("Pattern %u has too many rows, it has been clamped. %u > %u\n",
+              pattern_number, patt->nrows, MAX_ROWS);
+        patt->nrows = MAX_ROWS;
+    }
+
     skip8(4);
 
     patt->clength = clength;

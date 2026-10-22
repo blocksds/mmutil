@@ -687,6 +687,12 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
     memset(patt, 0, sizeof(Pattern));
 
     patt->nrows = read16();
+    if (patt->nrows > MAX_ROWS)
+    {
+        ERROR("Pattern %u has too many rows, it has been clamped. %u > %u\n",
+              pattern, patt->nrows, MAX_ROWS);
+        patt->nrows = MAX_ROWS;
+    }
 
     u16 clength = read16();
 

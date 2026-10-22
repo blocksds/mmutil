@@ -152,8 +152,8 @@ typedef struct tPattern
     u32             parapointer;
     u16             nrows;
     int             clength;
-    PatternEntry    data[MAX_CHANNELS*256];
-    bool            cmarks[256];
+    PatternEntry    data[MAX_CHANNELS * MAX_ROWS];
+    bool            cmarks[MAX_ROWS];
 }
 Pattern;
 
