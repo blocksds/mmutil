@@ -985,6 +985,12 @@ int Load_XM(MAS_Module *mod)
     mod->restart_pos = read16();
 
     u16 xm_nchannels = read16();
+    if (xm_nchannels > MAS_MAX_CHANNELS)
+    {
+        ERROR("The file has too many channels: %u > %u\n",
+              xm_nchannels, MAS_MAX_CHANNELS - 1);
+        return ERR_MANYCHANNELS;
+    }
 
     mod->patt_count = read16();
     mod->inst_count = read16();

@@ -527,6 +527,13 @@ int Load_MOD(MAS_Module *mod)
     VERBOSE("\"%s\"\n", mod->title);
     VERBOSE("%i channels (%s)\n", mod_channels, sigs);
 
+    if (mod_channels > MAS_MAX_CHANNELS)
+    {
+        ERROR("The file has too many channels: %u > %u\n",
+              mod_channels, MAS_MAX_CHANNELS - 1);
+        return ERR_MANYCHANNELS;
+    }
+
     for (int x = 0; x < MAS_MAX_CHANNELS; x++)
     {
         if ((x & 3) != 1 && (x & 3) != 2)

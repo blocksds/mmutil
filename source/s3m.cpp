@@ -13,6 +13,7 @@
 
 // information from ST3's TECH.DOC
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include "defs.h"
@@ -205,6 +206,10 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number)
 
         while ((what = read8()) != 0) // BYTE:what / 0 = end of row
         {
+            // MAS only supports MAS_MAX_CHANNELS, which is 32, so we don't need
+            // to check if we're over the limit.
+            assert(MAS_MAX_CHANNELS >= 32);
+
             int col = what & 31; // & 31 = channel
 
             int z = row * MAS_MAX_CHANNELS + col;

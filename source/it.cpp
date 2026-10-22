@@ -538,7 +538,11 @@ GetNextChannelMarker:
         // Channel = (channelvariable-1) & 63
         chan = (chanvar - 1) & 63;
         if (chan >= MAS_MAX_CHANNELS)
+        {
+            ERROR("The file has too many channels: %u > %u\n",
+                  chan, MAS_MAX_CHANNELS - 1);
             return ERR_MANYCHANNELS;
+        }
 
         // if (channelvariable & 128) then read byte into maskvariable
         if (chanvar & 128)
@@ -975,7 +979,11 @@ int Load_IT(MAS_Module *itm)
                 VERBOSE("\n");
             }
 
-            Load_IT_Pattern(&itm->patterns[x], x);
+            int ret = Load_IT_Pattern(&itm->patterns[x], x);
+            // TODO: This leaks memory, but it's better than continuing and
+            // finding the same error every time
+            if (ret != ERR_NONE)
+                return ret;
         }
         else
         {
