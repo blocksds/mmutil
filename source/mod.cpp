@@ -510,8 +510,6 @@ int Load_MOD(MAS_Module *mod)
                 chn_number[1] = (char)((sig >> 8) & 0xFF);
                 chn_number[2] = 0;
                 mod_channels = atoi(chn_number);
-                if (mod_channels > MAS_MAX_CHANNELS)
-                    return ERR_MANYCHANNELS;
             }
             else
             {
