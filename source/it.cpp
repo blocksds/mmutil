@@ -488,7 +488,8 @@ static int IT_Waveform_To_MAS(int type)
     return result[type & 3];
 }
 
-static int Load_IT_Pattern(Pattern *patt, int pattern_number)
+static int Load_IT_Pattern(Pattern *patt, int pattern_number,
+                           bool channel_enabled[MAS_MAX_CHANNELS])
 {
     u8 old_maskvar[MAS_MAX_CHANNELS];
     u8 old_note[MAS_MAX_CHANNELS];
@@ -720,6 +721,16 @@ GetNextChannelMarker:
             patt->data[x * MAS_MAX_CHANNELS + chan].param = old_param[chan];
         }
 
+        if (!channel_enabled[chan])
+        {
+            // If the channel is disabled, clear everything
+            patt->data[x * MAS_MAX_CHANNELS + chan].note = 250; // special clear
+            patt->data[x * MAS_MAX_CHANNELS + chan].inst = 0;
+            patt->data[x * MAS_MAX_CHANNELS + chan].vol = 255; // special clear
+            patt->data[x * MAS_MAX_CHANNELS + chan].fx = 0;
+            patt->data[x * MAS_MAX_CHANNELS + chan].param = 0;
+        }
+
         goto GetNextChannelMarker;
     }
 
@@ -865,12 +876,51 @@ int Load_IT(MAS_Module *itm)
     if (itm->old_effects)
         WARNING("IT 'Old Effects' flag is enabled, but Maxmod ignores it.\n");
 
+    bool channel_enabled[MAS_MAX_CHANNELS];
+
     skip8(12); // SEP, PWD, MSGLENGTH, MESSAGE OFFSET, [RESERVED]
-    for (int x = 0; x < 64; x++)
+
+    for (int i = 0; i < 64; i++)
     {
-        u8 b = read8();
-        if (x < MAS_MAX_CHANNELS)
-            itm->channel_panning[x] = b * 4 > 255 ? 255 : b * 4; // map 0->64 to 0->255
+        u8 pan = read8();
+
+        if (i >= MAS_MAX_CHANNELS)
+            continue;
+
+        if (pan & 128)
+        {
+            channel_enabled[i] = false;
+            itm->channel_panning[i] = 32;
+            continue;
+        }
+
+        pan &= 127;
+
+        channel_enabled[i] = true;
+
+        if (pan == 100)
+        {
+            WARNING("Channel %d configured as surround, which isn't supported. "
+                    "Panning has been set to center.\n", i + 1);
+            pan = 32;
+        }
+        else if (pan > 64)
+        {
+            WARNING("Channel %d has an invalid default panning value (%u). "
+                    "Panning has been set to center.\n", pan, i + 1);
+            pan = 32;
+        }
+
+        if (pan == 64)
+        {
+            pan = 255;
+        }
+        else
+        {
+            pan = pan * 4;
+        }
+
+        itm->channel_panning[i] = pan;
     }
 
     for (int x = 0; x < 64; x++)
@@ -986,7 +1036,7 @@ int Load_IT(MAS_Module *itm)
                 VERBOSE("\n");
             }
 
-            int ret = Load_IT_Pattern(&itm->patterns[x], x);
+            int ret = Load_IT_Pattern(&itm->patterns[x], x, &channel_enabled[0]);
             // TODO: This leaks memory, but it's better than continuing and
             // finding the same error every time
             if (ret != ERR_NONE)

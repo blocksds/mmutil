@@ -182,7 +182,7 @@ typedef struct tMAS_Module
     u16     initial_speed;
     u16     initial_tempo;
     u8      channel_volume[MAS_MAX_CHANNELS];
-    u8      channel_panning[MAS_MAX_CHANNELS];
+    u8      channel_panning[MAS_MAX_CHANNELS]; // 0..255
     u8      orders[MAS_MAX_PATTERN_ORDERS];
     Instrument  *instruments;
     Sample      *samples;
