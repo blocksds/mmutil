@@ -184,6 +184,15 @@ static int S3M_Waveform_To_MAS(int type)
     return result[type & 3];
 }
 
+static void Empty_S3M_Pattern(Pattern *patt)
+{
+    memset(patt, 0, sizeof(Pattern));
+    patt->nrows = 1;
+
+    for (u32 row = 0; row < patt->nrows * MAS_MAX_CHANNELS; row++)
+        patt->data[row].note = 250;
+}
+
 static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                             bool channel_enabled[MAS_MAX_CHANNELS])
 {
@@ -659,6 +668,13 @@ int Load_S3M(MAS_Module *mod)
 
     for (int x = 0; x < mod->patt_count; x++)
     {
+        if (!Pattern_Is_Used(mod, x))
+        {
+            VERBOSE("Pattern %u is unused. Skipped.\n", x);
+            Empty_S3M_Pattern(&mod->patterns[x]);
+            continue;
+        }
+
         VERBOSE(" * %2i\n", x + 1);
 
         file_seek_read(parap_patt[x] * 16, SEEK_SET);

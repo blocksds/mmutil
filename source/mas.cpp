@@ -43,6 +43,17 @@ static int CalcInstrumentSize(Instrument *instr)
     return size;
 }
 
+bool Pattern_Is_Used(MAS_Module *mod, unsigned int index)
+{
+    for (size_t i = 0; i < mod->order_count; i++)
+    {
+        if (mod->orders[i] == index)
+            return true;
+    }
+
+    return false;
+}
+
 void Sanitize_Module(MAS_Module *mod)
 {
     // Make sure that the song isn't empty

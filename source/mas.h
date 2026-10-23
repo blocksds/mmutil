@@ -290,6 +290,7 @@ void Write_SampleData(Sample *samp);
 int Write_MAS(MAS_Module *mod, bool msl_dep);
 void Delete_Module(MAS_Module *mod);
 
+bool Pattern_Is_Used(MAS_Module *mod, unsigned int index);
 void Sanitize_Module(MAS_Module *mod);
 
 extern u32 MAS_FILESIZE;

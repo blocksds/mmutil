@@ -673,6 +673,15 @@ static void Sanitize_XM_VolumeCommand(u8 *cmd, int pattern, int row, int channel
     *cmd = volcmd;
 }
 
+static void Empty_XM_Pattern(Pattern *patt)
+{
+    memset(patt, 0, sizeof(Pattern));
+    patt->nrows = 1;
+
+    for (u32 row = 0; row < patt->nrows * MAS_MAX_CHANNELS; row++)
+        patt->data[row].note = 250;
+}
+
 static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 {
     u32 headstart = file_tell_read();
@@ -1059,6 +1068,14 @@ int Load_XM(MAS_Module *mod)
         VERBOSE(" * %2i\n", x);
 
         Load_XM_Pattern(&mod->patterns[x], xm_nchannels, x);
+
+        // Load_XM_Pattern() moves the file pointer to the start of the
+        // following pattern, so we can't just skip the processing step.
+        if (!Pattern_Is_Used(mod, x))
+        {
+            VERBOSE("Pattern %u is unused. Cleared.\n", x);
+            Empty_XM_Pattern(&mod->patterns[x]);
+        }
     }
 
     mod->instruments = (Instrument*)calloc(mod->inst_count, sizeof(Instrument));

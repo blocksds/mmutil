@@ -1025,29 +1025,28 @@ int Load_IT(MAS_Module *itm)
     cc = 0;
     for (int x = 0; x < itm->patt_count; x++)
     {
-        file_seek_read(parap_patt[x], SEEK_SET);
-
-        if (parap_patt[x] != 0)
+        if (!Pattern_Is_Used(itm, x))
         {
-            VERBOSE(" * %2i\n", x + 1);
-            cc++;
-            if (cc == 15)
-            {
-                cc = 0;
-                VERBOSE("\n");
-            }
-
-            int ret = Load_IT_Pattern(&itm->patterns[x], x, &channel_enabled[0]);
-            // TODO: This leaks memory, but it's better than continuing and
-            // finding the same error every time
-            if (ret != ERR_NONE)
-                return ret;
+            VERBOSE("Pattern %u is unused. Skipped.\n", x);
+            Empty_IT_Pattern(&itm->patterns[x]);
+            continue;
         }
-        else
+
+        if (parap_patt[x] == 0)
         {
             Empty_IT_Pattern(&itm->patterns[x]);
-            //memset(&itm->patterns[x], 0, sizeof(Pattern));
+            continue;
         }
+
+        file_seek_read(parap_patt[x], SEEK_SET);
+
+        VERBOSE(" * %2i\n", x + 1);
+
+        int ret = Load_IT_Pattern(&itm->patterns[x], x, &channel_enabled[0]);
+        // TODO: This leaks memory, but it's better than continuing and
+        // finding the same error every time
+        if (ret != ERR_NONE)
+            return ret;
     }
 
     if (cc != 0)

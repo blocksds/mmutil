@@ -290,6 +290,15 @@ static void conv_mod_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel
     *param = wpm;
 }
 
+static void Empty_MOD_Pattern(Pattern *patt)
+{
+    memset(patt, 0, sizeof(Pattern));
+    patt->nrows = 1;
+
+    for (u32 row = 0; row < patt->nrows * MAS_MAX_CHANNELS; row++)
+        patt->data[row].note = 250;
+}
+
 static int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pattern)
 {
     memset(patt, 0, sizeof(Pattern));
@@ -628,7 +637,16 @@ int Load_MOD(MAS_Module *mod)
     for (int x = 0; x < mod->patt_count; x++)
     {
         VERBOSE(" * %2i\n", x + 1);
+
         Load_MOD_Pattern(&mod->patterns[x], (u8)mod_channels, &(mod->inst_count), x);
+
+        // Load_MOD_Pattern() moves the file pointer to the start of the
+        // following pattern, so we can't just skip the processing step.
+        if (!Pattern_Is_Used(mod, x))
+        {
+            VERBOSE("Pattern %u is unused. Cleared.\n", x);
+            Empty_MOD_Pattern(&mod->patterns[x]);
+        }
     }
 
     VERBOSE("\n");
