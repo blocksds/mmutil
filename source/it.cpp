@@ -744,7 +744,7 @@ static void IT_SanitizePatterns(MAS_Module *itm)
 
     for (int p = 0; p < itm->patt_count; p++)
     {
-        VERBOSE("Fixing pattern %d...\n", p + 1);
+        VERBOSE("Fixing pattern %d...\n", p);
 
         Pattern *patt = &itm->patterns[p];
 
