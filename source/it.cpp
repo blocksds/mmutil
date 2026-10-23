@@ -891,6 +891,7 @@ int Load_IT(MAS_Module *itm)
         {
             channel_enabled[i] = false;
             itm->channel_panning[i] = 32;
+            EXTRA("Channel %u is disabled, it will be ignored.\n", i + 1);
             continue;
         }
 

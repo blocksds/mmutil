@@ -184,7 +184,8 @@ static int S3M_Waveform_To_MAS(int type)
     return result[type & 3];
 }
 
-static int Load_S3M_Pattern(Pattern *patt, int pattern_number)
+static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
+                            bool channel_enabled[MAS_MAX_CHANNELS])
 {
     int clength = read16();
     // unpack s3m data
@@ -373,6 +374,16 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number)
                 patt->data[z].fx = 0;
                 patt->data[z].param = 0;
             }
+
+            if (!channel_enabled[col])
+            {
+                // If the channel is disabled, clear everything
+                patt->data[z].note = 250; // special clear
+                patt->data[z].inst = 0;
+                patt->data[z].vol = 255; // special clear
+                patt->data[z].fx = 0;
+                patt->data[z].param = 0;
+            }
         }
     }
 
@@ -483,22 +494,62 @@ int Load_S3M(MAS_Module *mod)
     u8 dp = read8(); // default pan positions (when 252)
     skip8(8 + 2); // reserved space + special pointer
 
-    bool chan_enabled[32];
+    bool channel_enabled[32];
     for (int x = 0; x < 32; x++)
     {
         u8 chn = read8();
-        chan_enabled[x] = chn >> 7;
-        (void)chan_enabled[0]; // TODO: This variable is unused, is that ok?
+
+        if (chn & (1 << 7))
+        {
+            channel_enabled[x] = false;
+            EXTRA("Channel %u is disabled, it will be ignored.\n", x + 1);
+            continue;
+        }
+
+        chn &= 127;
+        channel_enabled[x] = true;
+
         if (stereo)
         {
-            if ((chn & 127) < 8) // left channel
+            if (chn < 8) // Left PCM channel
+            {
                 mod->channel_panning[x] = clamp_u8(128 - (PANNING_SEP / 2));
-            else // right channel
+            }
+            else if (chn < 16) // Right PCM channel
+            {
                 mod->channel_panning[x] = clamp_u8(128 + (PANNING_SEP / 2));
+            }
+            else if (chn < 30)
+            {
+                u8 type = chn - 16;
+                const char *type_str[] = {
+                    "Adlib melody channel 1",
+                    "Adlib melody channel 2",
+                    "Adlib melody channel 3",
+                    "Adlib melody channel 4",
+                    "Adlib melody channel 5",
+                    "Adlib melody channel 6",
+                    "Adlib melody channel 7",
+                    "Adlib melody channel 8",
+                    "Adlib melody channel 9",
+                    "Adlib percussion channel: bass drum",
+                    "Adlib percussion channel: snare drum",
+                    "Adlib percussion channel: tom tom",
+                    "Adlib percussion channel: top cymbal",
+                    "Adlib percussion channel: hi-hat",
+                };
+
+                ERROR("Unsupported channel %d type %u: '%s'\n", x + 1, chn,
+                      type_str[type]);
+            }
+            else
+            {
+                ERROR("Invalid channel %d type %u.\n", x + 1, chn);
+            }
         }
         else
         {
-            mod->channel_panning[x] = 128;
+            mod->channel_panning[x] = 128; // Center
         }
     }
 
@@ -611,7 +662,7 @@ int Load_S3M(MAS_Module *mod)
         VERBOSE(" * %2i\n", x + 1);
 
         file_seek_read(parap_patt[x] * 16, SEEK_SET);
-        Load_S3M_Pattern(&mod->patterns[x], x);
+        Load_S3M_Pattern(&mod->patterns[x], x, &channel_enabled[0]);
     }
 
     VERBOSE("\n");
