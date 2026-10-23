@@ -10,11 +10,11 @@
  *                                                                          *
  ****************************************************************************/
 
-#ifndef SAMPLEFIX_H__
-#define SAMPLEFIX_H__
+#ifndef SAMPLES_H__
+#define SAMPLES_H__
 
 #include "defs.h"
 
 void FixSample(Sample *samp, InputTypes input_file_format);
 
-#endif // SAMPLEFIX_H__
+#endif // SAMPLES_H__

@@ -19,7 +19,7 @@
 #include "mas.h"
 #include "simple.h"
 #include "files.h"
-#include "samplefix.h"
+#include "samples.h"
 
 // Credits to Coda, look at this awesome codes
 u32 readbits(u8 *buffer, unsigned int pos, unsigned int size)

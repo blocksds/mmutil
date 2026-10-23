@@ -31,7 +31,7 @@
 #include "msl.h"
 #include "systems.h"
 #include "wav.h"
-#include "samplefix.h"
+#include "samples.h"
 
 int target_system;
 

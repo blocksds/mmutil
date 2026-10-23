@@ -21,7 +21,7 @@
 #include "mas.h"
 #include "wav.h"
 #include "simple.h"
-#include "samplefix.h"
+#include "samples.h"
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 

@@ -24,7 +24,7 @@
 #include "files.h"
 #include "simple.h"
 #include "errors.h"
-#include "samplefix.h"
+#include "samples.h"
 
 #define S3M_NOTE(a) ((((a) & 15) + ((a) >> 4) * 12) + 12)
 

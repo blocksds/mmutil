@@ -35,7 +35,7 @@
 #include "simple.h"
 #include "version.h"
 #include "systems.h"
-#include "samplefix.h"
+#include "samples.h"
 
 FILE *F_SAMP = NULL;
 FILE *F_SONG = NULL;
