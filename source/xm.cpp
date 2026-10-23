@@ -37,7 +37,8 @@ static int Get_XM_Frequency(s8 relnote, s8 finetune)
     return (int)freq;
 }
 
-static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample)
+static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsample,
+                              int instrument_number)
 {
     int ns = *p_nextsample;
 
@@ -234,7 +235,7 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
 
         *p_nextsample = ns + nsamples;
 
-        VERBOSE("  %2i   │   %s%s   │ %-22s │\n",
+        VERBOSE("│%3i  │  %2i   │   %s%s   │ %-22s │\n", instrument_number,
                 nsamples, (volbits & 1) ? "V" : "-",
                 (panbits & 1) ? "P" : "-", inst->name);
     }
@@ -243,7 +244,8 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
         inst->is_valid = false;
 
         file_seek_read(inst_headstart + inst_size, SEEK_SET);
-        VERBOSE("  --   │   --   │ %-22s │\n", inst->name);
+        VERBOSE("│%3i  │  --   │   --   │ %-22s │\n",
+                instrument_number, inst->name);
     }
 
     return ERR_NONE;
@@ -1091,9 +1093,7 @@ int Load_XM(MAS_Module *mod)
 
     for (int x = 0; x < mod->inst_count; x++)
     {
-        VERBOSE("│%3i  │", x + 1);
-
-        Load_XM_Instrument(&mod->instruments[x], mod, &next_sample);
+        Load_XM_Instrument(&mod->instruments[x], mod, &next_sample, x + 1);
     }
 
     VERBOSE("└─────┴───────┴────────┴────────────────────────┘\n");

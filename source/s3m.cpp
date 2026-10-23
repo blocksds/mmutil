@@ -85,7 +85,7 @@ static int Load_S3M_SampleData(Sample *samp, u8 ffi)
     return ERR_NONE;
 }
 
-static int Load_S3M_Sample(Sample *samp)
+static int Load_S3M_Sample(Sample *samp, int sample_num)
 {
     memset(samp, 0, sizeof(Sample));
     samp->msl_index = 0xFFFF;
@@ -94,7 +94,8 @@ static int Load_S3M_Sample(Sample *samp)
 
     if (type == 0) // Empty instrument (message only)
     {
-        VERBOSE(" ----- │ --- │ ---- │ ----- │ %-28s│\n", samp->name);
+        VERBOSE("│ %2i  │ ----- │ --- │ ---- │ ----- │ %-28s│\n",
+                sample_num, samp->name);
     }
     else if (type == 1) // 1 = PCM instrument
     {
@@ -132,7 +133,7 @@ static int Load_S3M_Sample(Sample *samp)
         if (read32() != ID4('S', 'C', 'R', 'S'))
             return ERR_UNKNOWNSAMPLE;
 
-        VERBOSE(" %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n",
+        VERBOSE("│ %2i  │ %5i │ %-4s│ %3i%% │%5ihz│ %-28s│\n", sample_num,
                 samp->sample_length, samp->loop_type ? "Yes" : "No",
                 (samp->default_volume * 100) / 64, samp->frequency, samp->name);
 
@@ -637,13 +638,11 @@ int Load_S3M(MAS_Module *mod)
     // load instruments
     for (int x = 0; x < mod->inst_count; x++)
     {
-        VERBOSE("│ %2i  │", x + 1);
-
         // load sample
         file_seek_read(parap_inst[x] * 16, SEEK_SET);
-        if (Load_S3M_Sample(&mod->samples[x]))
+        if (Load_S3M_Sample(&mod->samples[x], x + 1))
         {
-            ERROR("S3M: Error loading sample!\n");
+            ERROR("Error loading sample %u.\n", x + 1);
             return ERR_UNKNOWNSAMPLE;
         }
 
