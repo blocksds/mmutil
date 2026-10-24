@@ -804,7 +804,7 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 
                 if (fx != 0 || param != 0)
                 {
-                    Convert_XM_Effect_To_MAS(&fx, &param, pattern, row, col);
+                    Convert_XM_Effect_To_MAS(&fx, &param, pattern, row, col + 1);
                     patt->data[e].fx = fx;
                     patt->data[e].param = param;
                 }
@@ -827,7 +827,7 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
                 u8 fx = read8();              // (byte) Effect type
                 u8 param = read8();           // (byte) Effect parameter
 
-                Convert_XM_Effect_To_MAS(&fx, &param, pattern, row, col);
+                Convert_XM_Effect_To_MAS(&fx, &param, pattern, row, col + 1);
 
                 patt->data[e].fx = fx;
                 patt->data[e].param = param;

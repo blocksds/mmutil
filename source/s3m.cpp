@@ -270,8 +270,8 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                     }
                     else
                     {
-                        WARNING("Pattern %d, row %d. Ignored 'C%02X'.\n",
-                                pattern_number, row, new_row);
+                        WARNING("Pattern %d, Row %d, Channel. Ignored 'C%02X'.\n",
+                                pattern_number, row, new_row, col + 1);
                         fx = 0;
                         param = 0;
                     }
@@ -310,7 +310,7 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                                 // sound. In MOD/XM/IT, it does.
                                 WARNING("Pattern %d, Row %d, Channel %d. "
                                         "Effect 'S%02X' replaced by 'v00'.\n",
-                                        pattern_number, row, col, param);
+                                        pattern_number, row, col + 1, param);
                                 fx = MAS_FX_XM_SET_VOLUME;
                                 param = 0;
                             }
@@ -318,7 +318,7 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
 
                         case 15: // Unused effect. Maxmod uses it as "Event callback"
                             VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
-                                    pattern_number, row, col, param & 0xF);
+                                    pattern_number, row, col + 1, param & 0xF);
                             supported = true;
                             break;
 
@@ -330,7 +330,7 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                     if (!supported)
                     {
                         WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'S%02X'\n",
-                                pattern_number, row, col, param);
+                                pattern_number, row, col + 1, param);
                         fx = 0;
                         param = 0;
                     }
@@ -348,7 +348,7 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                     if (param == 0)
                     {
                         WARNING("Pattern %d, Row %d, Channel %d. Removed invalid effect 'A00'\n",
-                            pattern_number, row, col);
+                            pattern_number, row, col + 1);
                         fx = 0;
                     }
                     else
@@ -365,16 +365,16 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                     }
                     else
                     {
-                        WARNING("Pattern %d, Row %d. Ignored 'V%2X' (max is 'V40')\n",
-                                pattern_number, row, vol);
+                        WARNING("Pattern %d, Row %d, Channel %d. Ignored 'V%2X' (max is 'V40')\n",
+                                pattern_number, row, col + 1, vol);
                         fx = 0;
                         param = 0;
                     }
                 }
                 else if ((letter == 'P') || (letter == 'Y') || (letter == 'Z'))
                 {
-                    WARNING("Pattern %d, Row %d. Unsupported effect '%c'\n",
-                            pattern_number, row, letter);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%c'\n",
+                            pattern_number, row, col + 1, letter);
                     fx = 0;
                     param = 0;
                 }

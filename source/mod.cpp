@@ -336,7 +336,7 @@ static int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pa
             PatternEntry* p = &patt->data[row * MAS_MAX_CHANNELS + col]; // copy data to pattern entry
 
             p->inst = inst;
-            Convert_MOD_Effect_To_MAS(&effect, &param, pattern, row, col);
+            Convert_MOD_Effect_To_MAS(&effect, &param, pattern, row, col + 1);
             p->fx = effect;
             p->param = param;
 
@@ -351,6 +351,7 @@ static int Load_MOD_Pattern(Pattern *patt, u8 nchannels, u16 *inst_count, int pa
             }
         }
     }
+
     return ERR_NONE;
 }
 

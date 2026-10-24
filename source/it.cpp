@@ -597,7 +597,7 @@ GetNextChannelMarker:
                 (letter == 'Z'))
             {
                 WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%c%02X'\n",
-                        pattern_number, x, chan, letter, param);
+                        pattern_number, x, chan + 1, letter, param);
 
                 fx = 0;
                 param = 0;
@@ -607,7 +607,7 @@ GetNextChannelMarker:
                 if (param == 0)
                 {
                     WARNING("Pattern %d, Row %d, Channel %d. Removed invalid effect 'A00'\n",
-                            pattern_number, x, chan);
+                            pattern_number, x, chan + 1);
                     fx = 0;
                 }
                 else
@@ -619,18 +619,18 @@ GetNextChannelMarker:
             {
                 if (fx == 27)
                 {
-                    WARNING("Pattern %d, Row %d. Unsupported effect '#%02X'\n",
-                            pattern_number, x, param);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '#%02X'\n",
+                            pattern_number, x, chan + 1, param);
                 }
                 else if (fx == 28)
                 {
-                    WARNING("Pattern %d, Row %d. Unsupported effect '\\%02X'\n",
-                            pattern_number, x, param);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '\\%02X'\n",
+                            pattern_number, x, chan + 1, param);
                 }
                 else
                 {
-                    WARNING("Pattern %d, Row %d. Unsupported effect '%d %02X'\n",
-                            pattern_number, x, fx, param);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect '%d %02X'\n",
+                            pattern_number, x, fx, chan + 1, param);
                 }
 
                 fx = 0;
@@ -680,7 +680,7 @@ GetNextChannelMarker:
 
                             case 15: // Unused effect. Maxmod uses it as "Event callback"
                                 VERBOSE("Pattern %d, Row %d, Channel %d. Event '0x%X'\n",
-                                        pattern_number, x, chan, param & 0xF);
+                                        pattern_number, x, chan + 1, param & 0xF);
                                 supported = true;
                                 break;
 
@@ -700,8 +700,8 @@ GetNextChannelMarker:
 
                 if (!supported)
                 {
-                    WARNING("Pattern %d, Row %d. Unsupported effect 'S%02X'\n",
-                            pattern_number, x, param);
+                    WARNING("Pattern %d, Row %d, Channel %d. Unsupported effect 'S%02X'\n",
+                            pattern_number, x, chan + 1, param);
                     fx = 0;
                     param = 0;
                 }
