@@ -189,6 +189,37 @@ static int S3M_Waveform_To_MAS(int type)
     return result[type & 3];
 }
 
+static u8 Sanitize_S3M_Volume_Slide(char effect, u8 param, int pattern, int row, int channel)
+{
+    u8 x = param >> 4;
+    u8 y = param & 0xF;
+
+    if ((x == 0xF) || (y == 0xF)) // Fine volume slide
+    {
+        // Always valid
+    }
+    else // Volume slide
+    {
+        if ((x != 0) && (y != 0))
+        {
+            // Down volume slide has priority over up volume slide. Clear the up
+            // volume slide setting (x) if there is an down volume slide setting
+            // (y). The code in Maxmod ignores invalid volume slides, which is
+            // the expected behaviour of IT files.
+
+            u8 new_param = y;
+
+            WARNING("Pattern %d, Row %d, Channel %d. "
+                    "Invalid volume slide parameter. '%c%02X' replaced by '%c%02X'.\n",
+                    pattern, row, channel, effect, param, effect, new_param);
+
+            param = new_param;
+        }
+    }
+
+    return param;
+}
+
 static void Empty_S3M_Pattern(Pattern *patt)
 {
     memset(patt, 0, sizeof(Pattern));
@@ -275,6 +306,12 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                         fx = 0;
                         param = 0;
                     }
+                }
+                else if ((letter == 'D') || (letter == 'K') || (letter == 'L') ||
+                         (letter == 'N') || (letter == 'W')) // Volume slides
+                {
+                    param = Sanitize_S3M_Volume_Slide(letter, param,
+                                                      pattern_number, row, col + 1);
                 }
                 else if (letter == 'S') // Extended effects
                 {

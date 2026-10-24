@@ -284,6 +284,27 @@ static int XM_Waveform_To_MAS(int type)
     return result[type & 7];
 }
 
+// For effects 5xy, 6xy, Axy
+static u8 Sanitize_XM_Volume_Slide(u8 effect, u8 param, int pattern, int row, int channel)
+{
+    if (((param & 0x0F) != 0) && ((param & 0xF0) != 0))
+    {
+        // Up volume slide has priority over down volume slide. Clear the down
+        // volume slide setting (y) if there is an up volume slide setting (x).
+        // This way we can simplify the code in Maxmod.
+
+        u8 new_param = param & 0xF0; // Clear 'y'
+
+        WARNING("Pattern %d, Row %d, Channel %d. "
+                "Invalid volume slide parameter. '%X%02X' replaced by '%X%02X'.\n",
+                pattern, row, channel, effect, param, effect, new_param);
+
+        param = new_param;
+    }
+
+    return param;
+}
+
 // XM effects are an extension of MOD effects. The MAS format expects S3M/IT
 // effects, so this function converts from XM to MAS.
 static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, int channel)
@@ -336,10 +357,12 @@ static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, in
             break;
 
         case 5: // 5xy volslide+glissando
+            wpm = Sanitize_XM_Volume_Slide(wfx, wpm, pattern, row, channel);
             wfx = MAS_FX_PORTA_VOLUME;
             break;
 
         case 6: // 6xy volslide+vibrato
+            wpm = Sanitize_XM_Volume_Slide(wfx, wpm, pattern, row, channel);
             wfx = MAS_FX_VIBRATO_VOLUME;
             break;
 
@@ -356,6 +379,7 @@ static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, in
             break;
 
         case 0xA: // Axy volume slide
+            wpm = Sanitize_XM_Volume_Slide(wfx, wpm, pattern, row, channel);
             wfx = MAS_FX_VOLUME_SLIDE;
             break;
 

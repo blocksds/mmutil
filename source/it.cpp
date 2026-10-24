@@ -240,6 +240,28 @@ static int Load_IT_Instrument(Instrument *inst, int index)
     return 0;
 }
 
+static void Sanitize_IT_Volume_Slide(char effect, u8 param, int pattern, int row, int channel)
+{
+    u8 x = param >> 4;
+    u8 y = param & 0xF;
+
+    if ((x == 0xF) || (y == 0xF)) // Fine volume slide
+    {
+        // Always valid
+    }
+    else // Volume slide
+    {
+        if ((x != 0) && (y != 0))
+        {
+            // The code in Maxmod ignores invalid volume slides, which is the
+            // expected behaviour of IT files. However, we should warn the user.
+            WARNING("Pattern %d, Row %d, Channel %d. "
+                    "Invalid volume slide parameter '%c%02X'. Ignored by Maxmod.\n",
+                    pattern, row, channel, effect, param);
+        }
+    }
+}
+
 static void Create_IT_Instrument(Instrument *inst, int sample)
 {
     memset(inst, 0, sizeof(Instrument));
@@ -635,6 +657,11 @@ GetNextChannelMarker:
 
                 fx = 0;
                 param = 0;
+            }
+            else if ((letter == 'D') || (letter == 'K') || (letter == 'L') ||
+                     (letter == 'N') || (letter == 'W')) // Volume slides
+            {
+                Sanitize_IT_Volume_Slide(letter, param, pattern_number, x, chan + 1);
             }
             else if (letter == 'S')
             {
