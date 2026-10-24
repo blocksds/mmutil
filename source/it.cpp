@@ -274,8 +274,16 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
     samp->it_compression = flg & 8 ? 1 : 0;
 
     bool bit16 = flg & 2;
+    bool stereo = flg & 4;
     bool hasloop = flg & 16;
     bool pingpong = flg & 64;
+
+    if (stereo)
+    {
+        WARNING("Sample %d is stereo. "
+                "It will be converted to mono by keeping the left channel.\n",
+                sample_num + 1);
+    }
 
     samp->default_volume = read8();
     for (int x = 0; x < 26; x++)
@@ -415,6 +423,11 @@ static int Load_IT_SampleData(Sample *samp, int index)
         samp->data = (u16 *)malloc(((u32)samp->sample_length) * 2);
     else
         samp->data = (u8 *)malloc(samp->sample_length);
+
+    // For mono samples, reading the sample length is enough. For stereo
+    // samples, the left channel data before the right channel data, so this
+    // code simply ignores the right channel data.
+    // TODO: Calculate the average of left and right and use that as mono sample?
 
     if (samp->it_compression == 0)
     {
@@ -1053,6 +1066,7 @@ int Load_IT(MAS_Module *itm)
         VERBOSE("\n");
     VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Sample Data...\n");
+    VERBOSE("────────────────────────────────────────────\n");
 
     // read sample data
     for (int x = 0; x < itm->samp_count; x++)

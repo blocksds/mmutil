@@ -115,8 +115,12 @@ static int Load_S3M_Sample(Sample *samp, int sample_num)
 
         u8 flags = read8();
         samp->loop_type = flags & 1 ? 1 : 0;
-        if (flags & 2)
-            return ERR_UNKNOWNSAMPLE;
+        if (flags & 2) // Stereo
+        {
+            WARNING("Sample %d is stereo. "
+                    "It will be converted to mono by keeping the left channel.\n",
+                    sample_num);
+        }
 
         samp->original_sample_length = samp->sample_length;
         samp->original_loop_start = samp->loop_start;
@@ -683,6 +687,7 @@ int Load_S3M(MAS_Module *mod)
     VERBOSE("\n");
     VERBOSE("────────────────────────────────────────────\n");
     VERBOSE("Loading Sample Data...\n");
+    VERBOSE("────────────────────────────────────────────\n");
 
     for (int x = 0; x < mod->samp_count; x++)
     {

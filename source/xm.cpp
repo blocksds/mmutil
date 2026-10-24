@@ -160,12 +160,12 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
             samp->vibrate = vibsweep;
 
             s8 finetune = (s8)read8();
-            u8 loopbits = read8();
+            u8 flags = read8();
             samp->default_panning = (read8() >> 1) | 128;
             s8 relnote = (s8)read8();
             read8(); // reserved
 
-            for (int y =0; y < 22; y++)
+            for (int y = 0; y < 22; y++)
             {
                 samp->name[y] = read8();
                 if (y < 12)
@@ -174,16 +174,31 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
 
             samp->frequency = Get_XM_Frequency(relnote, finetune);
 
-            //samp->bit16 = loopbits & 16 ? true : false;
-            samp->format = loopbits & 16 ? SAMP_FORMAT_U16 : SAMP_FORMAT_U8;
+            bool stereo = flags & (1 << 5); // Stereo
+            //samp->bit16 = flags & 16 ? true : false;
+            samp->format = flags & 16 ? SAMP_FORMAT_U16 : SAMP_FORMAT_U8;
             if (samp->format & SAMPF_16BIT)
             {
                 samp->sample_length /= 2;
                 samp->loop_start /= 2;
                 samp->loop_end /= 2;
             }
-            samp->loop_type = loopbits & 3;
+            samp->loop_type = flags & 3;
             file_seek_read(samp_headstart + samp_headsize, SEEK_SET);
+
+            if (stereo)
+            {
+                WARNING("Sample %d in instrument %d is stereo. "
+                        "It will be converted to mono by keeping the left channel.\n",
+                        x + 1, instrument_number);
+
+                // Stereo samples have doubled sample lenghts and loop start and
+                // end points.
+                // https://wiki.openmpt.org/Development:_Formats/XM#Stereo_samples
+                samp->sample_length /= 2;
+                samp->loop_start /= 2;
+                samp->loop_end /= 2;
+            }
 
             EXTRA("    Length........%i\n", samp->sample_length);
             if (samp->loop_type == 0)

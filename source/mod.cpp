@@ -651,10 +651,8 @@ int Load_MOD(MAS_Module *mod)
 
     VERBOSE("\n");
     VERBOSE("────────────────────────────────────────────\n");
-
-    // Load Sample Data
     VERBOSE("Loading Sample Data...\n");
-
+    VERBOSE("────────────────────────────────────────────\n");
     mod->samp_count = mod->inst_count;
     for (int x = 0; x < 31; x++)
     {
