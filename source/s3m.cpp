@@ -395,15 +395,26 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
                 }
                 else if (letter == 'V')
                 {
-                    u32 vol = param;
-                    if (vol <= 64)
+                    if (param <= 0x40)
                     {
-                        param = vol * 2; // multiply volume scale by 2
+                        // Multiply volume scale by 2 to match the range of the
+                        // Vxx effect of IT files.
+                        param *= 2;
                     }
                     else
                     {
-                        WARNING("Pattern %d, Row %d, Channel %d. Ignored 'V%2X' (max is 'V40')\n",
-                                pattern_number, row, col + 1, vol);
+                        WARNING("Pattern %d, Row %d, Channel %d. Ignored 'V%02X' (max is 'V40')\n",
+                                pattern_number, row, col + 1, param);
+                        fx = 0;
+                        param = 0;
+                    }
+                }
+                else if (letter == 'M')
+                {
+                    if (param > 0x40)
+                    {
+                        WARNING("Pattern %d, Row %d, Channel %d. Ignored 'M%02X' (max is 'M40')\n",
+                                pattern_number, row, col + 1, param);
                         fx = 0;
                         param = 0;
                     }

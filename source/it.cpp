@@ -658,6 +658,26 @@ GetNextChannelMarker:
                 fx = 0;
                 param = 0;
             }
+            else if (letter == 'M')
+            {
+                if (param > 0x40)
+                {
+                    WARNING("Pattern %d, Row %d, Channel %d. Ignored 'M%02X' (max is 'M40')\n",
+                            pattern_number, x, chan + 1, param);
+                    fx = 0;
+                    param = 0;
+                }
+            }
+            else if (letter == 'V')
+            {
+                if (param > 0x80)
+                {
+                    WARNING("Pattern %d, Row %d, Channel %d. Ignored 'V%02X' (max is 'V80')\n",
+                            pattern_number, x, chan + 1, param);
+                    fx = 0;
+                    param = 0;
+                }
+            }
             else if ((letter == 'D') || (letter == 'K') || (letter == 'L') ||
                      (letter == 'N') || (letter == 'W')) // Volume slides
             {

@@ -179,6 +179,12 @@ static void Convert_MOD_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, i
 
         case 0xC: // Cxx set volume
             wfx = MAS_FX_XM_SET_VOLUME;
+            if (wpm > 0x40)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Set Volume 'C%02X clamped to 'C40'.\n",
+                        pattern, row, channel, wpm);
+                wpm = 0x40;
+            }
             break;
 
         case 0xD: // Dxx pattern break

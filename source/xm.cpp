@@ -388,7 +388,13 @@ static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, in
             break;
 
         case 0xC: // Cxx set volume
-            wfx = MAS_FX_XM_SET_VOLUME; // Compatibility effect
+            wfx = MAS_FX_XM_SET_VOLUME;
+            if (wpm > 0x40)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Set Volume 'C%02X clamped to 'C40'.\n",
+                        pattern, row, channel, wpm);
+                wpm = 0x40;
+            }
             break;
 
         case 0xD: // Dxx pattern break
@@ -520,7 +526,12 @@ static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, in
 
         case 16: // Gxx set global volume
             wfx = MAS_FX_SET_GLOBAL_VOLUME;
-            wpm = wpm;
+            if (wpm > 0x40)
+            {
+                WARNING("Pattern %d, Row %d, Channel %d. Set Global Volume 'G%02X clamped to 'G40'.\n",
+                        pattern, row, channel, wpm);
+                wpm = 0x40;
+            }
             break;
 
         case 17: // Hxx global volume slide
