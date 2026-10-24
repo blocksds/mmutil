@@ -32,12 +32,17 @@ extern int ignore_sflags;
 static void Sample_PadEnd(Sample *samp, u32 count)
 {
     // Pad end of sample with loop data (or zero) and shift loops forward
+    // Note that this function forcibly sets the loop points such that:
+    //  loop_start = new_length - loop_len
+    //  loop_end   = new_length
+    // This relies on sample_length being pre-sanitized; see the notes in
+    // FixSample() below for exact details.
 
     if (count == 0)
         return; // nothing to do
 
     u32 lpoint = samp->loop_start;
-    u32 length = samp->loop_type ? samp->loop_end : samp->sample_length;
+    u32 length = samp->sample_length;
 
     if (samp->format & SAMPF_16BIT)
     {
@@ -74,49 +79,12 @@ static void Sample_PadEnd(Sample *samp, u32 count)
         samp->data = (void *)newdata8;
     }
 
+    samp->sample_length = length + count;
     if (samp->loop_type)
     {
-        samp->loop_start += count;
-        samp->loop_end   += count;
+        samp->loop_start = samp->sample_length - (samp->loop_end - samp->loop_start);
+        samp->loop_end   = samp->sample_length;
     }
-    samp->sample_length = length + count;
-}
-
-// This function copies the loop of the sample to the end of the sample. Then,
-// it adjust the total sample size to the sum of both lengths and it adjusts the
-// loop start and end to the new appended loop.
-static void Sample_AppendLoopToEnd(Sample *samp)
-{
-    if (samp->loop_type == 0)
-        return;
-
-    u32 loop_start = samp->loop_start;
-    u32 loop_length = samp->loop_end - samp->loop_start;
-    u32 sample_length = samp->sample_length;
-    u32 new_sample_length = sample_length + loop_length;
-
-    if (samp->format & SAMPF_16BIT)
-    {
-        u16 *newdata16 = (u16*)realloc(samp->data, new_sample_length * 2);
-
-        for (u32 x = 0; x < loop_length; x++)
-            newdata16[sample_length + x] = newdata16[loop_start + x];
-
-        samp->data = (void *)newdata16;
-    }
-    else
-    {
-        u8 *newdata8 = (u8*)realloc(samp->data, new_sample_length);
-
-        for (u32 x = 0; x < loop_length; x++)
-            newdata8[sample_length + x] = newdata8[loop_start + x];
-
-        samp->data = (void *)newdata8;
-    }
-
-    samp->sample_length = new_sample_length;
-    samp->loop_start = sample_length;
-    samp->loop_end = new_sample_length;
 }
 
 static void Unroll_Sample_Loop(Sample *samp, u32 count)
@@ -500,7 +468,7 @@ void FixSample(Sample *samp, InputTypes input_file_format)
             if (samp->loop_start == 0)
             {
                 VERBOSE("Appending loop after sample to fix MOD loop playback.\n");
-                Sample_AppendLoopToEnd(samp);
+                Sample_PadEnd(samp, samp->loop_end - samp->loop_start);
             }
             else
             {
