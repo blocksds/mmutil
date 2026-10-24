@@ -286,7 +286,7 @@ static int XM_Waveform_To_MAS(int type)
 
 // XM effects are an extension of MOD effects. The MAS format expects S3M/IT
 // effects, so this function converts from XM to MAS.
-static void conv_xm_to_mas(u8 *fx, u8 *param, int pattern, int row, int channel)
+static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, int channel)
 {
     int wfx = *fx;
     int wpm = *param;
@@ -804,7 +804,7 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
 
                 if (fx != 0 || param != 0)
                 {
-                    conv_xm_to_mas(&fx, &param, pattern, row, col); // convert effect
+                    Convert_XM_Effect_To_MAS(&fx, &param, pattern, row, col);
                     patt->data[e].fx = fx;
                     patt->data[e].param = param;
                 }
@@ -827,7 +827,7 @@ static int Load_XM_Pattern(Pattern *patt, u32 nchannels, int pattern)
                 u8 fx = read8();              // (byte) Effect type
                 u8 param = read8();           // (byte) Effect parameter
 
-                conv_xm_to_mas(&fx, &param, pattern, row, col); // convert effect
+                Convert_XM_Effect_To_MAS(&fx, &param, pattern, row, col);
 
                 patt->data[e].fx = fx;
                 patt->data[e].param = param;
