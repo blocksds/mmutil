@@ -510,9 +510,19 @@ static int Empty_IT_Pattern(Pattern *patt)
     return ERR_NONE;
 }
 
-static int IT_Waveform_To_MAS(int type)
+static int IT_Waveform_To_MAS(u8 param, int pattern, int row, int channel)
 {
-    const int result[8] =
+    if (param & 0xC)
+    {
+        // OpenMPT sets the waveform to "sine" if the type is over 3
+        int new_param = param & 0xF0;
+        WARNING("Pattern %d, Row %d, Channel %d. "
+                "Invalid waveform 'S%02X' replaced by 'S%02X'.\n",
+                pattern, row, channel, param, new_param);
+        param = 0;
+    }
+
+    const int result[4] =
     {
         [0] = MAS_WAVE_SINE_CONTINUE,
         [1] = MAS_WAVE_DOWN_RAMP_NORMAL_CONTINUE,
@@ -520,7 +530,7 @@ static int IT_Waveform_To_MAS(int type)
         [3] = MAS_WAVE_RANDOM,
     };
 
-    return result[type & 3];
+    return result[param & 3];
 }
 
 static int Load_IT_Pattern(Pattern *patt, int pattern_number,
@@ -697,16 +707,21 @@ GetNextChannelMarker:
                         supported = false;
 
                     case 3: // Set Vibrato Waveform
+                    {
                         fx = MAS_FX_EXTENDED;
-                        param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | IT_Waveform_To_MAS(param);
+                        param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) |
+                                IT_Waveform_To_MAS(param, pattern_number, x, chan + 1);
                         supported = true;
                         break;
-
+                    }
                     case 4: // Set Tremolo Waveform
+                    {
                         fx = MAS_FX_EXTENDED;
-                        param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | IT_Waveform_To_MAS(param);
+                        param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) |
+                                IT_Waveform_To_MAS(param, pattern_number, x, chan + 1);
                         supported = true;
                         break;
+                    }
 
                     case 7:
                     {

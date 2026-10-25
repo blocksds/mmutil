@@ -176,9 +176,17 @@ static int Load_S3M_Sample(Sample *samp, int sample_num)
     return ERR_NONE;
 }
 
-static int S3M_Waveform_To_MAS(int type)
+static int S3M_Waveform_To_MAS(u8 param, int pattern, int row, int channel)
 {
-    const int result[8] =
+    if (param & 0xC)
+    {
+        int new_param = param & ~0xC;
+        WARNING("Pattern %d, Row %d, Channel %d. "
+                "Invalid waveform 'S%02X' replaced by 'S%02X'.\n",
+                pattern, row, channel, param, new_param);
+    }
+
+    const int result[4] =
     {
         [0] = MAS_WAVE_SINE,
         [1] = MAS_WAVE_DOWN_RAMP_OFFSET,
@@ -186,7 +194,7 @@ static int S3M_Waveform_To_MAS(int type)
         [3] = MAS_WAVE_RANDOM,
     };
 
-    return result[type & 3];
+    return result[param & 3];
 }
 
 static u8 Sanitize_S3M_Volume_Slide(char effect, u8 param, int pattern, int row, int channel)
@@ -329,13 +337,15 @@ static int Load_S3M_Pattern(Pattern *patt, int pattern_number,
 
                         case 3: // Set Vibrato Waveform
                             fx = MAS_FX_EXTENDED;
-                            param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | S3M_Waveform_To_MAS(param);
+                            param = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) |
+                                    S3M_Waveform_To_MAS(param, pattern_number, row, col + 1);
                             supported = true;
                             break;
 
                         case 4: // Set Tremolo Waveform
                             fx = MAS_FX_EXTENDED;
-                            param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | S3M_Waveform_To_MAS(param);
+                            param = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) |
+                                    S3M_Waveform_To_MAS(param, pattern_number, row, col + 1);
                             supported = true;
                             break;
 

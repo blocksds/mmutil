@@ -266,8 +266,16 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
     return ERR_NONE;
 }
 
-static int XM_Waveform_To_MAS(int type)
+static int XM_Waveform_To_MAS(u8 param, int pattern, int row, int channel)
 {
+    if (param & (1 << 3))
+    {
+        int new_param = param & ~(1 << 3);
+        WARNING("Pattern %d, Row %d, Channel %d. "
+                "Invalid waveform 'E%02X' replaced by 'E%02X'.\n",
+                pattern, row, channel, param, new_param);
+    }
+
     const int result[8] =
     {
         [0] = MAS_WAVE_SINE,
@@ -281,7 +289,7 @@ static int XM_Waveform_To_MAS(int type)
         [7] = MAS_WAVE_RANDOM,
     };
 
-    return result[type & 7];
+    return result[param & 7];
 }
 
 // For effects 5xy, 6xy, Axy
@@ -447,7 +455,8 @@ static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, in
 
                 case 4: // vibrato control
                     wfx = MAS_FX_EXTENDED;
-                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) | XM_Waveform_To_MAS(wpm);
+                    wpm = (MAS_FX_EXT_VIBRATO_WAVEFORM << 4) |
+                          XM_Waveform_To_MAS(wpm, pattern, row, channel);
                     break;
 
                 case 6: // pattern loop
@@ -457,7 +466,8 @@ static void Convert_XM_Effect_To_MAS(u8 *fx, u8 *param, int pattern, int row, in
 
                 case 7: // tremolo control
                     wfx = MAS_FX_EXTENDED;
-                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) | XM_Waveform_To_MAS(wpm);
+                    wpm = (MAS_FX_EXT_TREMOLO_WAVEFORM << 4) |
+                          XM_Waveform_To_MAS(wpm, pattern, row, channel);
                     break;
 
                 case 8: // set panning
