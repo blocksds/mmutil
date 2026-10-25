@@ -226,25 +226,9 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
             if (samp->sample_length == 0)
                 continue;
 
-            int sample_old = 0;
-            if (samp->format & SAMPF_16BIT)
-            {
-                samp->data = (u16 *)malloc(samp->sample_length * 2);
-                for (u32 t = 0; t < samp->sample_length; t++)
-                {
-                    sample_old = (s16)((s16)read16() + sample_old);
-                    ((u16 *)samp->data)[t] = sample_old + 32768;
-                }
-            }
-            else
-            {
-                samp->data = (u8 *)malloc(samp->sample_length);
-                for (u32 t = 0; t < samp->sample_length; t++)
-                {
-                    sample_old = (s8)((s8)read8() + sample_old);
-                    ((u8 *)samp->data)[t] = sample_old + 128;
-                }
-            }
+            samp->data = Sample_AllocateData(samp->sample_length);
+            Sample_ReadData_MOD(samp->data, samp->sample_length, (samp->format & SAMPF_16BIT) | SAMPF_SIGNED, 0);
+            Sample_UnpackDeltaCoding(samp->data, samp->sample_length);
             FixSample(samp, INPUT_TYPE_XM);
         }
 

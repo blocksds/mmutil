@@ -22,7 +22,6 @@
 #include "files.h"
 #include "log.h"
 #include "mas.h"
-#include "simple.h"
 #include "errors.h"
 #include "samples.h"
 
@@ -423,8 +422,6 @@ static int Load_IT_Sample(Sample *samp, int sample_num)
     return 0;
 }
 
-static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, bool it215, bool bit16);
-
 static int Load_IT_SampleData(Sample *samp, int index)
 {
     if (samp->sample_length == 0)
@@ -441,57 +438,12 @@ static int Load_IT_SampleData(Sample *samp, int index)
     VERBOSE("%2d: Format: %s | Compression: %s\n", index,
             samp->format & SAMPF_16BIT ? "16 bits" : " 8 bits", compression);
 
-    if (samp->format & SAMPF_16BIT)
-        samp->data = (u16 *)malloc(((u32)samp->sample_length) * 2);
-    else
-        samp->data = (u8 *)malloc(samp->sample_length);
-
     // For mono samples, reading the sample length is enough. For stereo
     // samples, the left channel data before the right channel data, so this
     // code simply ignores the right channel data.
     // TODO: Calculate the average of left and right and use that as mono sample?
-
-    if (samp->it_compression == 0)
-    {
-        for (u32 x = 0; x < samp->sample_length; x++)
-        {
-            int a;
-
-            if (samp->format & SAMPF_16BIT)
-            {
-                if (!(samp->format & SAMPF_SIGNED))
-                {
-                    a = (unsigned short)read16();
-                }
-                else
-                {
-                    a = (signed short)read16();
-                    a += 32768;
-                }
-                ((u16 *)samp->data)[x] = (u16)a;
-            }
-            else
-            {
-                if (!(samp->format & SAMPF_SIGNED))
-                {
-                    a = (unsigned char)read8();
-                }
-                else
-                {
-                    a = (signed char)read8();
-                    a += 128;
-                }
-                ((u8 *)samp->data)[x] = (u8)a;
-            }
-        }
-    }
-    else
-    {
-        Load_IT_Sample_CMP((u8*)samp->data, samp->sample_length,
-                           samp->it_compression == 0x0215,
-                           (bool)(samp->format & SAMPF_16BIT));
-    }
-
+    samp->data = Sample_AllocateData(samp->sample_length);
+    Sample_ReadData_MOD(samp->data, samp->sample_length, samp->format, samp->it_compression);
     FixSample(samp, INPUT_TYPE_IT);
     return 0;
 }
@@ -1145,212 +1097,6 @@ int Load_IT(MAS_Module *itm)
 
     IT_SanitizePatterns(itm);
     Sanitize_Module(itm);
-
-    return ERR_NONE;
-}
-
-/*
-NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE
-
-The following sample decompression code is based on CHIBITRACKER's code
-(http://chibitracker.berlios.de) which is based on xmp's code
-(http://xmp.helllabs.org) which is based in openCP code.
-
-NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE * NOTICE
-*/
-
-static int Load_IT_CompressedSampleBlock(u8 **buffer)
-{
-    u32 size = read16();
-
-    (*buffer) = (u8*)malloc(size + 4);
-    (*buffer)[size + 0] = 0;
-    (*buffer)[size + 1] = 0;
-    (*buffer)[size + 2] = 0;
-    (*buffer)[size + 3] = 0;
-
-    for (u32 x = 0; x < size; x++)
-        (*buffer)[x] = read8();
-
-    return ERR_NONE;
-}
-
-static int Load_IT_Sample_CMP(u8 *p_dest_buffer, int samp_len, bool it215, bool bit16)
-{
-    u8 *c_buffer = NULL;
-
-    u8 *dest8_write = (u8 *)p_dest_buffer;
-    u16 *dest16_write = (u16 *)p_dest_buffer;
-
-    u32 nbits = bit16 ? 16 : 8;
-    u32 dsize = bit16 ? 4 : 3;
-
-    for (int i = 0; i < samp_len; i++)
-        p_dest_buffer[i] = 128;
-
-    // Now unpack data till the dest buffer is full
-
-    while (samp_len)
-    {
-        s8 v8;   // sample value
-        s16 v16; // sample value 16 bit
-
-        // read a new block of compressed data and reset variables
-        Load_IT_CompressedSampleBlock(&c_buffer);
-        u32 bit_readpos = 0;
-
-        u16 block_length;   // length of compressed data block in samples
-        u16 block_position; // position in block
-
-        if (bit16)
-            block_length = (samp_len < 0x4000) ? samp_len : 0x4000;
-        else
-            block_length = (samp_len < 0x8000) ? samp_len : 0x8000;
-
-        block_position = 0;
-
-        // actual "bit width"
-        u8 bit_width = nbits + 1; // start with width of 9 bits
-
-        // integrator buffers (d2 for it2.15). Reset them.
-        s16 d1 = 0, d2 = 0;
-        s8 d18 = 0, d28 = 0;
-
-        // now uncompress the data block
-        while (block_position < block_length)
-        {
-            u32 aux_value = readbits(c_buffer, bit_readpos, bit_width); // read bits
-            bit_readpos += bit_width;
-
-            if (bit_width < 7) // method 1 (1-6 bits)
-            {
-                if (bit16)
-                {
-                    if ((signed)aux_value == (1 << (bit_width - 1))) // check for "100..."
-                    {
-                        //read_n_bits_from_IT_compressed_block(3) + 1; // yes -> read new width;
-                        aux_value = readbits(c_buffer, bit_readpos, dsize) + 1;
-                        bit_readpos += dsize;
-                        bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-                        // and expand it
-                        continue; // ... next value
-                    }
-                }
-                else
-                {
-                    if (aux_value == ((u32)1 << ((u32)bit_width - 1))) // check for "100..."
-                    {
-                        //read_n_bits_from_IT_compressed_block(3) + 1; // yes -> read new width;
-                        aux_value = readbits(c_buffer, bit_readpos, dsize) + 1;
-                        bit_readpos += dsize;
-                        bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-                        // and expand it
-                        continue; // ... next value
-                    }
-                }
-
-            }
-            else if (bit_width < nbits + 1) // method 2 (7-8 bits)
-            {
-                if (bit16)
-                {
-                    u16 border = (0xFFFF >> ((nbits + 1) - bit_width)) - (nbits / 2);
-                    // lower border for width chg
-
-                    if ((aux_value > border) && (aux_value <= (border + nbits)))
-                    {
-                        aux_value -= border; // convert width to 1-8
-                        bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-                        // and expand it
-                        continue; // ... next value
-                    }
-                }
-                else
-                {
-                    u16 border = (0xFF >> ((nbits + 1) - bit_width)) - (nbits / 2);
-                    // lower border for width chg
-
-                    if (aux_value > border && aux_value <= (border + nbits))
-                    {
-                        aux_value -= border; // convert width to 1-8
-                        bit_width = (aux_value < bit_width) ? aux_value : aux_value + 1;
-                        // and expand it
-                        continue; // ... next value
-                    }
-                }
-            }
-            else if (bit_width == nbits + 1) // method 3 (9 bits)
-            {
-                if (aux_value & (1 << nbits)) // bit 8 set?
-                {
-                    bit_width = (aux_value + 1) & 0xff; // new width...
-                    continue;                           // ... and next value
-                }
-            }
-            else // illegal width, abort
-            {
-                if (c_buffer)
-                {
-                    free(c_buffer);
-                    c_buffer = NULL;
-                }
-                return ERR_UNKNOWNSAMPLE;
-            }
-
-            // now expand value to signed byte
-            if (bit_width < nbits)
-            {
-                u8 tmp_shift = nbits - bit_width;
-
-                if (bit16)
-                {
-                    v16 = aux_value << tmp_shift;
-                    v16 >>= tmp_shift;
-                }
-                else
-                {
-                    v8 = aux_value << tmp_shift;
-                    v8 >>= tmp_shift;
-                }
-            }
-            else
-            {
-                if (bit16)
-                    v16 = (s16)aux_value;
-                else
-                    v8 = (s8)aux_value;
-            }
-
-            if (bit16)
-            {
-                // integrate upon the sample values
-                d1 += v16;
-                d2 += d1;
-
-                // ... and store it into the buffer
-                *(dest16_write++) = (it215 ? d2 + 32768 : d1 + 32768);
-            }
-            else
-            {
-                // integrate upon the sample values
-                d18 += v8;
-                d28 += d18;
-
-                // ... and store it into the buffer
-                *(dest8_write)++ = (it215 ? (int)d28 + 128 : (int)d18 + 128);
-            }
-
-            block_position++;
-        }
-
-        // now subtract block lenght from total length and go on
-        if (c_buffer)
-        {
-            free(c_buffer);
-            c_buffer = NULL;
-        }
-        samp_len -= block_length;
-    }
 
     return ERR_NONE;
 }

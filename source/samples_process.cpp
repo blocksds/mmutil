@@ -43,40 +43,18 @@ static void Sample_PadEnd(Sample *samp, u32 count)
 
     u32 lpoint = samp->loop_start;
     u32 length = samp->sample_length;
+    samp->data = realloc(samp->data, (length + count) * 2);
 
-    if (samp->format & SAMPF_16BIT)
+    s16 *sdata = (s16*)samp->data;
+    if (samp->loop_type)
     {
-        u16 *newdata16 = (u16*)realloc(samp->data, (length + count) * 2);
-
-        if (samp->loop_type)
-        {
-            for (u32 x = 0; x < count; x++)
-                newdata16[length + x] = newdata16[lpoint + x];
-        }
-        else
-        {
-            for (u32 x = 0; x < count; x++)
-                newdata16[length + x] = 32768;
-        }
-
-        samp->data = (void *)newdata16;
+        for (u32 x = 0; x < count; x++)
+            sdata[length + x] = sdata[lpoint + x];
     }
     else
     {
-        u8 *newdata8 = (u8*)realloc(samp->data, length + count);
-
-        if (samp->loop_type)
-        {
-            for (u32 x = 0; x < count; x++)
-                newdata8[length + x] = newdata8[lpoint + x];
-        }
-        else
-        {
-            for (u32 x = 0; x < count; x++)
-                newdata8[length + x] = 128;
-        }
-
-        samp->data = (void *)newdata8;
+        for (u32 x = 0; x < count; x++)
+            sdata[length + x] = 0;
     }
 
     samp->sample_length = length + count;
@@ -102,24 +80,11 @@ static void Unroll_BIDI_Sample(Sample* samp)
     u32 length = samp->loop_end;
     u32 looplen = length - lpoint;
 
-    if (samp->format & SAMPF_16BIT)
-    {
-        u16 *newdata16 = (u16*)realloc(samp->data, (length + looplen) * 2);
+    samp->data = realloc(samp->data, (length + looplen) * 2);
 
-        for (u32 x = 0; x < looplen; x++)
-            newdata16[length + x] = newdata16[length-1 - x];
-
-        samp->data = (void *)newdata16;
-    }
-    else
-    {
-        u8 *newdata8 = (u8*)realloc(samp->data, length + looplen);
-
-        for (u32 x = 0; x < looplen; x++)
-            newdata8[length + x] = newdata8[length-1 - x];
-
-        samp->data = (void *)newdata8;
-    }
+    s16 *sdata = (s16*)samp->data;
+    for (u32 x = 0; x < looplen; x++)
+        sdata[length + x] = sdata[length-1 - x];
 
     samp->loop_type = 1;
     samp->sample_length = samp->loop_end = length + looplen;
@@ -137,10 +102,8 @@ NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOT
 static void Resample(Sample *samp, u32 oldrate, u32 newrate)
 {
     // output pointers
-    u8 *dst8 = 0;
-    u16 *dst16 = 0;
-    u8 *src8 = (u8 *)samp->data;
-    u16 *src16 = (u16 *)samp->data;
+    s16 *dst16 = 0;
+    s16 *src16 = (s16 *)samp->data;
 
     // oldlength clips to loop-end for loop wraparound in resampler
     int lpoint = samp->loop_start;
@@ -149,20 +112,11 @@ static void Resample(Sample *samp, u32 oldrate, u32 newrate)
     u32 newsize = (u32)(((u64)oldlength*newrate-1)/oldrate) + 1;
     u32 newlooplen = (u32)((u64)oldlooplen*newrate/oldrate);
 
-    bool bit16 = samp->format & SAMPF_16BIT;
     double sign_diff;
 
     // allocate memory
-    if (bit16)
-    {
-        dst16 = (u16*)malloc(newsize * 2);
-        sign_diff = 32768.0;
-    }
-    else
-    {
-        dst8 = (u8*)malloc(newsize);
-        sign_diff = 128.0;
-    }
+    dst16 = (s16*)malloc(newsize * 2);
+    sign_diff = 32768.0;
 
     double tscale = (double)oldrate / (double)newrate;
     double posf;
@@ -177,32 +131,16 @@ static void Resample(Sample *samp, u32 oldrate, u32 newrate)
         double mu2, a0, a1, a2, a3, res;
 
         // get previous, current, next, and after next samples
-        if (bit16)
-        {
-            s0 = (posi - 1) < 0 ? 0 : ((double)(src16[posi - 1]));
-            s1 =                      ((double)(src16[posi    ]));
-            s2 = (posi + 1) >= oldlength ?
-                        (samp->loop_type ?
-                                      ((double)(src16[lpoint + (posi + 1 - oldlength)])) : 0) :
-                                      ((double)(src16[posi + 1]));
-            s3 = (posi + 1) >= oldlength ?
-                        (samp->loop_type ?
-                                      ((double)(src16[lpoint + (posi + 2 - oldlength)])) : 0) :
-                                      ((double)(src16[posi + 2]));
-        }
-        else
-        {
-            s0 = (posi - 1) < 0 ? 0 : ((double)(src8[posi - 1]));
-            s1 =                      ((double)(src8[posi    ]));
-            s2 = (posi + 1) >= oldlength ?
-                        (samp->loop_type ?
-                                      ((double)(src8[lpoint + (posi + 1 - oldlength)])) : 0) :
-                                      ((double)(src8[posi + 1]));
-            s3 = (posi + 1) >= oldlength ?
-                        (samp->loop_type ?
-                                      ((double)(src8[lpoint + (posi + 2 - oldlength)])) : 0) :
-                                      ((double)(src8[posi + 2]));
-        }
+        s0 = (posi - 1) < 0 ? 0 : ((double)(src16[posi - 1]));
+        s1 =                      ((double)(src16[posi    ]));
+        s2 = (posi + 1) >= oldlength ?
+                    (samp->loop_type ?
+                                  ((double)(src16[lpoint + (posi + 1 - oldlength)])) : 0) :
+                                  ((double)(src16[posi + 1]));
+        s3 = (posi + 1) >= oldlength ?
+                    (samp->loop_type ?
+                                  ((double)(src16[lpoint + (posi + 2 - oldlength)])) : 0) :
+                                  ((double)(src16[posi + 2]));
 
         // sign data
         s0 -= sign_diff;
@@ -219,29 +157,15 @@ static void Resample(Sample *samp, u32 oldrate, u32 newrate)
         res = (a0 * mu * mu2) + (a1 * mu2) + (a2 * mu) + a3;
         int resi = ((int)floor(res + 0.5));
 
-        if (bit16)
-        {
-            if (resi < -32768)
-                resi = -32768;
-            if (resi > 32767)
-                resi = 32767;
-            dst16[i] = resi + 32768;
-        }
-        else
-        {
-            if (resi < -128)
-                resi = -128;
-            if (resi > 127)
-                resi = 127;
-            dst8[i] = resi + 128;
-        }
+        if (resi < -32768)
+            resi = -32768;
+        if (resi > 32767)
+            resi = 32767;
+        dst16[i] = resi;
     }
 
     free(samp->data);
-    if (bit16)
-        samp->data = (void *)dst16;
-    else
-        samp->data = (void *)dst8;
+    samp->data = (void *)dst16;
 
     samp->sample_length = newsize;
     samp->loop_end = newsize;
@@ -249,56 +173,35 @@ static void Resample(Sample *samp, u32 oldrate, u32 newrate)
     samp->frequency = (int)((double)samp->frequency / tscale);
 }
 
-static void Sample_8bit(Sample *samp)
+static void Sample_Signed8bit(Sample *samp)
 {
-    if (samp->format & SAMPF_16BIT)
-    {
-        u8 *newdata = (u8 *)malloc(samp->sample_length);
+    s8 *newdata = (s8 *)malloc(samp->sample_length);
 
-        for (u32 t = 0; t < samp->sample_length; t++)
-            newdata[t] = ((u16 * )samp->data)[t] / 256;
+    for (u32 t = 0; t < samp->sample_length; t++)
+        newdata[t] = (s8)(((s16 * )samp->data)[t] >> 8);
 
-        free(samp->data);
-        samp->data = newdata;
-//        samp->bit16 = false;
-        samp->format &= ~SAMPF_16BIT;
-    }
+    free(samp->data);
+    samp->data = newdata;
+//    samp->bit16 = false;
+    samp->format &= ~SAMPF_16BIT;
+    samp->format |=  SAMPF_SIGNED;
 }
 
-static void Sample_Sign(Sample *samp)
+static void Sample_Unsigned8bit(Sample *samp)
 {
-    // sample must be unsigned
-    if (samp->format & SAMPF_16BIT)
-    {
-        for (u32 x = 0; x < samp->sample_length; x++)
-        {
-            int a = (((int)((u16 *)samp->data)[x]) - 32768);
-            if (a < -32767) // clamp LOW to -32767 (leave space for interpolation error)
-                a = -32767;
-            //if (a > 32765) // clamp HIGH to 32766
-            //    a = 32765;
-            ((u16 *)samp->data)[x] = (u16)a;
-        }
-    }
-    else
-    {
-        for (u32 x = 0; x < samp->sample_length; x++)
-        {
-            int a = (((int)((u8 *)samp->data)[x]) - 128);
-            if (a == -128)
-                a = -127;
-            ((u8 *)samp->data)[x] = (u8)a;
-        }
-    }
+    u8 *newdata = (u8 *)malloc(samp->sample_length);
 
-    samp->format |= SAMPF_SIGNED;
+    for (u32 t = 0; t < samp->sample_length; t++)
+        newdata[t] = (u8)((((s16 * )samp->data)[t] >> 8) + 128);
+
+    free(samp->data);
+    samp->data = newdata;
+//    samp->bit16 = false;
+    samp->format &= ~(SAMPF_16BIT|SAMPF_SIGNED);
 }
 
 static void FixSample_GBA(Sample *samp)
 {
-    // convert to 8-bit if neccesary
-    Sample_8bit(samp);
-
     // unroll BIDI loop
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);
@@ -312,10 +215,16 @@ static void FixSample_GBA(Sample *samp)
             Unroll_Sample_Loop(samp, (GBA_MIN_LOOP_SIZE / (samp->loop_end - samp->loop_start)) + 1);
         }
     }
+
+    // convert to unsigned 8-bit
+    Sample_Unsigned8bit(samp);
 }
 
 static void FixSample_NDS(Sample *samp)
 {
+    // DS samples must always be signed
+    samp->format |= SAMPF_SIGNED;
+
     // unroll BIDI loop
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);
@@ -380,16 +289,15 @@ static void FixSample_NDS(Sample *samp)
         Sample_PadEnd(samp, (-samp->sample_length) & alignmask);
     }
 
-    Sample_Sign(samp); // DS hardware takes signed samples
-
     if (samp->format & SAMPF_COMP)
     {
         // compress with IMA-ADPCM hunger owned
         adpcm_compress_sample(samp);
     }
-    else
+    else if (!(samp->format & SAMPF_16BIT))
     {
-
+        // convert to 8-bit if neccesary
+        Sample_Signed8bit(samp);
     }
 }
 

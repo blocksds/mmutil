@@ -35,52 +35,24 @@ static int Load_S3M_SampleData(Sample *samp, u8 ffi)
     if (samp->sample_length == 0)
         return ERR_NONE;
 
-    if (samp->format & SAMPF_16BIT)
-        samp->data = malloc(samp->sample_length * 2);
-    else
-        samp->data = malloc(samp->sample_length);
+    samp->data = Sample_AllocateData(samp->sample_length);
 
+    u16 fmt_flags = 0;
     if (ffi == 1)
     {
         // signed samples [VERY OLD]
-        for (u32 x = 0; x < samp->sample_length; x++)
-        {
-            if (samp->format & SAMPF_16BIT)
-            {
-                int a = read16();
-                a += 32768;
-                ((u16*)samp->data)[x] = (u16)a;
-            }
-            else
-            {
-                int a = read8();
-                a += 128;
-                ((u8*)samp->data)[x] = (u8)a;
-            }
-        }
+        fmt_flags |= SAMPF_SIGNED;
     }
     else if (ffi == 2)
     {
         // unsigned samples
-        for (u32 x = 0; x < samp->sample_length; x++)
-        {
-            if (samp->format & SAMPF_16BIT)
-            {
-                int a = read16();
-                ((u16*)samp->data)[x] = (u16)a;
-            }
-            else
-            {
-                int a = read8();
-                ((u8*)samp->data)[x] = (u8)a;
-            }
-        }
     }
     else
     {
         return ERR_UNKNOWNSAMPLE;
     }
 
+    Sample_ReadData_MOD(samp->data, samp->sample_length, (samp->format & SAMPF_16BIT) | fmt_flags, 0);
     FixSample(samp, INPUT_TYPE_S3M);
     return ERR_NONE;
 }

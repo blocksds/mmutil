@@ -47,10 +47,8 @@ static int Load_MOD_SampleData(Sample *samp)
 {
     if (samp->sample_length > 0)
     {
-        // allocate a SAMPLE_LENGTH sized pointer to buffer in memory and load the sample into it
-        samp->data = malloc(samp->sample_length);
-        for (u32 t = 0; t < samp->sample_length; t++)
-            ((u8*)samp->data)[t] = read8() + 128; // unsign data
+        samp->data = Sample_AllocateData(samp->sample_length);
+        Sample_ReadData_MOD(samp->data, samp->sample_length, SAMP_FORMAT_S8, 0);
     }
     FixSample(samp, INPUT_TYPE_MOD);
     return ERR_NONE;

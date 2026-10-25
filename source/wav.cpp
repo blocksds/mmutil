@@ -22,6 +22,7 @@
 #include "wav.h"
 #include "simple.h"
 #include "samples.h"
+#include "systems.h"
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
@@ -133,9 +134,6 @@ int Load_WAV(Sample *samp, bool fix)
 
             case ID4('d', 'a', 't', 'a'): // data chunk
             {
-                size_t t, c;
-                int dat;
-
                 if (!hasformat)
                     return LOADWAV_CORRUPT;
 
@@ -148,47 +146,17 @@ int Load_WAV(Sample *samp, bool fix)
                 }
 
                 samp->sample_length = chunk_size / (bit_depth / 8) / num_channels;
-                samp->data = malloc(chunk_size);
+                samp->data = Sample_AllocateData(samp->sample_length);
 
-                size_t total_size_read = 0;
-
-                // read sample data
-                for (t = 0; t < samp->sample_length; t++)
-                {
-                    dat = 0;
-
-                    // for multi-channel samples, get average value
-                    for (c = 0; c < num_channels; c++)
-                    {
-                        if (bit_depth == 8)
-                        {
-                            dat += (int)read8() - 128;
-                            total_size_read += 1;
-                        }
-                        else
-                        {
-                            dat += (short)read16();
-                            total_size_read += 2;
-                        }
-                    }
-                    dat /= num_channels;
-
-                    if (bit_depth == 8)
-                    {
-                        ((u8*)samp->data)[t] = dat + 128;
-                    }
-                    else
-                    {
-                        ((u16*)samp->data)[t] = dat + 32768;
-                    }
-
-                }
-
+                size_t total_size_read = samp->sample_length * num_channels * (bit_depth / 8);
                 if (total_size_read != chunk_size)
                 {
                     VERBOSE("Data chunk size mismatch: Read %u (expected %u)\n",
                             total_size_read, chunk_size);
                 }
+
+                // read sample data
+                Sample_ReadData_WAV(samp->data, samp->sample_length, bit_depth, num_channels);
 
                 hasdata = 1;
 
