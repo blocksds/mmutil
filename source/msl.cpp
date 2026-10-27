@@ -193,6 +193,13 @@ static u16 MSL_AddModule(MAS_Module *mod)
     for (int x = 0; x < mod->samp_count; x++)
     {
         int samp_id = MSL_AddSampleC(&mod->samples[x]);
+        if (samp_id >= 0xFFFF)
+        {
+            // An ID of 0xFFFF has a special meaning (check the definition of
+            // msl_index).
+            ERROR("Too many samples in the MSL file. The maximum number of samples is 0xFFFF.\n");
+            exit(EXIT_FAILURE);
+        }
 
         if (mod->samples[x].filename[0] == '#')
             MSL_PrintDefinition(mod->samples[x].filename + 1, (u16)samp_id, "SFX_");

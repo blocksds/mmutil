@@ -127,7 +127,22 @@ typedef struct tSample
     u8      vibdepth;
     u8      vibspeed;
     u16     vibrate;
+
+    // In MSL files all samples (obtained from WAV files or module files) are
+    // stored as individual MAS files with their own MSL index (the one in the
+    // dictionary and the generated header). That means that this field is used
+    // to point to the right MAS file with the sample data in the MSL file.
+    //
+    // When generating individual MAS files (not inside a MSL file) it isn't
+    // possible to point to other MAS files, so all samples have the waveform
+    // data right after the sample information (and the index is set to
+    // 0xFFFF).
+    //
+    // In MSL files it's possible that multiple sound effects or songs use the
+    // same sample, so all waveforms are stored as individual samples, and
+    // module files store the indices to the MSL samples.
     u16     msl_index;
+
     u8      rsamp_index;
 
     u8      format;

@@ -440,7 +440,9 @@ int main(int argc, char *argv[])
                     return -1;
                 }
 
-                // Force saving the sample even if it isn't referenced anywhere
+                // Force saving the sample even if it isn't referenced anywhere.
+                // Samples with a MSL index of 0xFFFF always get the sample data
+                // appended after the sample information.
                 samp.msl_index = 0xFFFF;
 
                 mod.samp_count = 1;

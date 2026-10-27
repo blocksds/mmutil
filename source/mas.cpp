@@ -378,7 +378,12 @@ static void Write_Sample(Sample *samp)
     write16(samp->msl_index);
 
     if (samp->msl_index == 0xFFFF)
+    {
+        // This is only used when building individual MAS files (from a single
+        // WAV/MOD/S3M/XM/IT file), not when building MSL files. Check the
+        // definition of the struct for more information.
         Write_SampleData(samp);
+    }
 }
 
 #define COMPR_FLAG_NOTE     (1 << 0)
@@ -689,7 +694,7 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
         }
         if (unique)
         {
-            rsamps[rsamp]=mod->samples[x].msl_index;
+            rsamps[rsamp] = mod->samples[x].msl_index;
             mod->samples[x].rsamp_index = rsamp;
             rsamp++;
         }
