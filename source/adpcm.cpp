@@ -18,6 +18,9 @@
 #include "deftypes.h"
 #include "mas.h"
 
+// Number of samples to test for initial table index selection
+#define INIT_LOOKAHEAD 7
+
 const s8 IndexTable[8] = {
     -1, -1, -1, -1, 2, 4, 6, 8
 };
@@ -34,27 +37,6 @@ const u16 AdpcmTable[89] = {
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767
 };
 
-static int read_sample(Sample *sample, int position)
-{
-    int s;
-
-    if (sample->format & SAMPF_16BIT)
-    {
-        s = ((s16 *)sample->data)[position];
-    }
-    else
-    {
-        // Expand 8-bit value
-        int a = ((s8 *)sample->data)[position];
-        s = (a << 8);
-    }
-
-    if (s < -32767) // Is this necessary?...
-        s = -32767;
-
-    return s;
-}
-
 static int minmax(int value, int low, int high)
 {
     if (value < low)
@@ -64,148 +46,129 @@ static int minmax(int value, int low, int high)
     return value;
 }
 
-static int calc_delta(int diff, int step)
+static int quantize_delta(int diff, int step, u8 *code)
 {
-    int delta = step >> 3;      // t / 8
+    /*
+      difference calculation:
+      Diff = AdpcmTable[Index]/8
+      IF (Data4bit AND 1) THEN Diff = Diff + AdpcmTable[Index]/4
+      IF (Data4bit AND 2) THEN Diff = Diff + AdpcmTable[Index]/2
+      IF (Data4bit AND 4) THEN Diff = Diff + AdpcmTable[Index]/1
+      IF (Data4bit AND 8)=0 THEN Pcm16bit = Max(Pcm16bit+Diff,+7FFFh)
+      IF (Data4bit AND 8)=8 THEN Pcm16bit = Min(Pcm16bit-Diff,-7FFFh)
+      Index = MinMax (Index+IndexTable[Data4bit AND 7],0,88)
+    */
 
+    if (diff < 0)
+    {
+        *code = 8;
+        diff = -diff;
+    }
+    else
+    {
+        *code = 0;
+    }
+
+    int delta = step >> 3;      // t / 8
     if (diff >= step)           // t / 1
     {
+        *code |= 4;
         diff -= step;
         delta += step;
     }
 
     if (diff >= (step >> 1))    // t / 2
     {
+        *code |= 2;
         diff -= step >> 1;
         delta += step >> 1;
     }
 
     if (diff >= (step >> 2))    // t / 4
     {
+        *code |= 1;
         diff -= step >> 2;
         delta += step >> 2;
     }
 
-    return delta;
+    return (*code & 8) ? -delta : delta;
 }
 
 // Compresses a sample with IMA-ADPCM.
 // Make sure the data has proper alignment/length!
 void adpcm_compress_sample(Sample *sample)
 {
-    // Allocate space for sample (compressed size)
-    u8 *output = (u8 *)malloc(sample->sample_length / 2 + 4);
+    // We will be storing back to the same buffer we read from,
+    // so we must ensure we never overwrite samples we read!
+    u8 *output = (u8*)sample->data;
+    s16 *sdata = (s16*)sample->data;
+
+    // As per GBATek, the first sample must not be -8000h!
+    //   Max(+7FFFh) leaves -8000h unclipped (can happen if initial PCM16 was -8000h)
+    if (sdata[0] == -0x8000)
+        sdata[0] = -0x7FFF;
 
     // Determine best (or close to best) initial table value
-
-    int prev_value = read_sample(sample, 0);
     int index = 0;
-
     {
-        int smallest_error = 9999999;
-
-        int diff = read_sample(sample, 1) - read_sample(sample, 0);
-
+        u32 min_error = ~0u;
         for (int i = 0; i < 88; i++)
         {
-            int tmp_error = calc_delta(diff, i) - diff;
-            if (tmp_error < smallest_error)
+            int idx  = i;
+            int prev = sdata[0];
+            u32 total_error = 0;
+            for (u32 n = 1; n <= INIT_LOOKAHEAD; n++)
             {
-                smallest_error = tmp_error;
+                u8  code;
+                int delta  = sdata[n] - prev;
+                int qdelta = quantize_delta(delta, AdpcmTable[idx], &code);
+                prev = minmax(prev + qdelta, -32767, +32767);
+                idx  = minmax(idx + IndexTable[code & 7], 0, 88);
+
+                int e = delta - qdelta;
+                total_error += (u32)(e < 0 ? -e : e);
+            }
+
+            if (total_error < min_error)
+            {
                 index = i;
+                min_error = total_error;
             }
         }
     }
 
-    // Set data header
-
-    (*((u32 *)output)) = prev_value    // Initial PCM16 value
-                      | (index << 16); // Initial table index value
-
-    int step = AdpcmTable[index];
-
-    for (u32 x = 0; x < sample->sample_length; x++)
+    // Write header and begin output
+    // We need to store 32 bits of "header" information, which
+    // consists of the first sample, and the initial index.
+    // The first sample can stay where it is, but the second
+    // sample would be overwritten. So to work around this, we
+    // just read the next sample before we store the previous.
+    int prev_value = sdata[0];
+    int next_value = sdata[1];
+    output[2] = (u8)index;
+    output[3] = 0;
+    for (u32 x = 1; x < sample->sample_length; x++)
     {
-        int data;
-
-        int curr_value = read_sample(sample, x);
-
-        int diff = curr_value - prev_value;
-        if (diff < 0)
-        {
-            // Negate difference & set negative bit
-            diff = -diff;
-            data = 8;
-        }
-        else
-        {
-            // Clear negative flag
-            data = 0;
-        }
-
-        /*
-          difference calculation:
-          Diff = AdpcmTable[Index]/8
-          IF (data4bit AND 1) THEN Diff = Diff + AdpcmTable[Index]/4
-          IF (data4bit AND 2) THEN Diff = Diff + AdpcmTable[Index]/2
-          IF (data4bit AND 4) THEN Diff = Diff + AdpcmTable[Index]/1
-        */
-
-        int delta = step >> 3;      // t / 8 (always)
-
-        if (diff >= step)           // t / 1
-        {
-            data |= 4;
-            diff -= step;
-            delta += step;
-        }
-        if (diff >= (step >> 1))    // t / 2
-        {
-            data |= 2;
-            diff -= step >> 1;
-            delta += step >> 1;
-        }
-        if (diff >= (step >> 2))    // t / 4
-        {
-            data |= 1;
-            diff -= step >> 2;
-            delta += step >> 2;
-        }
-
-        // Add/subtract delta
-        prev_value += (data & 8) ? -delta : delta;
-
-        // Clamp output
-        prev_value = minmax(prev_value, -0x7FFF, 0x7FFF);
-
-        // Add index table value (and clamp)
-        index = minmax(index + IndexTable[data & 7], 0, 88);
-
-        // Read new step value
-        step = AdpcmTable[index];
-
-        // Write output
-        if (x & 1)
-            output[(x >> 1) + 4] |= data << 4;
-        else
-            output[(x >> 1) + 4] = data;
+        u8 code;
+        int qdelta = quantize_delta(next_value - prev_value, AdpcmTable[index], &code);
+        prev_value = minmax(prev_value + qdelta, -32767, +32767);
+        index      = minmax(index + IndexTable[code & 7], 0, 88);
+        if(x+1 < sample->sample_length) next_value = sdata[x+1];
+        output[4 + (x-1)/2u] >>= 4;
+        output[4 + (x-1)/2u]  |= code << 4;
     }
 
-    // Delete old sample
-    free(sample->data);
-
-    // Assign new sample
-    sample->data = output;
-
-    // New format
-    sample->format = SAMP_FORMAT_ADPCM;
-
-    // New length/loop
-    sample->sample_length = (sample->sample_length / 2) + 4;
-    sample->loop_start /= 2;
-    sample->loop_end /= 2;
-
-    // Step loop past adpcm header
-    sample->loop_start += 4;
-    sample->loop_end += 4;
+    // Update format information
+    // Note that the rest of the mmutil code expects that an ADPCM
+    // sample stores length information in bytes because... reasons.
+    // Also note that we explicitly aligned ADPCM samples such that
+    // their loop points (and length) are 8*N+1 to account for the
+    // first sample being stored explicitly, but we need to store
+    // the size (in bytes) of the ADPCM words, so the first sample
+    // must be excluded in these calculations to be correct!
+    // Finally, note the +1 word - this is to include the header.
+    sample->format        = SAMP_FORMAT_ADPCM;
+    sample->sample_length = ((sample->sample_length - 1) / 8 + 1) * 4;
+    sample->loop_start    = ((sample->loop_start    - 1) / 8 + 1) * 4;
+    sample->loop_end      = ((sample->loop_end      - 1) / 8 + 1) * 4;
 }

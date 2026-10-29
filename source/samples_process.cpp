@@ -283,14 +283,21 @@ static void FixSample_NDS(Sample *samp)
     }
 
     // Align loop_start (and thus loop_end), or pad sample_length if loop is disabled
+    // Note that for ADPCM, we want to align such that loop_end (or sample_length) is
+    // of the form 8*N+1; this is because the first sample is stored directly, and is
+    // followed by blocks of 8 samples per word.
+    u32 n_pad;
     if (samp->loop_type)
     {
-        Sample_PadEnd(samp, (-samp->loop_start) & alignmask);
+        n_pad = (-samp->loop_start) & alignmask;
     }
     else
     {
-        Sample_PadEnd(samp, (-samp->sample_length) & alignmask);
+        n_pad = (-samp->sample_length) & alignmask;
     }
+    if (samp->format & SAMPF_COMP)
+        n_pad += 1;
+    Sample_PadEnd(samp, n_pad);
 
     if (samp->format & SAMPF_COMP)
     {
