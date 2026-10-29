@@ -20,6 +20,6 @@
 #define LOADWAV_UNSUPPORTED_BD  0x13
 #define LOADWAV_BADDATA         0x14
 
-int Load_WAV(Sample *samp, bool fix);
+int Load_WAV(Sample *samp, bool force_compress);
 
 #endif // WAV_H__

@@ -202,6 +202,9 @@ static void Sample_Unsigned8bit(Sample *samp)
 
 static void FixSample_GBA(Sample *samp)
 {
+    // GBA doesn't support ADPCM, so clear this flag
+    samp->format &= ~SAMPF_COMP;
+
     // unroll BIDI loop
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);

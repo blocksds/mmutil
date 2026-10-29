@@ -26,7 +26,7 @@
 
 #define ID4(a, b, c, d) ((a) | ((b) << 8) | ((c) << 16) | ((d) << 24))
 
-int Load_WAV(Sample *samp, bool fix)
+int Load_WAV(Sample *samp, bool force_compress)
 {
     VERBOSE("Loading WAV file...\n");
 
@@ -276,8 +276,9 @@ int Load_WAV(Sample *samp, bool fix)
 
     if (hasformat && hasdata)
     {
-        if (fix)
-            FixSample(samp, INPUT_TYPE_WAV);
+        if (force_compress)
+            samp->format |= SAMPF_COMP;
+        FixSample(samp, INPUT_TYPE_WAV);
         return LOADWAV_OK;
     }
     else

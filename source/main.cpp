@@ -265,13 +265,7 @@ int main(int argc, char *argv[])
         file_open_read(str_input);
         Sample s;
 
-        Load_WAV(&s, false);
-
-        s.name[0] = '%';
-        s.name[1] = 'c';
-        s.name[2] = 0;
-
-        FixSample(&s, INPUT_TYPE_WAV);
+        Load_WAV(&s, true);
 
         file_close_read();
         file_open_write(str_output);
