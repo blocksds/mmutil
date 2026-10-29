@@ -53,7 +53,7 @@ static int Load_S3M_SampleData(Sample *samp, u8 ffi)
     }
 
     Sample_ReadData_MOD(samp->data, samp->sample_length, (samp->format & SAMPF_16BIT) | fmt_flags, 0);
-    FixSample(samp, INPUT_TYPE_S3M);
+    Sample_Process(samp, INPUT_TYPE_S3M);
     return ERR_NONE;
 }
 

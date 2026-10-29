@@ -21,13 +21,12 @@
 
 void *Sample_AllocateData(u32 sample_length)
 {
-    s16 *sdata = (s16*)malloc(sample_length * 2);
-    return sdata;
+    return calloc(Sample_GetPaddedLength(sample_length), 2);
 }
 
 void Sample_ReadData_WAV(void *data, u32 sample_length, u8 bit_depth, u16 num_channels)
 {
-    s16 *sdata = (s16*)data;
+    s16 *sdata = Sample_GetFirstSample(data);
     if (bit_depth == 8)
     {
         // 8-bit is always unsigned
@@ -58,7 +57,7 @@ void Sample_ReadData_WAV(void *data, u32 sample_length, u8 bit_depth, u16 num_ch
 
 void Sample_ReadData_MOD(void *data, u32 sample_length, u8 format, u16 it_compression)
 {
-    s16 *sdata = (s16*)data;
+    s16 *sdata = Sample_GetFirstSample(data);
     if(it_compression == 0)
     {
         switch (format)
@@ -216,7 +215,7 @@ void Sample_ReadData_MOD(void *data, u32 sample_length, u8 format, u16 it_compre
 void Sample_UnpackDeltaCoding(void *data, u32 sample_length)
 {
     s16 old = 0;
-    s16 *sdata = (s16*)data;
+    s16 *sdata = Sample_GetFirstSample(data);
     for (u32 x = 0; x < sample_length; x++)
     {
         old += sdata[x];

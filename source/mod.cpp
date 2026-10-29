@@ -50,7 +50,7 @@ static int Load_MOD_SampleData(Sample *samp)
         samp->data = Sample_AllocateData(samp->sample_length);
         Sample_ReadData_MOD(samp->data, samp->sample_length, SAMP_FORMAT_S8, 0);
     }
-    FixSample(samp, INPUT_TYPE_MOD);
+    Sample_Process(samp, INPUT_TYPE_MOD);
     return ERR_NONE;
 }
 

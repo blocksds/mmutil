@@ -229,7 +229,7 @@ static int Load_XM_Instrument(Instrument *inst, MAS_Module *mas, u8 *p_nextsampl
             samp->data = Sample_AllocateData(samp->sample_length);
             Sample_ReadData_MOD(samp->data, samp->sample_length, (samp->format & SAMPF_16BIT) | SAMPF_SIGNED, 0);
             Sample_UnpackDeltaCoding(samp->data, samp->sample_length);
-            FixSample(samp, INPUT_TYPE_XM);
+            Sample_Process(samp, INPUT_TYPE_XM);
         }
 
         *p_nextsample = ns + nsamples;

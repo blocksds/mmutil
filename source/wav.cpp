@@ -278,7 +278,7 @@ int Load_WAV(Sample *samp, bool force_compress)
     {
         if (force_compress)
             samp->format |= SAMPF_COMP;
-        FixSample(samp, INPUT_TYPE_WAV);
+        Sample_Process(samp, INPUT_TYPE_WAV);
         return LOADWAV_OK;
     }
     else

@@ -444,7 +444,7 @@ static int Load_IT_SampleData(Sample *samp, int index)
     // TODO: Calculate the average of left and right and use that as mono sample?
     samp->data = Sample_AllocateData(samp->sample_length);
     Sample_ReadData_MOD(samp->data, samp->sample_length, samp->format, samp->it_compression);
-    FixSample(samp, INPUT_TYPE_IT);
+    Sample_Process(samp, INPUT_TYPE_IT);
     return 0;
 }
 

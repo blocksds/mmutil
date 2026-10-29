@@ -336,8 +336,9 @@ void Write_SampleData(Sample *samp)
         }
         else
         {
-            write16(0);
-            write16(0);
+            u16 pad = (samp->format & SAMPF_SIGNED) ? 0 : 32768;
+            write16(pad);
+            write16(pad);
         }
     }
     else
@@ -355,8 +356,9 @@ void Write_SampleData(Sample *samp)
         }
         else
         {
+            u8 pad = (samp->format & SAMPF_SIGNED) ? 0 : 128;
             for (u32 x = 0; x < 4; x++)
-                write8((target_system == SYSTEM_GBA) ? 128 : 0);
+                write8(pad);
         }
     }
 }

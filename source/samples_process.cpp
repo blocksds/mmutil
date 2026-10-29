@@ -26,8 +26,37 @@
 #include "log.h"
 #include "systems.h"
 #include "adpcm.h"
+#include "files.h"
+#include "samples.h"
+#include "simple.h"
 
 extern int ignore_sflags;
+
+u8     Sample_srcMethod = SAMPLESRC_CUBIC;
+u8     Sample_srcOrder  = 4;
+u32    Sample_minFreq   = 1;
+u32    Sample_maxFreq   = ~0u;
+double Sample_osRatio   = 1.0;
+
+// This is an internal function to apply sample-rate conversion
+void Sample_ProcessSRC(tSample *samp, u32 oldrate, u32 newrate, u8 method, u8 order, double Fc);
+
+// This function ensures that newrate will fit in u32 by
+// shifting down as needed, and returns newrate as u32.
+// This can theoretically result in a non-integer loop
+// length, but only if the resampling ratio is extreme.
+static u32 ClipResampleRatio(u32 *oldrate, double newrate_f)
+{
+    u32 carry = 0;
+    while (newrate_f > 0xFFFFFFFFu)
+    {
+        carry = *oldrate & 1;
+        *oldrate  /= 2;
+        newrate_f *= 0.5;
+    }
+    *oldrate += carry;
+    return (u32)llrint(newrate_f);
+}
 
 static void Sample_PadEnd(Sample *samp, u32 count)
 {
@@ -43,9 +72,9 @@ static void Sample_PadEnd(Sample *samp, u32 count)
 
     u32 lpoint = samp->loop_start;
     u32 length = samp->sample_length;
-    samp->data = realloc(samp->data, (length + count) * 2);
+    samp->data = realloc(samp->data, Sample_GetPaddedLength(length + count) * 2);
 
-    s16 *sdata = (s16*)samp->data;
+    s16 *sdata = Sample_GetFirstSample(samp->data);
     if (samp->loop_type)
     {
         for (u32 x = 0; x < count; x++)
@@ -80,9 +109,9 @@ static void Unroll_BIDI_Sample(Sample* samp)
     u32 length = samp->loop_end;
     u32 looplen = length - lpoint;
 
-    samp->data = realloc(samp->data, (length + looplen) * 2);
+    samp->data = realloc(samp->data, Sample_GetPaddedLength(length + looplen) * 2);
 
-    s16 *sdata = (s16*)samp->data;
+    s16 *sdata = Sample_GetFirstSample(samp->data);
     for (u32 x = 0; x < looplen; x++)
         sdata[length + x] = sdata[length-1 - x];
 
@@ -90,124 +119,66 @@ static void Unroll_BIDI_Sample(Sample* samp)
     samp->sample_length = samp->loop_end = length + looplen;
 }
 
-/*
-NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
-
-The following resample routine was stolen from CHIBITRACKER (http://chibitracker.berlios.de),
-thanks reduz!
-
-NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE NOTICE
-*/
-
-static void Resample(Sample *samp, u32 oldrate, u32 newrate)
+static void ApplyResampling(Sample *samp, u32 loopalign)
 {
-    // output pointers
-    s16 *dst16 = 0;
-    s16 *src16 = (s16 *)samp->data;
-
-    // oldlength clips to loop-end for loop wraparound in resampler
-    int lpoint = samp->loop_start;
-    int oldlength = (samp->loop_type ? samp->loop_end : samp->sample_length);
-    u32 oldlooplen = samp->loop_end-samp->loop_start;
-    u32 newsize = (u32)(((u64)oldlength*newrate-1)/oldrate) + 1;
-    u32 newlooplen = (u32)((u64)oldlooplen*newrate/oldrate);
-
-    double sign_diff;
-
-    // allocate memory
-    dst16 = (s16*)malloc(newsize * 2);
-    sign_diff = 32768.0;
-
-    double tscale = (double)oldrate / (double)newrate;
-    double posf;
-
-    for (size_t i = 0; i < newsize; i++)
+    if (samp->frequency < Sample_minFreq || samp->frequency > Sample_maxFreq || Sample_osRatio != 1.0)
     {
-        posf = (double)i * tscale;
-        int posi = (int)floor(posf);
-
-        double mu = posf - (double)posi;
-        double s0, s1, s2, s3;
-        double mu2, a0, a1, a2, a3, res;
-
-        // get previous, current, next, and after next samples
-        s0 = (posi - 1) < 0 ? 0 : ((double)(src16[posi - 1]));
-        s1 =                      ((double)(src16[posi    ]));
-        s2 = (posi + 1) >= oldlength ?
-                    (samp->loop_type ?
-                                  ((double)(src16[lpoint + (posi + 1 - oldlength)])) : 0) :
-                                  ((double)(src16[posi + 1]));
-        s3 = (posi + 1) >= oldlength ?
-                    (samp->loop_type ?
-                                  ((double)(src16[lpoint + (posi + 2 - oldlength)])) : 0) :
-                                  ((double)(src16[posi + 2]));
-
-        // sign data
-        s0 -= sign_diff;
-        s1 -= sign_diff;
-        s2 -= sign_diff;
-        s3 -= sign_diff;
-
-        mu2 = mu * mu;
-        a0 = s3 - s2 - s0 + s1;
-        a1 = s0 - s1 - a0;
-        a2 = s2 - s0;
-        a3 = s1;
-
-        res = (a0 * mu * mu2) + (a1 * mu2) + (a2 * mu) + a3;
-        int resi = ((int)floor(res + 0.5));
-
-        if (resi < -32768)
-            resi = -32768;
-        if (resi > 32767)
-            resi = 32767;
-        dst16[i] = resi;
+        u32 oldrate;
+        u32 newrate;
+        u32 targetFreq = samp->frequency;
+        if (targetFreq < Sample_minFreq)
+            targetFreq = Sample_minFreq;
+        if (targetFreq > Sample_maxFreq)
+            targetFreq = Sample_maxFreq;
+        if (samp->loop_type)
+        {
+            oldrate = samp->loop_end - samp->loop_start;
+            double newrate_f = Sample_osRatio * oldrate*targetFreq/samp->frequency;
+                   newrate_f = floor(newrate_f / loopalign) * loopalign;
+            if (newrate_f < 2)
+            {
+                // We need at least 2 samples for a loop!
+                newrate_f = 2;
+            }
+            if (newrate_f < loopalign)
+            {
+                // ... or at least 1 block, depending on the format
+                newrate_f = loopalign;
+            }
+            newrate = ClipResampleRatio(&oldrate, newrate_f);
+        }
+        else
+        {
+            oldrate = samp->frequency;
+            newrate = ClipResampleRatio(&oldrate, Sample_osRatio * targetFreq);
+        }
+        if (oldrate != newrate)
+        {
+            // If we are oversampling, ensure that we place the cutoff
+            // at the Nyquist of the non-oversampled source!
+            double Fc = 1.0;
+            if (newrate < oldrate*Sample_osRatio)
+                Fc = newrate / (oldrate*Sample_osRatio);
+            Sample_ProcessSRC(
+                samp,
+                oldrate,
+                newrate,
+                Sample_srcMethod,
+                Sample_srcOrder,
+                Fc
+            );
+        }
     }
-
-    free(samp->data);
-    samp->data = (void *)dst16;
-
-    samp->sample_length = newsize;
-    samp->loop_end = newsize;
-    samp->loop_start = newsize - newlooplen;
-    samp->frequency = (int)((double)samp->frequency / tscale);
-}
-
-static void Sample_Signed8bit(Sample *samp)
-{
-    s8 *newdata = (s8 *)malloc(samp->sample_length);
-
-    for (u32 t = 0; t < samp->sample_length; t++)
-        newdata[t] = (s8)(((s16 * )samp->data)[t] >> 8);
-
-    free(samp->data);
-    samp->data = newdata;
-//    samp->bit16 = false;
-    samp->format &= ~SAMPF_16BIT;
-    samp->format |=  SAMPF_SIGNED;
-}
-
-static void Sample_Unsigned8bit(Sample *samp)
-{
-    u8 *newdata = (u8 *)malloc(samp->sample_length);
-
-    for (u32 t = 0; t < samp->sample_length; t++)
-        newdata[t] = (u8)((((s16 * )samp->data)[t] >> 8) + 128);
-
-    free(samp->data);
-    samp->data = newdata;
-//    samp->bit16 = false;
-    samp->format &= ~(SAMPF_16BIT|SAMPF_SIGNED);
 }
 
 static void FixSample_GBA(Sample *samp)
 {
-    // GBA doesn't support ADPCM, so clear this flag
-    samp->format &= ~SAMPF_COMP;
-
     // unroll BIDI loop
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);
+
+    // Apply maximum sampling rate, oversampling
+    ApplyResampling(samp, 1);
 
     if (samp->loop_type)
     {
@@ -218,16 +189,10 @@ static void FixSample_GBA(Sample *samp)
             Unroll_Sample_Loop(samp, (GBA_MIN_LOOP_SIZE / (samp->loop_end - samp->loop_start)) + 1);
         }
     }
-
-    // convert to unsigned 8-bit
-    Sample_Unsigned8bit(samp);
 }
 
 static void FixSample_NDS(Sample *samp)
 {
-    // DS samples must always be signed
-    samp->format |= SAMPF_SIGNED;
-
     // unroll BIDI loop
     if (samp->loop_type == 2)
         Unroll_BIDI_Sample(samp);
@@ -264,7 +229,12 @@ static void FixSample_NDS(Sample *samp)
     u32 alignmask = (samp->format & SAMPF_COMP) ? 7 : (samp->format & SAMPF_16BIT) ? 1 : 3;
 
     // Resize loop
-    if (samp->loop_type)
+    if (
+        samp->loop_type &&
+        samp->frequency >= Sample_minFreq &&
+        samp->frequency <= Sample_maxFreq &&
+        Sample_osRatio == 1.0
+    )
     {
         u32 count = 0;
         u32 looplen = samp->loop_end-samp->loop_start;
@@ -277,9 +247,24 @@ static void FixSample_NDS(Sample *samp)
 
         u32 addition = unrolledlen - looplen;
         if (addition > MAX_UNROLL_THRESHOLD)
-            Resample(samp, looplen, looplen + ((-looplen) & alignmask));
+        {
+            Sample_ProcessSRC(
+                samp,
+                looplen,
+                looplen + ((-looplen) & alignmask),
+                Sample_srcMethod,
+                Sample_srcOrder,
+                1.0
+            );
+        }
         else if (count > 0)
+        {
             Unroll_Sample_Loop(samp, count);
+        }
+    }
+    else
+    {
+        ApplyResampling(samp, alignmask + 1);
     }
 
     // Align loop_start (and thus loop_end), or pad sample_length if loop is disabled
@@ -298,17 +283,6 @@ static void FixSample_NDS(Sample *samp)
     if (samp->format & SAMPF_COMP)
         n_pad += 1;
     Sample_PadEnd(samp, n_pad);
-
-    if (samp->format & SAMPF_COMP)
-    {
-        // compress with IMA-ADPCM hunger owned
-        adpcm_compress_sample(samp);
-    }
-    else if (!(samp->format & SAMPF_16BIT))
-    {
-        // convert to 8-bit if neccesary
-        Sample_Signed8bit(samp);
-    }
 }
 
 // Looping samples playback works differently in different file formats.
@@ -318,7 +292,7 @@ static void FixSample_NDS(Sample *samp)
 //
 // - S3M/XM/IT: The sample is played from START to LOOP_END. Then, it jumps to
 //   loop_start until loop_end, and back to loop_start.
-void FixSample(Sample *samp, InputTypes input_file_format)
+void Sample_Process(Sample *samp, InputTypes input_file_format)
 {
     if (samp->sample_length == 0)
     {
@@ -404,7 +378,46 @@ void FixSample(Sample *samp, InputTypes input_file_format)
     }
 
     if (target_system == SYSTEM_GBA)
+    {
         FixSample_GBA(samp);
+        samp->format &= ~(SAMPF_16BIT | SAMPF_SIGNED | SAMPF_COMP);
+    }
     else if (target_system == SYSTEM_NDS)
+    {
         FixSample_NDS(samp);
+        samp->format |= SAMPF_SIGNED;
+    }
+    else
+    {
+        ApplyResampling(samp, 1);
+    }
+
+    // Apply sign convention, bit depth, and remove pre-padding
+    // On NDS, we clip to -127 (or -32767) because the software
+    // mixer can have interpolation errors that cause overflows
+    s16 min_value = (target_system == SYSTEM_NDS) ? -32767 : -32768;
+    if (samp->format & (SAMPF_16BIT|SAMPF_COMP))
+    {
+        s16 sign_flip = (samp->format & (SAMPF_SIGNED|SAMPF_COMP)) ? 0 : (s16)0x8000;
+        s16 *dst = (s16*)samp->data;
+        const s16 *src = Sample_GetFirstSample(samp->data);
+        for(u32 x = 0; x < samp->sample_length; x++)
+        {
+            dst[x] = ((src[x] >= min_value) ? src[x] : min_value) ^ sign_flip;
+        }
+    }
+    else
+    {
+        s8 sign_flip = (samp->format & SAMPF_SIGNED) ? 0 : (s8)0x80;
+        s8 *dst = (s8*)samp->data;
+        const s16 *src = Sample_GetFirstSample(samp->data);
+        for(u32 x = 0; x < samp->sample_length; x++)
+        {
+            dst[x] = (s8)(((src[x] >= min_value) ? src[x] : min_value) >> 8) ^ sign_flip;
+        }
+    }
+
+    // Apply ADPCM compression if required
+    if (samp->format & SAMPF_COMP)
+        adpcm_compress_sample(samp);
 }
