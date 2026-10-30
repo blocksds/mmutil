@@ -38,8 +38,7 @@ void Sample_ReadData_WAV(void *data, u32 sample_length, u8 bit_depth, u16 num_ch
             {
                 v += read8();
             }
-            v /= num_channels;
-            sdata[x] = ((s16)v - 0x80) << 8;
+            sdata[x] = (s16)(((v << 8) / (s32)num_channels) - 0x8000);
         }
     }
     else
@@ -52,8 +51,7 @@ void Sample_ReadData_WAV(void *data, u32 sample_length, u8 bit_depth, u16 num_ch
             {
                 v += (s16)read16();
             }
-            v /= num_channels;
-            sdata[x] = (s16)v;
+            sdata[x] = (s16)(v / (s32)num_channels);
         }
     }
 }
