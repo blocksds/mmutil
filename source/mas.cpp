@@ -644,9 +644,14 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
     write16(mod->patt_count);
 #endif
 
-    write8((u8)((mod->link_gxx ? 1 : 0) | (mod->old_effects ? 2 : 0) |
-                (mod->freq_mode ? 4 : 0) | (mod->xm_mode ? 8 : 0) |
-                (msl_dep ? 16 : 0) | (mod->old_mode ? 32 : 0)));
+    u8 flags = (mod->link_gxx ? MAS_HEADER_FLAG_LINK_GXX : 0)
+             | (mod->old_effects ? MAS_HEADER_FLAG_OLD_EFFECTS : 0)
+             | (mod->freq_mode ? MAS_HEADER_FLAG_FREQ_MODE : 0)
+             | (mod->xm_mode ? MAS_HEADER_FLAG_XM_MODE : 0)
+             | (msl_dep ? MAS_HEADER_FLAG_MSL_DEP : 0)
+             | (mod->old_mode ? MAS_HEADER_FLAG_OLD_MODE : 0);
+    write8(flags);
+
     write8(mod->global_volume);
 
 #ifdef MM_MMUTIL_DEVKITPRO_COMPAT

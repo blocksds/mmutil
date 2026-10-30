@@ -20,6 +20,15 @@
 // Max number of channels in MAS files
 #define MAS_MAX_CHANNELS        32
 
+// Flags used to modify global playback settings of a MAS module.
+
+#define MAS_HEADER_FLAG_LINK_GXX    (1 << 0) // Shared Gxx memory (effect and volcmd)
+#define MAS_HEADER_FLAG_OLD_EFFECTS (1 << 1) // MOD/S3M = true. XM/IT = false. TODO: Unused
+#define MAS_HEADER_FLAG_FREQ_MODE   (1 << 2) // 1 = Linear freqs, 0 = Amiga freqs
+#define MAS_HEADER_FLAG_XM_MODE     (1 << 3) // 1 = MOD/XM mode, 0 = S3M/IT mode
+#define MAS_HEADER_FLAG_MSL_DEP     (1 << 4) // MSL file = true, MAS file = false. TODO: Unused
+#define MAS_HEADER_FLAG_OLD_MODE    (1 << 5) // 1 = MOD/S3M, 0 = S3M/IT
+
 // Flags used to determine the characteristics of samples in an input module
 // file. Not all combinations are supported in a MAS sample.
 
