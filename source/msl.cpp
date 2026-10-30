@@ -494,8 +494,8 @@ static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix
 
 static void MSL_LoadFile(char *filename)
 {
-    Sample wav;
-    MAS_Module mod;
+    Sample wav = { 0 };
+    MAS_Module mod = { 0 };
 
     if (file_open_read(filename))
     {
