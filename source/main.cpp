@@ -17,6 +17,9 @@
 #include <ctype.h>
 #include <cerrno>
 
+#include <string>
+#include <vector>
+
 #include "defs.h"
 #include "mas.h"
 #include "mod.h"
@@ -178,7 +181,8 @@ static void ConfirmDeletePreexistingFile(const char *path, bool autoconfirm)
 
 int main(int argc, char *argv[])
 {
-    const char *str_input = NULL;
+    std::vector<std::string> input_files;
+
     char *str_output = NULL;
     const char *str_header = NULL;
 
@@ -201,8 +205,6 @@ int main(int argc, char *argv[])
     //------------------------------------------------------------------------
     // parse arguments
     //------------------------------------------------------------------------
-
-    int number_of_inputs = 0;
 
     for (int a = 1; a < argc; a++)
     {
@@ -251,7 +253,6 @@ int main(int argc, char *argv[])
             }
             else if (strcmp(arg, "-p") == 0)
             {
-
                 a++;
                 if (a >= argc)
                 {
@@ -292,6 +293,8 @@ int main(int argc, char *argv[])
                     ERROR("Failed to allocate memory for '-o'.\n");
                     exit(EXIT_FAILURE);
                 }
+
+                VERBOSE("Output file: %s\n", str_output);
             }
             else if (strcmp(arg, "-h") == 0)
             {
@@ -303,6 +306,8 @@ int main(int argc, char *argv[])
                 }
 
                 str_header = argv[a];
+
+                VERBOSE("Header file: %s\n", str_header);
             }
             // The following code is kept for backwards compatibility with the
             // parser that expected the option and the argument to be in the
@@ -341,18 +346,13 @@ int main(int argc, char *argv[])
                 WARNING("Unknown argument '%s' has been ignored.\n", arg);
             }
         }
-        else if (!str_input)
-        {
-            str_input = arg;
-            number_of_inputs = 1;
-        }
         else
         {
-            number_of_inputs++;
+            input_files.push_back(std::string(arg));
         }
     }
 
-    if (number_of_inputs == 0)
+    if (input_files.size() == 0)
     {
         print_usage();
         return 0;
@@ -366,6 +366,8 @@ int main(int argc, char *argv[])
 
     if (z_flag)
     {
+        const char *str_input = input_files[0].c_str();
+
         file_open_read(str_input);
         Sample s;
 
@@ -388,7 +390,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if (export_mas_file && number_of_inputs != 1)
+    if (export_mas_file && (input_files.size() != 1))
     {
         ERROR("-m only supports one input.\n");
         return -1;
@@ -402,8 +404,10 @@ int main(int argc, char *argv[])
     {
         if (!str_output)
         {
-            if (number_of_inputs == 1)
+            if (input_files.size() == 1)
             {
+                const char *str_input = input_files[0].c_str();
+
                 if (strlen(str_input) < 4)
                 {
                     print_error(ERR_BADINPUT);
@@ -464,16 +468,18 @@ int main(int argc, char *argv[])
         }
     }
 
-    // catch filename too small
-    int strl = strlen(str_input);
-    if (strl < 4)
-    {
-        print_error(ERR_BADINPUT);
-        return -1;
-    }
-
     if (export_mas_file)
     {
+        const char *str_input = input_files[0].c_str();
+
+        // catch filename too small
+        int strl = strlen(str_input);
+        if (strl < 4)
+        {
+            print_error(ERR_BADINPUT);
+            return -1;
+        }
+
         if (file_open_read(str_input))
         {
             ERROR("Cannot open %s for reading!\n", str_input);
@@ -584,7 +590,7 @@ int main(int argc, char *argv[])
 
         if (target_system == SYSTEM_GBA)
         {
-            MSL_Create(argv, argc, "tempSH308GK.bin", 0, msl_export_dictionary);
+            MSL_Create(input_files, "tempSH308GK.bin", 0, msl_export_dictionary);
 
             if (file_open_write(str_output))
             {
@@ -616,7 +622,7 @@ int main(int argc, char *argv[])
         }
         else if (target_system == SYSTEM_NDS)
         {
-            Write_NDS(argc, argv, str_output, msl_export_dictionary);
+            Write_NDS(input_files, str_output, msl_export_dictionary);
         }
         else
         {
@@ -626,7 +632,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        MSL_Create(argv, argc, str_output, str_header, msl_export_dictionary);
+        MSL_Create(input_files, str_output, str_header, msl_export_dictionary);
     }
 
     free(str_output);

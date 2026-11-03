@@ -13,9 +13,10 @@
 #ifndef NDS_H__
 #define NDS_H__
 
-#include <stdbool.h>
+#include <string>
+#include <vector>
 
-void Write_NDS(int argc, char *argv[], const char *out_path,
+void Write_NDS(std::vector<std::string> &input_files, const char *out_path,
                bool msl_export_dictionary);
 
 #endif // NDS_H__

@@ -163,7 +163,7 @@ static int create_dir(const char *path)
 #endif
 }
 
-void Write_NDS(int argc, char *argv[], const char *out_path,
+void Write_NDS(std::vector<std::string> &input_files, const char *out_path,
                bool msl_export_dictionary)
 {
     // Make sure that we can create the new files
@@ -184,7 +184,7 @@ void Write_NDS(int argc, char *argv[], const char *out_path,
         exit(EXIT_FAILURE);
     }
 
-    MSL_Create(argv, argc, FILE_SOUNDBANK, 0, msl_export_dictionary);
+    MSL_Create(input_files, FILE_SOUNDBANK, 0, msl_export_dictionary);
 
     save_array_to_file(FILE_ARM7_ELF, nds_arm7_elf, sizeof(nds_arm7_elf));
     save_array_to_file(FILE_ARM9_ELF, nds_arm9_elf, sizeof(nds_arm9_elf));

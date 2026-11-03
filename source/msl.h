@@ -13,7 +13,10 @@
 #ifndef MSL_H__
 #define MSL_H__
 
-int MSL_Create(char *argv[], int argc, const char *output, const char *header,
-               bool export_dictionary);
+#include <string>
+#include <vector>
+
+int MSL_Create(std::vector<std::string> &input_files, const char *output,
+               const char *header, bool export_dictionary);
 
 #endif // MSL_H__

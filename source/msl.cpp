@@ -492,7 +492,7 @@ static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix
     }
 }
 
-static void MSL_LoadFile(char *filename)
+static void MSL_LoadFile(const char *filename)
 {
     Sample wav = { 0 };
     MAS_Module mod = { 0 };
@@ -574,8 +574,8 @@ static int MSL_CreateTemporaryFiles(void)
     return ERR_NONE;
 }
 
-int MSL_Create(char *argv[], int argc, const char *output, const char *header,
-               bool export_dictionary)
+int MSL_Create(std::vector<std::string> &input_files, const char *output,
+               const char *header, bool export_dictionary)
 {
     MSL_Erase();
 
@@ -596,16 +596,9 @@ int MSL_Create(char *argv[], int argc, const char *output, const char *header,
     if (ret != ERR_NONE)
         return ret;
 
-    for (int x = 1; x < argc; x++)
+    for (std::string file : input_files)
     {
-        if (argv[x][0] == '-')
-        {
-            // Skip anything that isn't an input file
-        }
-        else
-        {
-            MSL_LoadFile(argv[x]);
-        }
+        MSL_LoadFile(file.c_str());
     }
 
     if (export_dictionary)
