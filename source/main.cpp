@@ -257,7 +257,7 @@ int main(int argc, char *argv[])
                 if (a >= argc)
                 {
                     ERROR("Not enough arguments for '-p'\n");
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
 
                 arg = argv[a];
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
                 if ((errno != 0) || (endptr == arg) || (val < 0) || (val > 255))
                 {
                     ERROR("Option '-p' expects a number between 0 and 255.\n");
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
 
                 // Read 0..255 from the command line argument directly
@@ -284,14 +284,14 @@ int main(int argc, char *argv[])
                 if (a >= argc)
                 {
                     ERROR("Not enough arguments for '-o'\n");
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
 
                 str_output = strdup(argv[a]);
                 if (str_output == NULL)
                 {
                     ERROR("Failed to allocate memory for '-o'.\n");
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
 
                 VERBOSE("Output file: %s\n", str_output);
@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
                 if (a >= argc)
                 {
                     ERROR("Not enough arguments for '-h'\n");
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
 
                 str_header = argv[a];
@@ -320,7 +320,7 @@ int main(int argc, char *argv[])
                 if ((val < '0') || (val > '9'))
                 {
                     ERROR("Invalid value for '-p': '%c' (use '0' to '9').\n", val);
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
 
                 // Scale from 0..9 to 0..256
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
                 if (str_output == NULL)
                 {
                     ERROR("Failed to allocate memory for '-o'.\n");
-                    exit(EXIT_FAILURE);
+                    return -1;
                 }
             }
             else if (arg[1] == 'h')
