@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <cassert>
 #include <unistd.h>
 
 #include <algorithm>
@@ -77,6 +78,13 @@ static void MSL_Erase(void)
 
 static u16 MSL_AddSample(Sample *samp)
 {
+    // An ID of 0xFFFF has a special meaning, check the definition of msl_index
+    if (MSL_NSAMPS == 0xFFFE)
+    {
+        ERROR("Too many samples. The limit is 0xFFFE.\n");
+        exit(EXIT_FAILURE);
+    }
+
     file_open_write_end(TMP_SAMP);
 
     u32 sample_length = samp->sample_length;
@@ -185,17 +193,19 @@ static u16 MSL_AddSampleC(Sample *samp)
 
 static u16 MSL_AddModule(MAS_Module *mod)
 {
+    if (MSL_NSONGS == 0xFFFF)
+    {
+        ERROR("Too many songs. The limit is 0xFFFF.\n");
+        exit(EXIT_FAILURE);
+    }
+
     // ADD SAMPLES
     for (int x = 0; x < mod->samp_count; x++)
     {
         int samp_id = MSL_AddSampleC(&mod->samples[x]);
-        if (samp_id >= 0xFFFF)
-        {
-            // An ID of 0xFFFF has a special meaning (check the definition of
-            // msl_index).
-            ERROR("Too many samples in the MSL file. The maximum number of samples is 0xFFFF.\n");
-            exit(EXIT_FAILURE);
-        }
+
+        // This is already checked in MSL_AddSample().
+        assert(samp_id < 0xFFFF);
 
         if (mod->samples[x].filename[0] == '#')
             MSL_PrintDefinition(mod->samples[x].filename + 1, (u16)samp_id, "SFX_");
@@ -581,7 +591,7 @@ int MSL_Create(std::vector<std::string> &input_files, const char *output,
         F_HEADER = fopen(header, "wb");
         if (F_HEADER == NULL)
         {
-            ERROR("Can't open output header file: %s\n", header);
+            ERROR("Can't open output header file for writing: %s\n", header);
             return ERR_NOWRITE;
         }
     }
