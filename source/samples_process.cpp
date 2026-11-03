@@ -96,7 +96,7 @@ static void Sample_PadEnd(Sample *samp, u32 count)
 
 static void Unroll_Sample_Loop(Sample *samp, u32 count)
 {
-    u32 addition = count*(samp->loop_end - samp->loop_start);
+    u32 addition = count * (samp->loop_end - samp->loop_start);
     Sample_PadEnd(samp, addition);
     samp->loop_start -= addition;
 }
@@ -121,7 +121,8 @@ static void Unroll_BIDI_Sample(Sample* samp)
 
 static void ApplyResampling(Sample *samp, u32 loopalign)
 {
-    if (samp->frequency < Sample_minFreq || samp->frequency > Sample_maxFreq || Sample_osRatio != 1.0)
+    if ((samp->frequency < Sample_minFreq) || (samp->frequency > Sample_maxFreq) ||
+        (Sample_osRatio != 1.0))
     {
         u32 oldrate;
         u32 newrate;
@@ -133,7 +134,7 @@ static void ApplyResampling(Sample *samp, u32 loopalign)
         if (samp->loop_type)
         {
             oldrate = samp->loop_end - samp->loop_start;
-            double newrate_f = Sample_osRatio * oldrate*targetFreq/samp->frequency;
+            double newrate_f = Sample_osRatio * oldrate * targetFreq / samp->frequency;
                    newrate_f = floor(newrate_f / loopalign) * loopalign;
             if (newrate_f < 2)
             {
@@ -157,16 +158,11 @@ static void ApplyResampling(Sample *samp, u32 loopalign)
             // If we are oversampling, ensure that we place the cutoff
             // at the Nyquist of the non-oversampled source!
             double Fc = 1.0;
-            if (newrate < oldrate*Sample_osRatio)
-                Fc = newrate / (oldrate*Sample_osRatio);
-            Sample_ProcessSRC(
-                samp,
-                oldrate,
-                newrate,
-                Sample_srcMethod,
-                Sample_srcOrder,
-                Fc
-            );
+            if (newrate < oldrate * Sample_osRatio)
+                Fc = newrate / (oldrate * Sample_osRatio);
+
+            Sample_ProcessSRC(samp, oldrate, newrate,
+                              Sample_srcMethod, Sample_srcOrder, Fc);
         }
     }
 }
@@ -229,15 +225,12 @@ static void FixSample_NDS(Sample *samp)
     u32 alignmask = (samp->format & SAMPF_COMP) ? 7 : (samp->format & SAMPF_16BIT) ? 1 : 3;
 
     // Resize loop
-    if (
-        samp->loop_type &&
-        samp->frequency >= Sample_minFreq &&
-        samp->frequency <= Sample_maxFreq &&
-        Sample_osRatio == 1.0
-    )
+    if ((samp->loop_type) &&
+        (samp->frequency >= Sample_minFreq) && (samp->frequency <= Sample_maxFreq) &&
+        (Sample_osRatio == 1.0))
     {
         u32 count = 0;
-        u32 looplen = samp->loop_end-samp->loop_start;
+        u32 looplen = samp->loop_end - samp->loop_start;
         u32 unrolledlen = looplen;
         while (unrolledlen & alignmask)
         {
@@ -248,14 +241,9 @@ static void FixSample_NDS(Sample *samp)
         u32 addition = unrolledlen - looplen;
         if (addition > MAX_UNROLL_THRESHOLD)
         {
-            Sample_ProcessSRC(
-                samp,
-                looplen,
-                looplen + ((-looplen) & alignmask),
-                Sample_srcMethod,
-                Sample_srcOrder,
-                1.0
-            );
+            Sample_ProcessSRC(samp,
+                              looplen, looplen + ((-looplen) & alignmask),
+                              Sample_srcMethod, Sample_srcOrder, 1.0);
         }
         else if (count > 0)
         {
@@ -396,12 +384,12 @@ void Sample_Process(Sample *samp, InputTypes input_file_format)
     // On NDS, we clip to -127 (or -32767) because the software
     // mixer can have interpolation errors that cause overflows
     s16 min_value = (target_system == SYSTEM_NDS) ? -32767 : -32768;
-    if (samp->format & (SAMPF_16BIT|SAMPF_COMP))
+    if (samp->format & (SAMPF_16BIT | SAMPF_COMP))
     {
-        s16 sign_flip = (samp->format & (SAMPF_SIGNED|SAMPF_COMP)) ? 0 : (s16)0x8000;
+        s16 sign_flip = (samp->format & (SAMPF_SIGNED | SAMPF_COMP)) ? 0 : (s16)0x8000;
         s16 *dst = (s16*)samp->data;
         const s16 *src = Sample_GetFirstSample(samp->data);
-        for(u32 x = 0; x < samp->sample_length; x++)
+        for (u32 x = 0; x < samp->sample_length; x++)
         {
             dst[x] = ((src[x] >= min_value) ? src[x] : min_value) ^ sign_flip;
         }
@@ -411,7 +399,7 @@ void Sample_Process(Sample *samp, InputTypes input_file_format)
         s8 sign_flip = (samp->format & SAMPF_SIGNED) ? 0 : (s8)0x80;
         s8 *dst = (s8*)samp->data;
         const s16 *src = Sample_GetFirstSample(samp->data);
-        for(u32 x = 0; x < samp->sample_length; x++)
+        for (u32 x = 0; x < samp->sample_length; x++)
         {
             dst[x] = (s8)(((src[x] >= min_value) ? src[x] : min_value) >> 8) ^ sign_flip;
         }

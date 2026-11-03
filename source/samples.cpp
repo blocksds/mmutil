@@ -58,7 +58,7 @@ void Sample_ReadData_WAV(void *data, u32 sample_length, u8 bit_depth, u16 num_ch
 void Sample_ReadData_MOD(void *data, u32 sample_length, u8 format, u16 it_compression)
 {
     s16 *sdata = Sample_GetFirstSample(data);
-    if(it_compression == 0)
+    if (it_compression == 0)
     {
         switch (format)
         {
@@ -109,10 +109,21 @@ void Sample_ReadData_MOD(void *data, u32 sample_length, u8 format, u16 it_compre
     u32 dsize;
     u16 bsize; // maximum block size in samples
     u16 range; // FFh for 8-bit, FFFFh for 16-bit
+
     if (format & SAMPF_16BIT)
-        nbits = 16, dsize = 4, bsize = 0x4000, range = 0xFFFF;
+    {
+        nbits = 16;
+        dsize = 4;
+        bsize = 0x4000;
+        range = 0xFFFF;
+    }
     else
-        nbits = 8, dsize = 3, bsize = 0x8000, range = 0xFF;
+    {
+        nbits = 8;
+        dsize = 3;
+        bsize = 0x8000;
+        range = 0xFF;
+    }
 
     // Now unpack data til the dest buffer is full
     for (u32 x = 0; x < sample_length; )
@@ -130,19 +141,20 @@ void Sample_ReadData_MOD(void *data, u32 sample_length, u8 format, u16 it_compre
             }
             for (u32 i = 0; i < 4; i++)
             {
-                c_buffer[size+i] = 0;
+                c_buffer[size + i] = 0;
             }
         }
 
         u32 block_length = bsize; // length of compressed data block in samples
-        if((x + block_length) > sample_length)
+        if ((x + block_length) > sample_length)
             block_length = sample_length - x;
 
         // actual "bit width"
         u8 bit_width = nbits + 1; // start with width of 9 bits
 
         // integrator buffers (d2 for it2.15). Reset them.
-        s16 d1 = 0, d2 = 0;
+        s16 d1 = 0;
+        s16 d2 = 0;
 
         // now uncompress the data block
         u32 bit_readpos = 0;
