@@ -396,12 +396,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    //---------------------------------------------------------------------------
-    // m/g generate output target if not given
-    //---------------------------------------------------------------------------
-
     if (export_mas_file || create_test_rom)
     {
+        // When generating a MAS file or a test ROM, if the user hasn't provided
+        // an output file name, generate it from the input file.
+
         if (!str_output)
         {
             if (input_files.size() == 1)
