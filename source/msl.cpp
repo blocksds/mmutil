@@ -37,13 +37,10 @@
 #include "systems.h"
 #include "samples.h"
 
-FILE *F_SAMP = NULL;
-FILE *F_SONG = NULL;
+static FILE *F_HEADER = NULL;
 
-FILE *F_HEADER = NULL;
-
-u16 MSL_NSAMPS;
-u16 MSL_NSONGS;
+static u16 MSL_NSAMPS;
+static u16 MSL_NSONGS;
 
 typedef struct
 {
@@ -59,8 +56,6 @@ static bool MSL_Name_Entry_Compare(MSL_Name_Entry a, MSL_Name_Entry b)
 
 static std::vector<MSL_Name_Entry> msl_sample_names = {};
 static std::vector<MSL_Name_Entry> msl_module_names = {};
-
-char str_msl[256];
 
 static char TMP_SAMP[] = "mm_samp_tmp.XXXXXXX";
 static char TMP_SONG[] = "mm_song_tmp.XXXXXXX";
@@ -109,7 +104,8 @@ static u16 MSL_AddSampleC(Sample *samp)
     {
         return MSL_AddSample(samp);
     }
-    F_SAMP = fopen(TMP_SAMP, "rb");
+
+    FILE *F_SAMP = fopen(TMP_SAMP, "rb");
     fseek(F_SAMP, 0, SEEK_SET);
 
     int samp_id = 0;
@@ -578,8 +574,6 @@ int MSL_Create(std::vector<std::string> &input_files, const char *output,
                const char *header, bool export_dictionary)
 {
     MSL_Erase();
-
-    str_msl[0] = 0;
 
     F_HEADER = NULL;
     if (header)

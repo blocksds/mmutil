@@ -21,8 +21,7 @@
 #include "systems.h"
 #include "version.h"
 
-u32 MAS_OFFSET;
-u32 MAS_FILESIZE;
+static u32 MAS_OFFSET;
 
 static int CalcEnvelopeSize(Instrument_Envelope *env)
 {
@@ -790,7 +789,7 @@ int Write_MAS(MAS_Module *mod, bool msl_dep)
 
     VERBOSE("Patterns: %i bytes\n", file_get_byte_count());
 
-    MAS_FILESIZE = file_tell_write() - MAS_OFFSET;
+    u32 MAS_FILESIZE = file_tell_write() - MAS_OFFSET;
 
     file_seek_write(MAS_OFFSET - 8, SEEK_SET);
     write32(MAS_FILESIZE);
