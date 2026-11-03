@@ -600,7 +600,7 @@ int MSL_Create(std::vector<std::string> &input_files, const char *output,
     if (ret != ERR_NONE)
         return ret;
 
-    for (std::string file : input_files)
+    for (const std::string& file : input_files)
     {
         MSL_LoadFile(file.c_str());
     }
