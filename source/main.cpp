@@ -183,7 +183,7 @@ int main(int argc, char *argv[])
 {
     std::vector<std::string> input_files;
 
-    char *str_output = NULL;
+    const char *str_output = NULL;
     const char *str_header = NULL;
 
     MAS_Module mod = { 0 };
@@ -287,12 +287,7 @@ int main(int argc, char *argv[])
                     return -1;
                 }
 
-                str_output = strdup(argv[a]);
-                if (str_output == NULL)
-                {
-                    ERROR("Failed to allocate memory for '-o'.\n");
-                    return -1;
-                }
+                str_output = argv[a];
 
                 VERBOSE("Output file: %s\n", str_output);
             }
@@ -329,12 +324,7 @@ int main(int argc, char *argv[])
             }
             else if (arg[1] == 'o')
             {
-                str_output = strdup(arg + 2);
-                if (str_output == NULL)
-                {
-                    ERROR("Failed to allocate memory for '-o'.\n");
-                    return -1;
-                }
+                str_output = arg + 2;
             }
             else if (arg[1] == 'h')
             {
@@ -395,77 +385,6 @@ int main(int argc, char *argv[])
         file_close_write();
         INFO("Done\n");
         return 0;
-    }
-
-    if (export_mas_file || create_test_rom)
-    {
-        // When generating a MAS file or a test ROM, if the user hasn't provided
-        // an output file name, generate it from the input file.
-
-        if (!str_output)
-        {
-            if (input_files.size() == 1)
-            {
-                const char *str_input = input_files[0].c_str();
-
-                if (strlen(str_input) < 4)
-                {
-                    print_error(ERR_BADINPUT);
-                    return -1;
-                }
-
-                int strp = strlen(str_input);
-                str_output = (char *)malloc(strp + 2);
-                strcpy(str_output, str_input);
-                strp = strlen(str_output) - 1;
-
-                int strpi;
-                for (strpi = strp; str_output[strpi] != '.' && strpi != 0; strpi--)
-                    ;
-
-                if (strpi == 0)
-                {
-                    print_error(ERR_BADINPUT);
-                    return -1;
-                }
-
-                str_output[strpi++] = '.';
-                if (!create_test_rom)
-                {
-                    str_output[strpi++] = 'm';
-                    str_output[strpi++] = 'a';
-                    str_output[strpi++] = 's';
-                    str_output[strpi++] = 0;
-                }
-                else
-                {
-                    if (target_system == SYSTEM_GBA)
-                    {
-                        str_output[strpi++] = 'g';
-                        str_output[strpi++] = 'b';
-                        str_output[strpi++] = 'a';
-                        str_output[strpi++] = 0;
-                    }
-                    else if (target_system == SYSTEM_NDS)
-                    {
-                        str_output[strpi++] = 'n';
-                        str_output[strpi++] = 'd';
-                        str_output[strpi++] = 's';
-                        str_output[strpi++] = 0;
-                    }
-                    else
-                    {
-                        // error!
-                    }
-                }
-                str_output[strpi++] = 0;
-            }
-            else
-            {
-                ERROR("No output file! (-o option)\n");
-                return -1;
-            }
-        }
     }
 
     if (export_mas_file)
@@ -634,8 +553,6 @@ int main(int argc, char *argv[])
     {
         MSL_Create(input_files, str_output, str_header, msl_export_dictionary);
     }
-
-    free(str_output);
 
     return 0;
 }
