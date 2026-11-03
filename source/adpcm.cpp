@@ -21,11 +21,11 @@
 // Number of samples to test for initial table index selection
 #define INIT_LOOKAHEAD 7
 
-const s8 IndexTable[8] = {
+static const s8 IndexTable[8] = {
     -1, -1, -1, -1, 2, 4, 6, 8
 };
 
-const u16 AdpcmTable[89] = {
+static const u16 AdpcmTable[89] = {
         7,     8,     9,    10,    11,    12,    13,    14,    16,    17,
        19,    21,    23,    25,    28,    31,    34,    37,    41,    45,
        50,    55,    60,    66,    73,    80,    88,    97,   107,   118,
