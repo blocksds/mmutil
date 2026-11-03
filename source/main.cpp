@@ -177,15 +177,15 @@ static void ConfirmDeletePreexistingFile(const char *path, bool autoconfirm)
 
 int main(int argc, char *argv[])
 {
-    char *str_input = NULL;
+    const char *str_input = NULL;
     char *str_output = NULL;
-    char *str_header = NULL;
+    const char *str_header = NULL;
 
     MAS_Module mod = { 0 };
     Sample samp = { 0 };
 
-    bool g_flag = false;
-    bool m_flag = false;
+    bool create_test_rom = false;
+    bool export_mas_file = false;
     bool z_flag = false;
 
     bool autoconfirm_overwrite = false;
@@ -205,41 +205,82 @@ int main(int argc, char *argv[])
 
     for (int a = 1; a < argc; a++)
     {
-        if (argv[a][0] == '-')
+        const char *arg = argv[a];
+
+        if (arg[0] == '-')
         {
-            if (argv[a][1] == 'V')
+            if (strcmp(arg, "-V") == 0)
+            {
                 print_version_and_exit();
-            else if (argv[a][1] == 'b')
-                g_flag = true;
-            else if (argv[a][1] == 'v')
+            }
+            else if (strcmp(arg, "-b") == 0)
+            {
+                create_test_rom = true;
+            }
+            else if (strcmp(arg, "-v") == 0)
             {
                 if (get_log_level() == LOG_VERBOSE)
                     set_log_level(LOG_EXTRA);
                 else
                     set_log_level(LOG_VERBOSE);
             }
-            else if (argv[a][1] == 'd')
+            else if (strcmp(arg, "-d") == 0)
+            {
                 target_system = SYSTEM_NDS;
-            else if (argv[a][1] == 'i')
+            }
+            else if (strcmp(arg, "-i") == 0)
+            {
                 ignore_sflags = true;
-            else if (argv[a][1] == 'p')
-                PANNING_SEP = ((argv[a][2] - '0') * 256) / 9;
-            else if (argv[a][1] == 'o')
-                str_output = argv[a] + 2;
-            else if (argv[a][1] == 'h')
-                str_header = argv[a] + 2;
-            else if (argv[a][1] == 'm')
-                m_flag = true;
-            else if (argv[a][1] == 'z')
+            }
+            else if (strcmp(arg, "-m") == 0)
+            {
+                export_mas_file = true;
+            }
+            else if (strcmp(arg, "-z") == 0)
+            {
                 z_flag = true;
-            else if (argv[a][1] == 'y')
+            }
+            else if (strcmp(arg, "-y") == 0)
+            {
                 autoconfirm_overwrite = true;
-            else if (argv[a][1] == 'D')
+            }
+            else if (strcmp(arg, "-D") == 0)
+            {
                 msl_export_dictionary = true;
+            }
+            else if (arg[1] == 'p')
+            {
+                char val = arg[2];
+                if ((val < '0') || (val > '9'))
+                {
+                    ERROR("Invalid value for '-p': '%c' (use '0' to '9').\n", val);
+                    exit(EXIT_FAILURE);
+                }
+
+                // Scale from 0..9 to 0..256
+                PANNING_SEP = ((val - '0') * 256) / 9;
+            }
+            else if (arg[1] == 'o')
+            {
+                str_output = strdup(arg + 2);
+                if (str_output == NULL)
+                {
+                    ERROR("Failed to allocate memory for '-o'.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else if (arg[1] == 'h')
+            {
+                str_header = arg + 2;
+            }
+            else
+            {
+                WARNING("Unknown argument '%s' has been ignored.\n", arg);
+            }
         }
         else if (!str_input)
         {
-            str_input = argv[a];
+            str_input = arg;
             number_of_inputs = 1;
         }
         else
@@ -278,13 +319,13 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    if (m_flag & g_flag)
+    if (export_mas_file & create_test_rom)
     {
         ERROR("-m and -g cannot be combined.\n");
         return -1;
     }
 
-    if (m_flag && number_of_inputs != 1)
+    if (export_mas_file && number_of_inputs != 1)
     {
         ERROR("-m only supports one input.\n");
         return -1;
@@ -294,7 +335,7 @@ int main(int argc, char *argv[])
     // m/g generate output target if not given
     //---------------------------------------------------------------------------
 
-    if (m_flag || g_flag)
+    if (export_mas_file || create_test_rom)
     {
         if (!str_output)
         {
@@ -309,7 +350,7 @@ int main(int argc, char *argv[])
                 int strp = strlen(str_input);
                 str_output = (char *)malloc(strp + 2);
                 strcpy(str_output, str_input);
-                strp=strlen(str_output)-1;
+                strp = strlen(str_output) - 1;
 
                 int strpi;
                 for (strpi = strp; str_output[strpi] != '.' && strpi != 0; strpi--)
@@ -322,7 +363,7 @@ int main(int argc, char *argv[])
                 }
 
                 str_output[strpi++] = '.';
-                if (!g_flag)
+                if (!create_test_rom)
                 {
                     str_output[strpi++] = 'm';
                     str_output[strpi++] = 'a';
@@ -368,7 +409,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if (m_flag)
+    if (export_mas_file)
     {
         if (file_open_read(str_input))
         {
@@ -474,7 +515,7 @@ int main(int argc, char *argv[])
 
         VERBOSE("Success! :)\n");
     }
-    else if (g_flag)
+    else if (create_test_rom)
     {
         ConfirmDeletePreexistingFile(str_output, autoconfirm_overwrite);
 
@@ -524,6 +565,8 @@ int main(int argc, char *argv[])
     {
         MSL_Create(argv, argc, str_output, str_header, msl_export_dictionary);
     }
+
+    free(str_output);
 
     return 0;
 }
