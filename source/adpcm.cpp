@@ -10,7 +10,7 @@
  *                                                                          *
  ****************************************************************************/
 
-// Thanks GBATEK for the ima-adpcm specification
+// Thanks GBATEK for the IMA-ADPCM specification
 
 #include <stdlib.h>
 
@@ -48,16 +48,15 @@ static int minmax(int value, int low, int high)
 
 static int quantize_delta(int diff, int step, u8 *code)
 {
-    /*
-      difference calculation:
-      Diff = AdpcmTable[Index]/8
-      IF (Data4bit AND 1) THEN Diff = Diff + AdpcmTable[Index]/4
-      IF (Data4bit AND 2) THEN Diff = Diff + AdpcmTable[Index]/2
-      IF (Data4bit AND 4) THEN Diff = Diff + AdpcmTable[Index]/1
-      IF (Data4bit AND 8)=0 THEN Pcm16bit = Max(Pcm16bit+Diff,+7FFFh)
-      IF (Data4bit AND 8)=8 THEN Pcm16bit = Min(Pcm16bit-Diff,-7FFFh)
-      Index = MinMax (Index+IndexTable[Data4bit AND 7],0,88)
-    */
+    // Difference calculation:
+    //
+    // Diff = AdpcmTable[Index]/8
+    // IF (Data4bit AND 1) THEN Diff = Diff + AdpcmTable[Index]/4
+    // IF (Data4bit AND 2) THEN Diff = Diff + AdpcmTable[Index]/2
+    // IF (Data4bit AND 4) THEN Diff = Diff + AdpcmTable[Index]/1
+    // IF (Data4bit AND 8)=0 THEN Pcm16bit = Max(Pcm16bit+Diff,+7FFFh)
+    // IF (Data4bit AND 8)=8 THEN Pcm16bit = Min(Pcm16bit-Diff,-7FFFh)
+    // Index = MinMax (Index+IndexTable[Data4bit AND 7],0,88)
 
     if (diff < 0)
     {
@@ -95,15 +94,17 @@ static int quantize_delta(int diff, int step, u8 *code)
 }
 
 // Compresses a sample with IMA-ADPCM.
+//
 // Make sure the data has proper alignment/length!
 void adpcm_compress_sample(Sample *sample)
 {
-    // We will be storing back to the same buffer we read from,
-    // so we must ensure we never overwrite samples we read!
+    // We will be storing back to the same buffer we read from, so we must
+    // ensure we never overwrite samples we read!
     u8 *output = (u8*)sample->data;
     s16 *sdata = (s16*)sample->data;
 
     // As per GBATek, the first sample must not be -8000h!
+    //
     //   Max(+7FFFh) leaves -8000h unclipped (can happen if initial PCM16 was -8000h)
     if (sdata[0] == -0x8000)
         sdata[0] = -0x7FFF;
@@ -137,35 +138,45 @@ void adpcm_compress_sample(Sample *sample)
         }
     }
 
-    // Write header and begin output
-    // We need to store 32 bits of "header" information, which
-    // consists of the first sample, and the initial index.
-    // The first sample can stay where it is, but the second
-    // sample would be overwritten. So to work around this, we
-    // just read the next sample before we store the previous.
+    // Write header and begin output.
+    //
+    // We need to store 32 bits of "header" information, which consists of the
+    // first sample, and the initial index.
+    //
+    // The first sample can stay where it is, but the second sample would be
+    // overwritten. So to work around this, we just read the next sample before
+    // we store the previous.
     int prev_value = sdata[0];
     int next_value = sdata[1];
     output[2] = (u8)index;
     output[3] = 0;
+
     for (u32 x = 1; x < sample->sample_length; x++)
     {
         u8 code;
         int qdelta = quantize_delta(next_value - prev_value, AdpcmTable[index], &code);
+
         prev_value = minmax(prev_value + qdelta, -32767, +32767);
         index      = minmax(index + IndexTable[code & 7], 0, 88);
-        if(x+1 < sample->sample_length) next_value = sdata[x+1];
-        output[4 + (x-1)/2u] >>= 4;
-        output[4 + (x-1)/2u]  |= code << 4;
+
+        if (x + 1 < sample->sample_length)
+            next_value = sdata[x + 1];
+
+        output[4 + (x - 1) / 2u] >>= 4;
+        output[4 + (x - 1) / 2u] |= code << 4;
     }
 
-    // Update format information
-    // Note that the rest of the mmutil code expects that an ADPCM
-    // sample stores length information in bytes because... reasons.
-    // Also note that we explicitly aligned ADPCM samples such that
-    // their loop points (and length) are 8*N+1 to account for the
-    // first sample being stored explicitly, but we need to store
-    // the size (in bytes) of the ADPCM words, so the first sample
-    // must be excluded in these calculations to be correct!
+    // Update format information.
+    //
+    // Note that the rest of the mmutil code expects that an ADPCM sample stores
+    // length information in bytes because... reasons.
+    //
+    // Also note that we explicitly aligned ADPCM samples such that their loop
+    // points (and length) are 8*N+1 to account for the first sample being
+    // stored explicitly, but we need to store the size (in bytes) of the ADPCM
+    // words, so the first sample must be excluded in these calculations to be
+    // correct!
+    //
     // Finally, note the +1 word - this is to include the header.
     sample->format        = SAMP_FORMAT_ADPCM;
     sample->sample_length = ((sample->sample_length - 1) / 8 + 1) * 4;
