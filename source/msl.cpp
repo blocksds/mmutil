@@ -466,11 +466,11 @@ static void MSL_PrintDefinition(const char* filename, u16 id, const char* prefix
         if (filename[x] != '.')
         {
             newtitle[x - s] = toupper(filename[x]);
-            if (newtitle[x - s] >= ' ' && newtitle[x-s] <= '/')
+            if (newtitle[x - s] >= ' ' && newtitle[x - s] <= '/')
                 newtitle[x - s] = '_';
-            if (newtitle[x - s] >= ':' && newtitle[x-s] <= '@')
+            if (newtitle[x - s] >= ':' && newtitle[x - s] <= '@')
                 newtitle[x - s] = '_';
-            if (newtitle[x - s] >= '[' && newtitle[x-s] <= '`')
+            if (newtitle[x - s] >= '[' && newtitle[x - s] <= '`')
                 newtitle[x - s] = '_';
             if (newtitle[x - s] >= '{')
                 newtitle[x - s] = '_';
@@ -604,7 +604,7 @@ int MSL_Create(std::vector<std::string> &input_files, const char *output,
     {
         fprintf(F_HEADER, "#define MSL_NSONGS    %i\r\n", MSL_NSONGS);
         fprintf(F_HEADER, "#define MSL_NSAMPS    %i\r\n", MSL_NSAMPS);
-        fprintf(F_HEADER, "#define MSL_BANKSIZE    %i\r\n", MSL_NSAMPS + MSL_NSONGS);
+        fprintf(F_HEADER, "#define MSL_BANKSIZE  %i\r\n", MSL_NSAMPS + MSL_NSONGS);
         fclose(F_HEADER);
         F_HEADER = NULL;
     }
