@@ -354,13 +354,26 @@ int main(int argc, char *argv[])
 
     if (input_files.size() == 0)
     {
+        ERROR("No input files provided.\n");
         print_usage();
         return 0;
     }
 
     if (str_output == NULL)
     {
-        ERROR("No output file specified with -o\n");
+        ERROR("No output file specified with '-o'.\n");
+        return -1;
+    }
+
+    if (export_mas_file & create_test_rom)
+    {
+        ERROR("Can't export to MAS file and create a test ROM at the same time.\n");
+        return -1;
+    }
+
+    if (export_mas_file && (input_files.size() != 1))
+    {
+        ERROR("Creating a MAS file can only be done with one input file.\n");
         return -1;
     }
 
@@ -382,18 +395,6 @@ int main(int argc, char *argv[])
         file_close_write();
         INFO("Done\n");
         return 0;
-    }
-
-    if (export_mas_file & create_test_rom)
-    {
-        ERROR("-m and -g cannot be combined.\n");
-        return -1;
-    }
-
-    if (export_mas_file && (input_files.size() != 1))
-    {
-        ERROR("-m only supports one input.\n");
-        return -1;
     }
 
     if (export_mas_file || create_test_rom)
