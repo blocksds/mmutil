@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <cerrno>
 
 #include "defs.h"
 #include "mas.h"
@@ -51,22 +52,22 @@ static void print_usage(void)
         "\n"
         " Input may be MOD, S3M, XM, IT, and/or WAV\n"
         "\n"
-        ".------------.----------------------------------------------------.\n"
-        "| Option     | Description                                        |\n"
-        "|------------|----------------------------------------------------|\n"
-        "| -o<output> | Set output file.                                   |\n"
-        "| -h<header> | Set header output file.                            |\n"
-        "| -D         | Add list of sample and module names to soundbank.  |\n"
-        "| -m         | Output MAS file rather than soundbank.             |\n"
-        "| -d         | Use for NDS projects.                              |\n"
-        "| -b         | Create test ROM. (use -d for .nds, otherwise .gba) |\n"
-        "| -i         | Ignore sample name flags (NDS mode only).          |\n"
-        "| -v         | Enable verbose output (-v -v for extra verbose).   |\n"
-        "| -p         | Set initial panning separation for MOD/S3M.        |\n"
-        "| -z         | Export raw WAV data (8-bit format)                 |\n"
-        "| -y         | Assume 'yes' in confirmation prompts.              |\n"
-        "| -V         | Print version string and exit.                     |\n"
-        "`-----------------------------------------------------------------'\n"
+        ".--------------.----------------------------------------------------.\n"
+        "| Option       | Description                                        |\n"
+        "|--------------|----------------------------------------------------|\n"
+        "| -o [output]  | Set output file (.mas, .bin, .gba, .nds).          |\n"
+        "| -h [header]  | Set header output file (.h).                       |\n"
+        "| -D           | Add list of sample and module names to soundbank.  |\n"
+        "| -m           | Output MAS file rather than soundbank.             |\n"
+        "| -d           | Use for NDS projects.                              |\n"
+        "| -b           | Create test ROM. (use -d for .nds, otherwise .gba) |\n"
+        "| -i           | Ignore sample name flags (NDS mode only).          |\n"
+        "| -v           | Enable verbose output (-v -v for extra verbose).   |\n"
+        "| -p [0...255] | Set initial panning separation for MOD/S3M.        |\n"
+        "| -z           | Export raw WAV data (8-bit format)                 |\n"
+        "| -y           | Assume 'yes' in confirmation prompts.              |\n"
+        "| -V           | Print version string and exit.                     |\n"
+        "`--------------'----------------------------------------------------'\n"
         "\n"
         ".-----------------------------------------------------------------.\n"
         "| Sample flags                                                    |\n"
@@ -97,15 +98,15 @@ static void print_usage(void)
         "| Create DS soundbank file (soundbank.bin) from input1.xm         |\n"
         "| and input2.it Also output header file (soundbank.h)             |\n"
         "|                                                                 |\n"
-        "| mmutil -d input1.xm input2.it -osoundbank.bin -hsoundbank.h     |\n"
+        "| mmutil -d input1.xm input2.it -o soundbank.bin -h soundbank.h   |\n"
         "|-----------------------------------------------------------------|\n"
         "| Create test GBA ROM from two inputs                             |\n"
         "|                                                                 |\n"
-        "| mmutil -b input1.mod input2.s3m -oTEST.gba                      |\n"
+        "| mmutil -b input1.mod input2.s3m -o TEST.gba                     |\n"
         "|-----------------------------------------------------------------|\n"
         "| Create test NDS ROM from three inputs                           |\n"
         "|                                                                 |\n"
-        "| mmutil -d -b input1.xm input2.s3m testsound.wav -oTEST.nds      |\n"
+        "| mmutil -d -b input1.xm input2.s3m testsound.wav -o TEST.nds     |\n"
         "`-----------------------------------------------------------------'\n"
     );
 }
@@ -248,8 +249,68 @@ int main(int argc, char *argv[])
             {
                 msl_export_dictionary = true;
             }
+            else if (strcmp(arg, "-p") == 0)
+            {
+
+                a++;
+                if (a >= argc)
+                {
+                    ERROR("Not enough arguments for '-p'\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                arg = argv[a];
+
+                errno = 0;
+                char *endptr = NULL;
+                // Use base 0 to allow decimal and hexadecimal
+                long int val = strtol(arg, &endptr, 0);
+
+                if ((errno != 0) || (endptr == arg) || (val < 0) || (val > 255))
+                {
+                    ERROR("Option '-p' expects a number between 0 and 255.\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                // Read 0..255 from the command line argument directly
+                PANNING_SEP = val;
+
+                INFO("Panning separation: %d\n", PANNING_SEP);
+            }
+            else if (strcmp(arg, "-o") == 0)
+            {
+                a++;
+                if (a >= argc)
+                {
+                    ERROR("Not enough arguments for '-o'\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                str_output = strdup(argv[a]);
+                if (str_output == NULL)
+                {
+                    ERROR("Failed to allocate memory for '-o'.\n");
+                    exit(EXIT_FAILURE);
+                }
+            }
+            else if (strcmp(arg, "-h") == 0)
+            {
+                a++;
+                if (a >= argc)
+                {
+                    ERROR("Not enough arguments for '-h'\n");
+                    exit(EXIT_FAILURE);
+                }
+
+                str_header = argv[a];
+            }
+            // The following code is kept for backwards compatibility with the
+            // parser that expected the option and the argument to be in the
+            // same string.
             else if (arg[1] == 'p')
             {
+                WARNING("Panning separation compatibility mode.\n");
+
                 char val = arg[2];
                 if ((val < '0') || (val > '9'))
                 {
@@ -259,6 +320,7 @@ int main(int argc, char *argv[])
 
                 // Scale from 0..9 to 0..256
                 PANNING_SEP = ((val - '0') * 256) / 9;
+                INFO("Panning separation: %d\n", PANNING_SEP);
             }
             else if (arg[1] == 'o')
             {
@@ -273,6 +335,7 @@ int main(int argc, char *argv[])
             {
                 str_header = arg + 2;
             }
+            // End of backwards compatibility code
             else
             {
                 WARNING("Unknown argument '%s' has been ignored.\n", arg);
