@@ -67,7 +67,7 @@ static void print_usage(void)
         "| -i           | Ignore sample name flags (NDS mode only).          |\n"
         "| -v           | Enable verbose output (-v -v for extra verbose).   |\n"
         "| -p [0...255] | Set initial panning separation for MOD/S3M.        |\n"
-        "| -z           | Export raw WAV data (8-bit format)                 |\n"
+        "| -z           | Save WAV file to raw ADPCM file (for testing).     |\n"
         "| -y           | Assume 'yes' in confirmation prompts.              |\n"
         "| -V           | Print version string and exit.                     |\n"
         "`--------------'----------------------------------------------------'\n"
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 
     bool create_test_rom = false;
     bool export_mas_file = false;
-    bool z_flag = false;
+    bool export_adpcm_file = false;
 
     bool autoconfirm_overwrite = false;
     bool msl_export_dictionary = false;
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
             }
             else if (strcmp(arg, "-z") == 0)
             {
-                z_flag = true;
+                export_adpcm_file = true;
             }
             else if (strcmp(arg, "-y") == 0)
             {
@@ -367,13 +367,15 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    if (z_flag)
+    if (export_adpcm_file)
     {
         const char *str_input = input_files[0].c_str();
 
         file_open_read(str_input);
         Sample s;
 
+        // Force compression mode (only allowed in NDS mode)
+        target_system = SYSTEM_NDS;
         Load_WAV(&s, true);
 
         file_close_read();
