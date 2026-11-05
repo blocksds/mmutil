@@ -13,6 +13,7 @@
 
 #include <math.h>
 #include <stddef.h>
+#include <stdlib.h>
 
 #include "defs.h"
 #include "mas.h"
